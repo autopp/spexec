@@ -41,7 +41,7 @@ run:
 build: $(EXEFILE)
 
 $(EXEFILE):
-	go build -o $@ -ldflags="-s -w -X main.version=$(VERSION)" ./cmd/spexec
+	go build -o $@ -ldflags="-s -w" ./cmd/spexec
 
 .PHONY: release
 release: $(ARTIFACT)

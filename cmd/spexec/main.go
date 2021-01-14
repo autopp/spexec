@@ -16,10 +16,17 @@ package main
 
 import (
 	"fmt"
+	"runtime/debug"
 )
 
-var version = "HEAD"
+func getVersion() string {
+	info, ok := debug.ReadBuildInfo()
+	if !ok {
+		return "(devel)"
+	}
+	return info.Main.Version
+}
 
 func main() {
-	fmt.Println(version)
+	fmt.Println(getVersion())
 }
