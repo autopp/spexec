@@ -12,23 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package cmd
 
 import (
-	"os"
-	"runtime/debug"
+	"io"
 
-	"github.com/autopp/spexec/internal/cmd"
+	"github.com/spf13/cobra"
 )
 
-func getVersion() string {
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return "(devel)"
+// Main is the entrypoint of command line
+func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
+	cmd := &cobra.Command{
+		Use:          "spexec",
+		SilenceUsage: true,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			cmd.Println(version)
+			return nil
+		},
 	}
-	return info.Main.Version
-}
 
-func main() {
-	cmd.Main(getVersion(), os.Stdin, os.Stdout, os.Stderr, os.Args)
+	cmd.SetIn(stdin)
+	cmd.SetOut(stdout)
+	cmd.SetErr(stderr)
+	cmd.SetArgs(args)
+
+	return cmd.Execute()
 }
