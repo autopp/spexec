@@ -22,14 +22,22 @@ import (
 
 // Main is the entrypoint of command line
 func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
+	const versionFlag = "version"
 	cmd := &cobra.Command{
 		Use:          "spexec",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cmd.Println(version)
+			if v, err := cmd.Flags().GetBool(versionFlag); err != nil {
+				return err
+			} else if v {
+				cmd.Println(version)
+				return nil
+			}
 			return nil
 		},
 	}
+
+	cmd.Flags().Bool(versionFlag, false, "print version")
 
 	cmd.SetIn(stdin)
 	cmd.SetOut(stdout)
