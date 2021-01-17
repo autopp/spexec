@@ -16,15 +16,18 @@ package cmd
 
 import (
 	"io"
+	"io/ioutil"
 
+	"github.com/autopp/spexec/internal/config"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v2"
 )
 
 // Main is the entrypoint of command line
 func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
 	const versionFlag = "version"
 	cmd := &cobra.Command{
-		Use:          "spexec",
+		Use:          "spexec file",
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if v, err := cmd.Flags().GetBool(versionFlag); err != nil {
@@ -33,6 +36,15 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 				cmd.Println(version)
 				return nil
 			}
+
+			cmd.Println(args[0])
+			in, err := ioutil.ReadFile(args[0])
+			if err != nil {
+				return err
+			}
+			var c config.Config
+			yaml.Unmarshal(in, &c)
+
 			return nil
 		},
 	}
