@@ -14,10 +14,29 @@
 
 package config
 
+import (
+	"io"
+	"io/ioutil"
+
+	"gopkg.in/yaml.v2"
+)
+
 type Config struct {
 	Tests []Test `yaml:"tests"`
 }
 
 type Test struct {
 	Command []string `yaml:"command"`
+}
+
+func Load(r io.Reader) (*Config, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, err
+	}
+
+	c := new(Config)
+	yaml.Unmarshal(b, c)
+
+	return c, nil
 }

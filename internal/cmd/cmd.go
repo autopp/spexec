@@ -16,11 +16,10 @@ package cmd
 
 import (
 	"io"
-	"io/ioutil"
+	"os"
 
 	"github.com/autopp/spexec/internal/config"
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 // Main is the entrypoint of command line
@@ -37,13 +36,11 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 				return nil
 			}
 
-			cmd.Println(args[0])
-			in, err := ioutil.ReadFile(args[0])
+			f, err := os.Open(args[0])
 			if err != nil {
 				return err
 			}
-			var c config.Config
-			yaml.Unmarshal(in, &c)
+			config.Load(f)
 
 			return nil
 		},
