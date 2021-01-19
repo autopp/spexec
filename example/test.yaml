@@ -1,0 +1,6 @@
+tests:
+  - command:
+      - echo
+  - command:
+      - exit
+      - "1"
