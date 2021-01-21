@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTestExecute(t *testing.T) {
+func TestExecRun(t *testing.T) {
 	cases := []struct {
 		name    string
 		command []string
@@ -25,16 +25,16 @@ func TestTestExecute(t *testing.T) {
 
 	for _, tt := range cases {
 		t.Run(tt.name, func(t *testing.T) {
-			test := Test{
+			e := Exec{
 				Command: tt.command,
 			}
 
-			expected := &CommandResult{
+			expected := &ExecResult{
 				Stdout: []byte(tt.stdout),
 				Stderr: []byte(tt.stderr),
 				Status: tt.status,
 			}
-			assert.Equal(t, expected, test.Execute())
+			assert.Equal(t, expected, e.Run())
 		})
 	}
 }
