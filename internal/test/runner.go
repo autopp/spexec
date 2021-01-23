@@ -12,25 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package main
+package test
 
-import (
-	"os"
-	"runtime/debug"
+import "fmt"
 
-	"github.com/autopp/spexec/internal/cmd"
-)
+type Runner struct{}
 
-func getVersion() string {
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return "(devel)"
-	}
-	return info.Main.Version
+type TestResult struct {
+	IsSuccess bool
 }
 
-func main() {
-	if cmd.Main(getVersion(), os.Stdin, os.Stdout, os.Stderr, os.Args) != nil {
-		os.Exit(1)
+func NewRunner() *Runner {
+	return &Runner{}
+}
+
+func (r *Runner) RunTests(tests []*Test) []*TestResult {
+	results := make([]*TestResult, 0, len(tests))
+
+	for _, t := range tests {
+		r := t.ToExec().Run()
+		fmt.Println(string(r.Stdout))
+		results = append(results, &TestResult{IsSuccess: r.Status == 0})
 	}
+
+	return results
 }

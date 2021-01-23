@@ -15,10 +15,13 @@
 package cmd
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"os"
 
 	"github.com/autopp/spexec/internal/config"
+	"github.com/autopp/spexec/internal/test"
 	"github.com/spf13/cobra"
 )
 
@@ -40,8 +43,31 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			if err != nil {
 				return err
 			}
-			config.Load(f)
+			c, err := config.Load(f)
+			if err != nil {
+				return err
+			}
 
+			tests := make([]*test.Test, len(c.Tests))
+			for i, t := range c.Tests {
+				tests[i] = test.NewTest(&t)
+			}
+
+			runner := test.NewRunner()
+			results := runner.RunTests(tests)
+
+			allGreen := true
+			for _, r := range results {
+				fmt.Printf("%#v\n", *r)
+				if !r.IsSuccess {
+					allGreen = false
+					break
+				}
+			}
+
+			if !allGreen {
+				return errors.New("test failed")
+			}
 			return nil
 		},
 	}
