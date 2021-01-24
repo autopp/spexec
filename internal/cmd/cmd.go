@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"os"
 
@@ -29,8 +28,9 @@ import (
 func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
 	const versionFlag = "version"
 	cmd := &cobra.Command{
-		Use:          "spexec file",
-		SilenceUsage: true,
+		Use:           "spexec file",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if v, err := cmd.Flags().GetBool(versionFlag); err != nil {
 				return err
@@ -58,7 +58,6 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 
 			allGreen := true
 			for _, r := range results {
-				fmt.Printf("%#v\n", *r)
 				if !r.IsSuccess {
 					allGreen = false
 					break
