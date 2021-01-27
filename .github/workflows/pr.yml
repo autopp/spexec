@@ -1,0 +1,43 @@
+name: pr
+
+on: ["pull_request"]
+
+jobs:
+  test:
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    runs-on: ubuntu-latest
+    if: "!startsWith(github.head_ref, 'release/') || github.event.pull_request.head.fork"
+    steps:
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.15
+      id: go
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+    - name: Use Cache
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Get dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        go mod download
+    - name: Run Test
+      run: make test
+    - name: Build
+      run: make build
+    - name: Save Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: artifact
+        path: ${{ github.workspace }}/build/*/spexec
+    - name: Auto Merge
+      if: contains(github.event.pull_request.body, '[auto merge]') && !contains(github.event.pull_request.title, '[WIP]') && !contains(github.event.pull_request.title, '[DNM]') && !github.event.pull_request.head.fork
+      run: |
+        # Request to merge button API
+        hub api -X PUT /repos/${GITHUB_REPOSITORY}/pulls/${{ github.event.number }}/merge

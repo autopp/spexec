@@ -1,0 +1,57 @@
+name: release-pr
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    if: "startsWith(github.head_ref, 'release/') && !github.event.pull_request.head.fork"
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+    - name: Set up Go 1.x
+      uses: actions/setup-go@v2
+      with:
+        go-version: ^1.15
+      id: go
+    - name: Check out code into the Go module directory
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+    - name: Check existing release
+      run: |
+        VERSION=${GITHUB_HEAD_REF#release/}
+        echo target version is ${VERSION}
+        if hub release -f "%T:%s%n" | grep -x -F "${VERSION}:" >/dev/null; then
+          echo ${VERSION} is already published
+          exit 1
+        fi
+    - name: Use Cache
+      uses: actions/cache@v1
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+    - name: Get dependencies
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        go mod download
+    - name: Build artifacts
+      run: |
+        VERSION=${GITHUB_HEAD_REF#release/}
+        make release GOOS=windows GOARCH=amd64 VERSION="${VERSION}"
+        make release GOOS=darwin GOARCH=amd64 VERSION="${VERSION}"
+        make release GOOS=linux GOARCH=amd64 VERSION="${VERSION}"
+    - name: Edit release
+      run: |
+        VERSION=${GITHUB_HEAD_REF#release/}
+
+        if hub release --include-drafts -f "%t:%S%n" | grep -x -F "${VERSION}:draft" >/dev/null; then
+          echo Delete existing release
+          hub release delete "${VERSION}"
+        fi
+
+        hub release create "${VERSION}" -t "${{ github.event.pull_request.head.sha }}" $(ls build/*.zip | xargs -n 1 echo -a) -m "${VERSION}" --draft
