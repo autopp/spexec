@@ -1,6 +1,12 @@
 tests:
   - command:
       - echo
+      - "42"
+    expect:
+      status: 0
+      stdout: "42\n"
+      stderr: ""
   - command:
-      - exit
-      - "1"
+      - "false"
+    expect:
+      status: 1

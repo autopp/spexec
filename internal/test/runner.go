@@ -29,8 +29,14 @@ func (r *Runner) RunTests(tests []*Test) []*TestResult {
 
 	for _, t := range tests {
 		r := t.ToExec().Run()
-		results = append(results, &TestResult{IsSuccess: r.Status == 0})
+		results = append(results, assertResult(t, r))
 	}
 
 	return results
+}
+
+func assertResult(t *Test, r *ExecResult) *TestResult {
+	return &TestResult{
+		IsSuccess: (t.Status == nil || *t.Status == r.Status) && (t.Stdout == nil || *t.Stdout == string(r.Stdout)) && (t.Stderr == nil || *t.Stderr == string(r.Stderr)),
+	}
 }

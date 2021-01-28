@@ -27,6 +27,11 @@ type Config struct {
 
 type Test struct {
 	Command []string `yaml:"command"`
+	Expect  *struct {
+		Status *int    `yaml:"status"`
+		Stdout *string `yaml:"stdout"`
+		Stderr *string `yaml:"stderr"`
+	} `yaml:"expect"`
 }
 
 func Load(r io.Reader) (*Config, error) {
