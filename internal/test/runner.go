@@ -14,6 +14,8 @@
 
 package test
 
+import "fmt"
+
 type Runner struct{}
 
 type TestResult struct {
@@ -28,9 +30,16 @@ func (r *Runner) RunTests(tests []*Test) []*TestResult {
 	results := make([]*TestResult, 0, len(tests))
 
 	for _, t := range tests {
-		r := t.ToExec().Run()
-		results = append(results, assertResult(t, r))
+		er := t.ToExec().Run()
+		tr := assertResult(t, er)
+		if tr.IsSuccess {
+			fmt.Print(".")
+		} else {
+			fmt.Print("F")
+		}
+		results = append(results, tr)
 	}
+	fmt.Println("")
 
 	return results
 }
