@@ -29,6 +29,7 @@ func NewRunner() *Runner {
 func (r *Runner) RunTests(tests []*Test) []*TestResult {
 	results := make([]*TestResult, 0, len(tests))
 
+	failures := 0
 	for _, t := range tests {
 		er := t.ToExec().Run()
 		tr := assertResult(t, er)
@@ -36,10 +37,11 @@ func (r *Runner) RunTests(tests []*Test) []*TestResult {
 			fmt.Print(".")
 		} else {
 			fmt.Print("F")
+			failures++
 		}
 		results = append(results, tr)
 	}
-	fmt.Println("")
+	fmt.Printf("\n%d examples, %d failures\n", len(results), failures)
 
 	return results
 }
