@@ -14,8 +14,6 @@
 
 package test
 
-import "fmt"
-
 type Runner struct{}
 
 type TestResult struct {
@@ -28,20 +26,17 @@ func NewRunner() *Runner {
 
 func (r *Runner) RunTests(tests []*Test) []*TestResult {
 	results := make([]*TestResult, 0, len(tests))
+	reporter := NewReporter()
 
-	failures := 0
+	reporter.OnRunStart()
 	for _, t := range tests {
+		reporter.OnTestStart(t)
 		er := t.ToExec().Run()
 		tr := assertResult(t, er)
-		if tr.IsSuccess {
-			fmt.Print(".")
-		} else {
-			fmt.Print("F")
-			failures++
-		}
+		reporter.OnTestComplete(t, tr)
 		results = append(results, tr)
 	}
-	fmt.Printf("\n%d examples, %d failures\n", len(results), failures)
+	reporter.OnRunComplete(results)
 
 	return results
 }
