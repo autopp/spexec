@@ -14,6 +14,8 @@
 
 package test
 
+import "bytes"
+
 type Runner struct{}
 
 type TestResult struct {
@@ -43,6 +45,6 @@ func (r *Runner) RunTests(tests []*Test) []*TestResult {
 
 func assertResult(t *Test, r *ExecResult) *TestResult {
 	return &TestResult{
-		IsSuccess: (t.Status == nil || *t.Status == r.Status) && (t.Stdout == nil || *t.Stdout == string(r.Stdout)) && (t.Stderr == nil || *t.Stderr == string(r.Stderr)),
+		IsSuccess: (t.Status == nil || *t.Status == r.Status) && (t.Stdout == nil || bytes.Equal([]byte(*t.Stdout), r.Stdout)) && (t.Stderr == nil || bytes.Equal([]byte(*t.Stderr), r.Stderr)),
 	}
 }
