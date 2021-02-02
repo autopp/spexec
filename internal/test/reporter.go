@@ -14,14 +14,17 @@
 
 package test
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 // Reporter is the interface implemented by test reporter
 type Reporter interface {
-	OnRunStart()
-	OnTestStart(t *Test)
-	OnTestComplete(t *Test, tr *TestResult)
-	OnRunComplete(trs []*TestResult)
+	OnRunStart(w io.Writer)
+	OnTestStart(w io.Writer, t *Test)
+	OnTestComplete(w io.Writer, t *Test, tr *TestResult)
+	OnRunComplete(w io.Writer, trs []*TestResult)
 }
 
 func NewReporter() Reporter {
@@ -30,26 +33,26 @@ func NewReporter() Reporter {
 
 type SimpleReporter struct{}
 
-func (sr *SimpleReporter) OnRunStart() {
+func (sr *SimpleReporter) OnRunStart(w io.Writer) {
 }
 
-func (sr *SimpleReporter) OnTestStart(t *Test) {
+func (sr *SimpleReporter) OnTestStart(w io.Writer, t *Test) {
 }
 
-func (sr *SimpleReporter) OnTestComplete(t *Test, tr *TestResult) {
+func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *Test, tr *TestResult) {
 	if tr.IsSuccess {
-		fmt.Print(".")
+		fmt.Fprint(w, ".")
 	} else {
-		fmt.Print("f")
+		fmt.Fprint(w, "f")
 	}
 }
 
-func (sr *SimpleReporter) OnRunComplete(trs []*TestResult) {
+func (sr *SimpleReporter) OnRunComplete(w io.Writer, trs []*TestResult) {
 	failures := 0
 	for _, tr := range trs {
 		if !tr.IsSuccess {
 			failures++
 		}
 	}
-	fmt.Printf("\n%d examples, %d failures\n", len(trs), failures)
+	fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), failures)
 }

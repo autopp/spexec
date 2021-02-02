@@ -14,7 +14,10 @@
 
 package test
 
-import "bytes"
+import (
+	"bytes"
+	"os"
+)
 
 type Runner struct{}
 
@@ -29,16 +32,17 @@ func NewRunner() *Runner {
 func (r *Runner) RunTests(tests []*Test) []*TestResult {
 	results := make([]*TestResult, 0, len(tests))
 	reporter := NewReporter()
+	w := os.Stdout
 
-	reporter.OnRunStart()
+	reporter.OnRunStart(w)
 	for _, t := range tests {
-		reporter.OnTestStart(t)
+		reporter.OnTestStart(w, t)
 		er := t.ToExec().Run()
 		tr := assertResult(t, er)
-		reporter.OnTestComplete(t, tr)
+		reporter.OnTestComplete(w, t, tr)
 		results = append(results, tr)
 	}
-	reporter.OnRunComplete(results)
+	reporter.OnRunComplete(w, results)
 
 	return results
 }
