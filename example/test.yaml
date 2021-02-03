@@ -10,3 +10,12 @@ tests:
       - "false"
     expect:
       status: 1
+  - command:
+      - printenv
+      - ANSWER
+    env:
+      - name: ANSWER
+        value: "42"
+    expect:
+      status: 0
+      stdout: "42\n"

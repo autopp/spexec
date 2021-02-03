@@ -27,7 +27,11 @@ type Config struct {
 
 type Test struct {
 	Command []string `yaml:"command"`
-	Expect  *struct {
+	Env     []struct {
+		Name  string `yaml:"name"`
+		Value string `yaml:"value"`
+	} `yaml:"env"`
+	Expect *struct {
 		Status *int    `yaml:"status"`
 		Stdout *string `yaml:"stdout"`
 		Stderr *string `yaml:"stderr"`

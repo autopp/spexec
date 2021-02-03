@@ -21,12 +21,18 @@ type Test struct {
 	Status  *int
 	Stdout  *string
 	Stderr  *string
+	Env     map[string]string
 }
 
 // NewTest creates new Test instance from config
 func NewTest(c *config.Test) *Test {
 	t := &Test{
 		Command: c.Command,
+		Env:     make(map[string]string),
+	}
+
+	for _, kv := range c.Env {
+		t.Env[kv.Name] = kv.Value
 	}
 
 	if c.Expect != nil {
@@ -42,5 +48,6 @@ func NewTest(c *config.Test) *Test {
 func (t *Test) ToExec() *Exec {
 	return &Exec{
 		Command: t.Command,
+		Env:     t.Env,
 	}
 }

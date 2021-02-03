@@ -16,6 +16,8 @@ package test
 
 import (
 	"bytes"
+	"fmt"
+	"os"
 	"os/exec"
 )
 
@@ -27,6 +29,7 @@ type ExecResult struct {
 
 type Exec struct {
 	Command []string
+	Env     map[string]string
 }
 
 func (e *Exec) Run() *ExecResult {
@@ -35,6 +38,11 @@ func (e *Exec) Run() *ExecResult {
 	cmd.Stdout = stdout
 	stderr := new(bytes.Buffer)
 	cmd.Stderr = stderr
+	cmd.Env = os.Environ()
+	for name, v := range e.Env {
+		kv := fmt.Sprintf("%s=%s", name, v)
+		cmd.Env = append(cmd.Env, kv)
+	}
 	cmd.Run()
 
 	return &ExecResult{
