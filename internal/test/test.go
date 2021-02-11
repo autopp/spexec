@@ -17,6 +17,7 @@ package test
 import "github.com/autopp/spexec/internal/config"
 
 type Test struct {
+	Name    string
 	Command []string
 	Status  *int
 	Stdout  *string
@@ -27,6 +28,7 @@ type Test struct {
 // NewTest creates new Test instance from config
 func NewTest(c *config.Test) *Test {
 	t := &Test{
+		Name:    c.Name,
 		Command: c.Command,
 		Env:     make(map[string]string),
 	}

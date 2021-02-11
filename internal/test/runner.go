@@ -22,6 +22,7 @@ import (
 type Runner struct{}
 
 type TestResult struct {
+	Name      string
 	IsSuccess bool
 }
 
@@ -49,6 +50,7 @@ func (r *Runner) RunTests(tests []*Test) []*TestResult {
 
 func assertResult(t *Test, r *ExecResult) *TestResult {
 	return &TestResult{
+		Name:      t.Name,
 		IsSuccess: (t.Status == nil || *t.Status == r.Status) && (t.Stdout == nil || bytes.Equal([]byte(*t.Stdout), r.Stdout)) && (t.Stderr == nil || bytes.Equal([]byte(*t.Stderr), r.Stderr)),
 	}
 }
