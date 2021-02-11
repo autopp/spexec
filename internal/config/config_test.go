@@ -28,6 +28,7 @@ func TestLoad(t *testing.T) {
 		expected := &Config{
 			Tests: []Test{
 				{
+					Name:    "test_answer",
 					Command: []string{"echo", "42"},
 					Env: []struct {
 						Name  string `yaml:"name"`

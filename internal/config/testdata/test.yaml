@@ -1,5 +1,6 @@
 tests:
-  - command:
+  - name: test_answer
+    command:
       - echo
       - "42"
     expect:

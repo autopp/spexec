@@ -26,6 +26,7 @@ type Config struct {
 }
 
 type Test struct {
+	Name    string   `yaml:"name"`
 	Command []string `yaml:"command"`
 	Env     []struct {
 		Name  string `yaml:"name"`
