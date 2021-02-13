@@ -20,6 +20,7 @@ import (
 	"os"
 
 	"github.com/autopp/spexec/internal/config"
+	"github.com/autopp/spexec/internal/runner"
 	"github.com/autopp/spexec/internal/test"
 	"github.com/spf13/cobra"
 )
@@ -53,7 +54,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 				tests[i] = test.NewTest(&t)
 			}
 
-			runner := test.NewRunner()
+			runner := runner.NewRunner()
 			results := runner.RunTests(tests)
 
 			allGreen := true

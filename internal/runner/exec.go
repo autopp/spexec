@@ -12,13 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package test
+package runner
 
 import (
 	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/autopp/spexec/internal/test"
 )
 
 type ExecResult struct {
@@ -30,6 +32,13 @@ type ExecResult struct {
 type Exec struct {
 	Command []string
 	Env     map[string]string
+}
+
+func NewExec(t *test.Test) *Exec {
+	return &Exec{
+		Command: t.Command,
+		Env:     t.Env,
+	}
 }
 
 func (e *Exec) Run() *ExecResult {

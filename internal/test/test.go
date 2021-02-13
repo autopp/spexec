@@ -45,11 +45,3 @@ func NewTest(c *config.Test) *Test {
 
 	return t
 }
-
-// ToExec converts self to Exec
-func (t *Test) ToExec() *Exec {
-	return &Exec{
-		Command: t.Command,
-		Env:     t.Env,
-	}
-}
