@@ -21,7 +21,6 @@ import (
 
 	"github.com/autopp/spexec/internal/config"
 	"github.com/autopp/spexec/internal/runner"
-	"github.com/autopp/spexec/internal/test"
 	"github.com/spf13/cobra"
 )
 
@@ -44,14 +43,9 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			if err != nil {
 				return err
 			}
-			c, err := config.Load(f)
+			tests, err := config.Load(f)
 			if err != nil {
 				return err
-			}
-
-			tests := make([]*test.Test, len(c.Tests))
-			for i, t := range c.Tests {
-				tests[i] = test.NewTest(&t)
 			}
 
 			runner := runner.NewRunner()

@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/autopp/spexec/internal/test"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -25,24 +26,13 @@ func TestLoad(t *testing.T) {
 	if c, err := Load(r); assert.NoError(t, err) {
 		status := 0
 		stdout := "42\n"
-		expected := &Config{
-			Tests: []Test{
-				{
-					Name:    "test_answer",
-					Command: []string{"echo", "42"},
-					Env: []struct {
-						Name  string `yaml:"name"`
-						Value string `yaml:"value"`
-					}{{Name: "ANSWER", Value: "42"}},
-					Expect: &struct {
-						Status *int    `yaml:"status"`
-						Stdout *string `yaml:"stdout"`
-						Stderr *string `yaml:"stderr"`
-					}{
-						Status: &status,
-						Stdout: &stdout,
-					},
-				},
+		expected := []*test.Test{
+			{
+				Name:    "test_answer",
+				Command: []string{"echo", "42"},
+				Env:     map[string]string{"ANSWER": "42"},
+				Status:  &status,
+				Stdout:  &stdout,
 			},
 		}
 

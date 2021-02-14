@@ -14,8 +14,6 @@
 
 package test
 
-import "github.com/autopp/spexec/internal/config"
-
 type Test struct {
 	Name    string
 	Command []string
@@ -23,25 +21,4 @@ type Test struct {
 	Stdout  *string
 	Stderr  *string
 	Env     map[string]string
-}
-
-// NewTest creates new Test instance from config
-func NewTest(c *config.Test) *Test {
-	t := &Test{
-		Name:    c.Name,
-		Command: c.Command,
-		Env:     make(map[string]string),
-	}
-
-	for _, kv := range c.Env {
-		t.Env[kv.Name] = kv.Value
-	}
-
-	if c.Expect != nil {
-		t.Status = c.Expect.Status
-		t.Stdout = c.Expect.Stdout
-		t.Stderr = c.Expect.Stderr
-	}
-
-	return t
 }

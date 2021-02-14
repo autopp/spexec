@@ -18,6 +18,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/autopp/spexec/internal/test"
 	"gopkg.in/yaml.v2"
 )
 
@@ -39,7 +40,7 @@ type Test struct {
 	} `yaml:"expect"`
 }
 
-func Load(r io.Reader) (*Config, error) {
+func Load(r io.Reader) ([]*test.Test, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
@@ -47,6 +48,31 @@ func Load(r io.Reader) (*Config, error) {
 
 	c := new(Config)
 	yaml.Unmarshal(b, c)
+	tests := make([]*test.Test, len(c.Tests))
+	for i, t := range c.Tests {
+		tests[i] = newTest(&t)
+	}
 
-	return c, nil
+	return tests, nil
+}
+
+// NewTest creates new Test instance from config
+func newTest(c *Test) *test.Test {
+	t := &test.Test{
+		Name:    c.Name,
+		Command: c.Command,
+		Env:     make(map[string]string),
+	}
+
+	for _, kv := range c.Env {
+		t.Env[kv.Name] = kv.Value
+	}
+
+	if c.Expect != nil {
+		t.Status = c.Expect.Status
+		t.Stdout = c.Expect.Stdout
+		t.Stderr = c.Expect.Stderr
+	}
+
+	return t
 }
