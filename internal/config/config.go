@@ -47,7 +47,10 @@ func Load(r io.Reader) ([]*test.Test, error) {
 	}
 
 	c := new(Config)
-	yaml.Unmarshal(b, c)
+	err = yaml.Unmarshal(b, c)
+	if err != nil {
+		return nil, err
+	}
 	tests := make([]*test.Test, len(c.Tests))
 	for i, t := range c.Tests {
 		tests[i] = newTest(&t)
