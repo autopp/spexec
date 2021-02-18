@@ -1,5 +1,7 @@
 package config
 
+import "fmt"
+
 type validator struct {
 	paths  []string
 	errors []string
@@ -27,4 +29,12 @@ func (v *validator) inPath(path string, f func()) {
 	v.pushPath(path)
 	defer v.popPath()
 	f()
+}
+
+func (v *validator) inField(field string, f func()) {
+	v.inPath("."+field, f)
+}
+
+func (v *validator) inIndex(index int, f func()) {
+	v.inPath(fmt.Sprintf("[%d]", index), f)
 }
