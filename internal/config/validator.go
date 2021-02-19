@@ -1,16 +1,24 @@
 package config
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+type violation struct {
+	path    string
+	message string
+}
 
 type validator struct {
-	paths  []string
-	errors []string
+	paths      []string
+	violations []violation
 }
 
 func newValidator() *validator {
 	return &validator{
-		paths:  make([]string, 0),
-		errors: make([]string, 0),
+		paths:      []string{"$"},
+		violations: make([]violation, 0),
 	}
 }
 
@@ -19,7 +27,7 @@ func (v *validator) pushPath(path string) {
 }
 
 func (v *validator) popPath() {
-	if len(v.paths) == 0 {
+	if len(v.paths) < 2 {
 		panic("pop empty validator.paths ")
 	}
 	v.paths = v.paths[:len(v.paths)-1]
@@ -37,4 +45,8 @@ func (v *validator) inField(field string, f func()) {
 
 func (v *validator) inIndex(index int, f func()) {
 	v.inPath(fmt.Sprintf("[%d]", index), f)
+}
+
+func (v *validator) addViolation(message string) {
+	v.violations = append(v.violations, violation{path: strings.Join(v.paths, ""), message: message})
 }
