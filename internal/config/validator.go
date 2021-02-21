@@ -1,6 +1,7 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -69,4 +70,17 @@ func (v *validator) toBeSeq(x interface{}) (configSeq, bool) {
 	}
 	v.addViolation("should be seq, but is %T", x)
 	return nil, false
+}
+
+func (v *validator) error() error {
+	if len(v.violations) == 0 {
+		return nil
+	}
+
+	b := strings.Builder{}
+	for _, violation := range v.violations {
+		b.WriteString(violation.path + ": " + violation.message + "\n")
+	}
+
+	return errors.New(b.String())
 }
