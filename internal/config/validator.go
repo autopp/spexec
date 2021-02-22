@@ -37,42 +37,42 @@ func (v *validator) popPath() {
 	v.paths = v.paths[:len(v.paths)-1]
 }
 
-func (v *validator) inPath(path string, f func()) {
+func (v *validator) InPath(path string, f func()) {
 	v.pushPath(path)
 	defer v.popPath()
 	f()
 }
 
-func (v *validator) inField(field string, f func()) {
-	v.inPath("."+field, f)
+func (v *validator) InField(field string, f func()) {
+	v.InPath("."+field, f)
 }
 
-func (v *validator) inIndex(index int, f func()) {
-	v.inPath(fmt.Sprintf("[%d]", index), f)
+func (v *validator) InIndex(index int, f func()) {
+	v.InPath(fmt.Sprintf("[%d]", index), f)
 }
 
-func (v *validator) addViolation(format string, args ...interface{}) {
+func (v *validator) AddViolation(format string, args ...interface{}) {
 	message := fmt.Sprintf(format, args...)
 	v.violations = append(v.violations, violation{path: strings.Join(v.paths, ""), message: message})
 }
 
-func (v *validator) toBeMap(x interface{}) (configMap, bool) {
+func (v *validator) MustBeMap(x interface{}) (configMap, bool) {
 	if m, ok := x.(configMap); ok {
 		return m, true
 	}
-	v.addViolation("should be map, but is %T", x)
+	v.AddViolation("should be map, but is %T", x)
 	return nil, false
 }
 
-func (v *validator) toBeSeq(x interface{}) (configSeq, bool) {
+func (v *validator) MustBeSeq(x interface{}) (configSeq, bool) {
 	if s, ok := x.(configSeq); ok {
 		return s, true
 	}
-	v.addViolation("should be seq, but is %T", x)
+	v.AddViolation("should be seq, but is %T", x)
 	return nil, false
 }
 
-func (v *validator) error() error {
+func (v *validator) Error() error {
 	if len(v.violations) == 0 {
 		return nil
 	}
