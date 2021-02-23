@@ -72,6 +72,28 @@ func (v *validator) MustBeSeq(x interface{}) (configSeq, bool) {
 	return nil, false
 }
 
+func (v *validator) mustHave(m configMap, key string) (interface{}, bool) {
+	x, ok := m[key]
+	if !ok {
+		v.AddViolation("should have .%s", key)
+	}
+	return x, ok
+}
+
+func (v *validator) MustHaveSeq(m configMap, key string) (configSeq, bool) {
+	x, ok := v.mustHave(m, key)
+	if !ok {
+		return nil, false
+	}
+
+	var s configSeq
+	v.InField(key, func() {
+		s, ok = v.MustBeSeq(x)
+	})
+
+	return s, ok
+}
+
 func (v *validator) Error() error {
 	if len(v.violations) == 0 {
 		return nil
