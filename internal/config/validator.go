@@ -89,7 +89,7 @@ func (v *validator) mustHave(m configMap, key string) (interface{}, bool) {
 	return x, ok
 }
 
-func (v *validator) MustHaveSeq(m configMap, key string) (configSeq, bool) {
+func (v *validator) MustHaveSeq(m configMap, key string, f func(configSeq)) (configSeq, bool) {
 	x, ok := v.mustHave(m, key)
 	if !ok {
 		return nil, false
@@ -98,6 +98,9 @@ func (v *validator) MustHaveSeq(m configMap, key string) (configSeq, bool) {
 	var s configSeq
 	v.InField(key, func() {
 		s, ok = v.MustBeSeq(x)
+		if ok {
+			f(s)
+		}
 	})
 
 	return s, ok
@@ -114,7 +117,7 @@ func (v *validator) MayHaveString(m configMap, key string) (string, bool, bool) 
 		s, ok = v.MustBeString(x)
 	})
 
-	return s, true, ok
+	return s, ok, ok
 }
 
 func (v *validator) MustHaveString(m configMap, key string) (string, bool) {
