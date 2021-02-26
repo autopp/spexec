@@ -106,6 +106,14 @@ func (v *validator) MustHaveSeq(m configMap, key string, f func(configSeq)) (con
 	return s, ok
 }
 
+func (v *validator) ForInSeq(s configSeq, f func(i int, x interface{})) {
+	for i, x := range s {
+		v.InIndex(i, func() {
+			f(i, x)
+		})
+	}
+}
+
 func (v *validator) MayHaveString(m configMap, key string) (string, bool, bool) {
 	x, ok := m[key]
 	if !ok {
