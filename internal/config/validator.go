@@ -89,6 +89,23 @@ func (v *validator) mustHave(m configMap, key string) (interface{}, bool) {
 	return x, ok
 }
 
+func (v *validator) MayHaveMap(m configMap, key string, f func(configMap)) (configMap, bool, bool) {
+	x, ok := m[key]
+	if !ok {
+		return nil, false, true
+	}
+
+	var inner configMap
+	v.InField(key, func() {
+		inner, ok = v.MustBeMap(x)
+		if ok {
+			f(inner)
+		}
+	})
+
+	return inner, ok, ok
+}
+
 func (v *validator) MayHaveSeq(m configMap, key string, f func(configSeq)) (configSeq, bool, bool) {
 	x, ok := m[key]
 	if !ok {
