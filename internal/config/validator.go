@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -81,6 +82,22 @@ func (v *validator) MustBeString(x interface{}) (string, bool) {
 	return s, ok
 }
 
+func (v *validator) MustBeInt(x interface{}) (int, bool) {
+	switch n := x.(type) {
+	case int:
+		return n, true
+	case json.Number:
+		i, ok := n.Int64()
+		if ok != nil {
+			v.AddViolation("should be integer but is %T", x)
+		}
+		return int(i), ok == nil
+	default:
+		v.AddViolation("should be integer but is %T", x)
+		return 0, false
+	}
+}
+
 func (v *validator) mustHave(m configMap, key string) (interface{}, bool) {
 	x, ok := m[key]
 	if !ok {
@@ -154,6 +171,20 @@ func (v *validator) MayHaveString(m configMap, key string) (string, bool, bool) 
 func (v *validator) MustHaveString(m configMap, key string) (string, bool) {
 	s, exists, ok := v.MayHaveString(m, key)
 	return s, exists && ok
+}
+
+func (v *validator) MayHaveInt(m configMap, key string) (int, bool, bool) {
+	x, ok := m[key]
+	if !ok {
+		return 0, false, true
+	}
+
+	var i int
+	v.InField(key, func() {
+		i, ok = v.MustBeInt(x)
+	})
+
+	return i, ok, ok
 }
 
 func (v *validator) Error() error {
