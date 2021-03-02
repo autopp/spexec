@@ -7,8 +7,8 @@ import (
 	"strings"
 )
 
-type configMap map[string]interface{}
-type configSeq []interface{}
+type configMap = map[string]interface{}
+type configSeq = []interface{}
 
 type violation struct {
 	path    string

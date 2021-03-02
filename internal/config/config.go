@@ -22,22 +22,23 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Config struct {
-	Tests []Test `yaml:"tests"`
+// xxxSchema are structs for documentation, not used
+type configSchema struct {
+	tests []testSchema
 }
 
-type Test struct {
-	Name    string   `yaml:"name"`
-	Command []string `yaml:"command"`
-	Env     []struct {
-		Name  string `yaml:"name"`
-		Value string `yaml:"value"`
-	} `yaml:"env"`
-	Expect *struct {
-		Status *int    `yaml:"status"`
-		Stdout *string `yaml:"stdout"`
-		Stderr *string `yaml:"stderr"`
-	} `yaml:"expect"`
+type testSchema struct {
+	name    string
+	command []string
+	env     []struct {
+		name  string
+		value string
+	}
+	expect *struct {
+		status *int
+		stdout *string
+		stderr *string
+	}
 }
 
 func Load(r io.Reader) ([]*test.Test, error) {
@@ -45,37 +46,86 @@ func Load(r io.Reader) ([]*test.Test, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	c := new(Config)
-	err = yaml.Unmarshal(b, c)
+	var x interface{}
+	err = yaml.Unmarshal(b, &x)
 	if err != nil {
 		return nil, err
 	}
-	tests := make([]*test.Test, len(c.Tests))
-	for i, t := range c.Tests {
-		tests[i] = newTest(&t)
-	}
 
-	return tests, nil
+	ts, err := parseConfig(x)
+	return ts, err
 }
 
-// NewTest creates new Test instance from config
-func newTest(c *Test) *test.Test {
-	t := &test.Test{
-		Name:    c.Name,
-		Command: c.Command,
-		Env:     make(map[string]string),
+func parseConfig(c interface{}) ([]*test.Test, error) {
+	v := newValidator()
+	cmap, ok := v.MustBeMap(c)
+	if !ok {
+		return nil, v.Error()
 	}
 
-	for _, kv := range c.Env {
-		t.Env[kv.Name] = kv.Value
+	ts := make([]*test.Test, 0)
+	v.MustHaveSeq(cmap, "tests", func(tcs configSeq) {
+		v.ForInSeq(tcs, func(i int, tc interface{}) {
+			t := parseTest(v, tc)
+			ts = append(ts, t)
+		})
+	})
+
+	return ts, v.Error()
+}
+
+func parseTest(v *validator, x interface{}) *test.Test {
+	tc, ok := v.MustBeMap(x)
+	if !ok {
+		return nil
 	}
 
-	if c.Expect != nil {
-		t.Status = c.Expect.Status
-		t.Stdout = c.Expect.Stdout
-		t.Stderr = c.Expect.Stderr
+	t := new(test.Test)
+	name, exists, ok := v.MayHaveString(tc, "name")
+	if exists {
+		t.Name = name
 	}
+
+	v.MustHaveSeq(tc, "command", func(command configSeq) {
+		t.Command = make([]string, len(command))
+		v.ForInSeq(command, func(i int, x interface{}) {
+			c, _ := v.MustBeString(x)
+			t.Command[i] = c
+		})
+	})
+
+	v.MayHaveSeq(tc, "env", func(env configSeq) {
+		t.Env = make(map[string]string)
+		v.ForInSeq(env, func(i int, x interface{}) {
+			envVar, ok := v.MustBeMap(x)
+			if !ok {
+				return
+			}
+			name, nameOk := v.MustHaveString(envVar, "name")
+			value, valueOk := v.MustHaveString(envVar, "value")
+
+			if nameOk && valueOk {
+				t.Env[name] = value
+			}
+		})
+	})
+
+	v.MayHaveMap(tc, "expect", func(expect configMap) {
+		status, exists, _ := v.MayHaveInt(expect, "status")
+		if exists {
+			t.Status = &status
+		}
+
+		stdout, exists, _ := v.MayHaveString(expect, "stdout")
+		if exists {
+			t.Stdout = &stdout
+		}
+
+		stderr, exists, _ := v.MayHaveString(expect, "stderr")
+		if exists {
+			t.Stderr = &stderr
+		}
+	})
 
 	return t
 }
