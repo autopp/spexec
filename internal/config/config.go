@@ -16,7 +16,6 @@ package config
 
 import (
 	"io"
-	"io/ioutil"
 
 	"github.com/autopp/spexec/internal/test"
 	"gopkg.in/yaml.v3"
@@ -42,7 +41,7 @@ type testSchema struct {
 }
 
 func Load(r io.Reader) ([]*test.Test, error) {
-	b, err := ioutil.ReadAll(r)
+	b, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
