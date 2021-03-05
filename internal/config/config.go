@@ -15,6 +15,8 @@
 package config
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 
 	"github.com/autopp/spexec/internal/test"
@@ -40,13 +42,30 @@ type testSchema struct {
 	}
 }
 
-func Load(r io.Reader) ([]*test.Test, error) {
+type ConfigFormat string
+
+const YAMLFormat ConfigFormat = "yaml"
+const JSONFormat ConfigFormat = "json"
+
+func Load(r io.Reader, format ConfigFormat) ([]*test.Test, error) {
 	b, err := io.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
+
 	var x interface{}
-	err = yaml.Unmarshal(b, &x)
+	switch format {
+	case YAMLFormat:
+		err = yaml.Unmarshal(b, &x)
+		if err != nil {
+			return nil, err
+		}
+	case JSONFormat:
+		err = json.Unmarshal(b, &b)
+	default:
+		return nil, fmt.Errorf("unknown config format name: %q", format)
+	}
+
 	if err != nil {
 		return nil, err
 	}

@@ -23,7 +23,7 @@ func openConfig(name string) io.Reader {
 func TestLoad(t *testing.T) {
 	r := openConfig("test.yaml")
 
-	if c, err := Load(r); assert.NoError(t, err) {
+	if c, err := Load(r, YAMLFormat); assert.NoError(t, err) {
 		status := 0
 		stdout := "42\n"
 		expected := []*test.Test{

@@ -43,7 +43,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			if err != nil {
 				return err
 			}
-			tests, err := config.Load(f)
+			tests, err := config.Load(f, config.YAMLFormat)
 			if err != nil {
 				return err
 			}
