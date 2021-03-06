@@ -18,6 +18,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/autopp/spexec/internal/config"
 	"github.com/autopp/spexec/internal/runner"
@@ -39,11 +40,17 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 				return nil
 			}
 
-			f, err := os.Open(args[0])
+			filename := args[0]
+			f, err := os.Open(filename)
 			if err != nil {
 				return err
 			}
-			tests, err := config.Load(f, config.YAMLFormat)
+			format := config.JSONFormat
+			ext := filepath.Ext(filename)
+			if ext == ".yml" || ext == ".yaml" {
+				format = config.YAMLFormat
+			}
+			tests, err := config.Load(f, format)
 			if err != nil {
 				return err
 			}
