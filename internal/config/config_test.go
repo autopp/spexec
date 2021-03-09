@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/autopp/spexec/internal/test"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,7 +26,7 @@ func TestLoad(t *testing.T) {
 	if c, err := Load(r, YAMLFormat); assert.NoError(t, err) {
 		status := 0
 		stdout := "42\n"
-		expected := []*test.Test{
+		expected := []*model.Test{
 			{
 				Name:    "test_answer",
 				Command: []string{"echo", "42"},

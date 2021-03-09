@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/autopp/spexec/internal/test"
+	test "github.com/autopp/spexec/internal/model"
 	"gopkg.in/yaml.v3"
 )
 

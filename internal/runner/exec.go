@@ -20,7 +20,7 @@ import (
 	"os"
 	"os/exec"
 
-	"github.com/autopp/spexec/internal/test"
+	"github.com/autopp/spexec/internal/model"
 )
 
 type ExecResult struct {
@@ -34,7 +34,7 @@ type Exec struct {
 	Env     map[string]string
 }
 
-func NewExec(t *test.Test) *Exec {
+func NewExec(t *model.Test) *Exec {
 	return &Exec{
 		Command: t.Command,
 		Env:     t.Env,

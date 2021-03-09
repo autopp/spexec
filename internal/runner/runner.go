@@ -18,7 +18,7 @@ import (
 	"bytes"
 	"os"
 
-	"github.com/autopp/spexec/internal/test"
+	"github.com/autopp/spexec/internal/model"
 )
 
 type Runner struct{}
@@ -32,7 +32,7 @@ func NewRunner() *Runner {
 	return &Runner{}
 }
 
-func (r *Runner) RunTests(tests []*test.Test) []*TestResult {
+func (r *Runner) RunTests(tests []*model.Test) []*TestResult {
 	results := make([]*TestResult, 0, len(tests))
 	reporter := NewReporter()
 	w := os.Stdout
@@ -50,7 +50,7 @@ func (r *Runner) RunTests(tests []*test.Test) []*TestResult {
 	return results
 }
 
-func assertResult(t *test.Test, r *ExecResult) *TestResult {
+func assertResult(t *model.Test, r *ExecResult) *TestResult {
 	return &TestResult{
 		Name:      t.Name,
 		IsSuccess: (t.Status == nil || *t.Status == r.Status) && (t.Stdout == nil || bytes.Equal([]byte(*t.Stdout), r.Stdout)) && (t.Stderr == nil || bytes.Equal([]byte(*t.Stderr), r.Stderr)),

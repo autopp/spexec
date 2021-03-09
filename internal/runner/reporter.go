@@ -18,14 +18,14 @@ import (
 	"fmt"
 	"io"
 
-	"github.com/autopp/spexec/internal/test"
+	"github.com/autopp/spexec/internal/model"
 )
 
 // Reporter is the interface implemented by test reporter
 type Reporter interface {
 	OnRunStart(w io.Writer)
-	OnTestStart(w io.Writer, t *test.Test)
-	OnTestComplete(w io.Writer, t *test.Test, tr *TestResult)
+	OnTestStart(w io.Writer, t *model.Test)
+	OnTestComplete(w io.Writer, t *model.Test, tr *TestResult)
 	OnRunComplete(w io.Writer, trs []*TestResult)
 }
 
@@ -38,10 +38,10 @@ type SimpleReporter struct{}
 func (sr *SimpleReporter) OnRunStart(w io.Writer) {
 }
 
-func (sr *SimpleReporter) OnTestStart(w io.Writer, t *test.Test) {
+func (sr *SimpleReporter) OnTestStart(w io.Writer, t *model.Test) {
 }
 
-func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *test.Test, tr *TestResult) {
+func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *TestResult) {
 	if tr.IsSuccess {
 		fmt.Fprint(w, ".")
 	} else {
