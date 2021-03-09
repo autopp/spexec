@@ -25,8 +25,8 @@ import (
 type Reporter interface {
 	OnRunStart(w io.Writer)
 	OnTestStart(w io.Writer, t *model.Test)
-	OnTestComplete(w io.Writer, t *model.Test, tr *TestResult)
-	OnRunComplete(w io.Writer, trs []*TestResult)
+	OnTestComplete(w io.Writer, t *model.Test, tr *model.TestResult)
+	OnRunComplete(w io.Writer, trs []*model.TestResult)
 }
 
 func NewReporter() Reporter {
@@ -41,7 +41,7 @@ func (sr *SimpleReporter) OnRunStart(w io.Writer) {
 func (sr *SimpleReporter) OnTestStart(w io.Writer, t *model.Test) {
 }
 
-func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *TestResult) {
+func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *model.TestResult) {
 	if tr.IsSuccess {
 		fmt.Fprint(w, ".")
 	} else {
@@ -49,7 +49,7 @@ func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *TestRes
 	}
 }
 
-func (sr *SimpleReporter) OnRunComplete(w io.Writer, trs []*TestResult) {
+func (sr *SimpleReporter) OnRunComplete(w io.Writer, trs []*model.TestResult) {
 	failures := 0
 	for _, tr := range trs {
 		if !tr.IsSuccess {

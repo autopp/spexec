@@ -23,17 +23,12 @@ import (
 
 type Runner struct{}
 
-type TestResult struct {
-	Name      string
-	IsSuccess bool
-}
-
 func NewRunner() *Runner {
 	return &Runner{}
 }
 
-func (r *Runner) RunTests(tests []*model.Test) []*TestResult {
-	results := make([]*TestResult, 0, len(tests))
+func (r *Runner) RunTests(tests []*model.Test) []*model.TestResult {
+	results := make([]*model.TestResult, 0, len(tests))
 	reporter := NewReporter()
 	w := os.Stdout
 
@@ -50,8 +45,8 @@ func (r *Runner) RunTests(tests []*model.Test) []*TestResult {
 	return results
 }
 
-func assertResult(t *model.Test, r *ExecResult) *TestResult {
-	return &TestResult{
+func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
+	return &model.TestResult{
 		Name:      t.Name,
 		IsSuccess: (t.Status == nil || *t.Status == r.Status) && (t.Stdout == nil || bytes.Equal([]byte(*t.Stdout), r.Stdout)) && (t.Stderr == nil || bytes.Equal([]byte(*t.Stderr), r.Stderr)),
 	}
