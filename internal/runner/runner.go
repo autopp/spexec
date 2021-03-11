@@ -27,9 +27,8 @@ func NewRunner() *Runner {
 	return &Runner{}
 }
 
-func (r *Runner) RunTests(tests []*model.Test) []*model.TestResult {
+func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*model.TestResult {
 	results := make([]*model.TestResult, 0, len(tests))
-	reporter := reporter.New()
 
 	reporter.OnRunStart()
 	for _, t := range tests {

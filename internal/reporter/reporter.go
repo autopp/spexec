@@ -35,9 +35,27 @@ type ReportFormatter interface {
 	OnRunComplete(w io.Writer, trs []*model.TestResult)
 }
 
+// Option is functional option of New
+type Option func(r *Reporter) error
+
+// WithWriter is a option of New to specify output writer
+func WithWriter(w io.Writer) Option {
+	return func(r *Reporter) error {
+		r.w = w
+		return nil
+	}
+}
+
 // New returns a new Reporter
-func New() *Reporter {
-	return &Reporter{w: os.Stdout, rf: &SimpleFormatter{}}
+func New(opts ...Option) (*Reporter, error) {
+	r := &Reporter{w: os.Stdout, rf: &SimpleFormatter{}}
+
+	for _, o := range append([]Option{WithWriter(os.Stdout)}, opts...) {
+		if err := o(r); err != nil {
+			return nil, err
+		}
+	}
+	return r, nil
 }
 
 // OnRunStart should be called before all test execution
