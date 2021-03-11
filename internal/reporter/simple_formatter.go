@@ -22,25 +22,25 @@ import (
 )
 
 /*
-SimpleReporter implements Reporter.
+SimpleFormatter implements Reporter.
 
 Example of output:
 
 	.F.
 	3 examples, 1 failures
 */
-type SimpleReporter struct{}
+type SimpleFormatter struct{}
 
 // OnRunStart is part of Reporter
-func (sr *SimpleReporter) OnRunStart(w io.Writer) {
+func (sr *SimpleFormatter) OnRunStart(w io.Writer) {
 }
 
 // OnTestStart is part of Reporter
-func (sr *SimpleReporter) OnTestStart(w io.Writer, t *model.Test) {
+func (sr *SimpleFormatter) OnTestStart(w io.Writer, t *model.Test) {
 }
 
 // OnTestComplete is part of Reporter
-func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *model.TestResult) {
+func (sr *SimpleFormatter) OnTestComplete(w io.Writer, t *model.Test, tr *model.TestResult) {
 	if tr.IsSuccess {
 		fmt.Fprint(w, ".")
 	} else {
@@ -49,7 +49,7 @@ func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *model.T
 }
 
 // OnRunComplete is part of Reporter
-func (sr *SimpleReporter) OnRunComplete(w io.Writer, trs []*model.TestResult) {
+func (sr *SimpleFormatter) OnRunComplete(w io.Writer, trs []*model.TestResult) {
 	failures := 0
 	for _, tr := range trs {
 		if !tr.IsSuccess {

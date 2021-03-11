@@ -16,7 +16,6 @@ package runner
 
 import (
 	"bytes"
-	"os"
 
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
@@ -30,18 +29,17 @@ func NewRunner() *Runner {
 
 func (r *Runner) RunTests(tests []*model.Test) []*model.TestResult {
 	results := make([]*model.TestResult, 0, len(tests))
-	reporter := reporter.NewReporter()
-	w := os.Stdout
+	reporter := reporter.New()
 
-	reporter.OnRunStart(w)
+	reporter.OnRunStart()
 	for _, t := range tests {
-		reporter.OnTestStart(w, t)
+		reporter.OnTestStart(t)
 		er := NewExec(t).Run()
 		tr := assertResult(t, er)
-		reporter.OnTestComplete(w, t, tr)
+		reporter.OnTestComplete(t, tr)
 		results = append(results, tr)
 	}
-	reporter.OnRunComplete(w, results)
+	reporter.OnRunComplete(results)
 
 	return results
 }

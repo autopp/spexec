@@ -16,18 +16,46 @@ package reporter
 
 import (
 	"io"
+	"os"
 
 	"github.com/autopp/spexec/internal/model"
 )
 
-// Reporter is the interface implemented by test reporter
-type Reporter interface {
+// Reporter provides formatted test reporter
+type Reporter struct {
+	w  io.Writer
+	rf ReportFormatter
+}
+
+// ReportFormatter is the interface implemented by report formatter
+type ReportFormatter interface {
 	OnRunStart(w io.Writer)
 	OnTestStart(w io.Writer, t *model.Test)
 	OnTestComplete(w io.Writer, t *model.Test, tr *model.TestResult)
 	OnRunComplete(w io.Writer, trs []*model.TestResult)
 }
 
-func NewReporter() Reporter {
-	return &SimpleReporter{}
+// New returns a new Reporter
+func New() *Reporter {
+	return &Reporter{w: os.Stdout, rf: &SimpleFormatter{}}
+}
+
+// OnRunStart should be called before all test execution
+func (r *Reporter) OnRunStart() {
+	r.rf.OnRunStart(r.w)
+}
+
+// OnTestStart should be called before each test execution
+func (r *Reporter) OnTestStart(t *model.Test) {
+	r.rf.OnTestStart(r.w, t)
+}
+
+// OnTestComplete should be called after each test execution
+func (r *Reporter) OnTestComplete(t *model.Test, tr *model.TestResult) {
+	r.rf.OnTestComplete(r.w, t, tr)
+}
+
+// OnRunComplete should be called afterall test execution
+func (r *Reporter) OnRunComplete(trs []*model.TestResult) {
+	r.rf.OnRunComplete(r.w, trs)
 }
