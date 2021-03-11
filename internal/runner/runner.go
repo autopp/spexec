@@ -19,6 +19,7 @@ import (
 	"os"
 
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/reporter"
 )
 
 type Runner struct{}
@@ -29,7 +30,7 @@ func NewRunner() *Runner {
 
 func (r *Runner) RunTests(tests []*model.Test) []*model.TestResult {
 	results := make([]*model.TestResult, 0, len(tests))
-	reporter := NewReporter()
+	reporter := reporter.NewReporter()
 	w := os.Stdout
 
 	reporter.OnRunStart(w)

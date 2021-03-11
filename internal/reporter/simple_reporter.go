@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package runner
+package reporter
 
 import (
 	"fmt"
@@ -21,26 +21,25 @@ import (
 	"github.com/autopp/spexec/internal/model"
 )
 
-// Reporter is the interface implemented by test reporter
-type Reporter interface {
-	OnRunStart(w io.Writer)
-	OnTestStart(w io.Writer, t *model.Test)
-	OnTestComplete(w io.Writer, t *model.Test, tr *model.TestResult)
-	OnRunComplete(w io.Writer, trs []*model.TestResult)
-}
+/*
+SimpleReporter implements Reporter.
 
-func NewReporter() Reporter {
-	return &SimpleReporter{}
-}
+Example of output:
 
+	.F.
+	3 examples, 1 failures
+*/
 type SimpleReporter struct{}
 
+// OnRunStart is part of Reporter
 func (sr *SimpleReporter) OnRunStart(w io.Writer) {
 }
 
+// OnTestStart is part of Reporter
 func (sr *SimpleReporter) OnTestStart(w io.Writer, t *model.Test) {
 }
 
+// OnTestComplete is part of Reporter
 func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *model.TestResult) {
 	if tr.IsSuccess {
 		fmt.Fprint(w, ".")
@@ -49,6 +48,7 @@ func (sr *SimpleReporter) OnTestComplete(w io.Writer, t *model.Test, tr *model.T
 	}
 }
 
+// OnRunComplete is part of Reporter
 func (sr *SimpleReporter) OnRunComplete(w io.Writer, trs []*model.TestResult) {
 	failures := 0
 	for _, tr := range trs {
