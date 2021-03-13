@@ -44,7 +44,7 @@ func (sr *SimpleFormatter) OnTestComplete(w io.Writer, t *model.Test, tr *model.
 	if tr.IsSuccess {
 		fmt.Fprint(w, ".")
 	} else {
-		fmt.Fprint(w, "f")
+		fmt.Fprint(w, "F")
 	}
 }
 
