@@ -29,6 +29,8 @@ import (
 // Main is the entrypoint of command line
 func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
 	const versionFlag = "version"
+	const outputFlag = "output"
+
 	cmd := &cobra.Command{
 		Use:           "spexec file",
 		SilenceUsage:  true,
@@ -57,7 +59,22 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			}
 
 			runner := runner.NewRunner()
-			reporter, err := reporter.New()
+			reporterOpts := make([]reporter.Option, 0)
+			output, err := cmd.Flags().GetString(outputFlag)
+			if err != nil {
+				return err
+			}
+			if len(output) != 0 {
+				f, err := os.Create(output)
+				if err != nil {
+					return err
+				}
+				defer f.Close()
+
+				reporterOpts = append(reporterOpts, reporter.WithWriter(f))
+			}
+
+			reporter, err := reporter.New(reporterOpts...)
 			if err != nil {
 				return err
 			}
@@ -79,6 +96,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	}
 
 	cmd.Flags().Bool(versionFlag, false, "print version")
+	cmd.Flags().StringP(outputFlag, "o", "", "output to file")
 
 	cmd.SetIn(stdin)
 	cmd.SetOut(stdout)
