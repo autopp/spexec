@@ -27,6 +27,32 @@ type Reporter struct {
 	rf ReportFormatter
 }
 
+// Color is enum type for console color
+type Color int
+
+const (
+	FgBlack = iota
+	FgRed
+	FgGreen
+	FgYellow
+	FgBlue
+	FgMagenta
+	FgCyan
+	FgWhite
+	BgBlack
+	BgRed
+	BgGreen
+	BgYellow
+	BgBlue
+	BgMagenta
+	BgCyan
+	BgWhite
+)
+
+func (c Color) isValid() bool {
+	return c >= FgBlack && c <= BgWhite
+}
+
 // ReportWriter extends io.Writer
 type ReportWriter struct {
 	io.Writer
