@@ -27,37 +27,6 @@ type Reporter struct {
 	rf ReportFormatter
 }
 
-// Color is enum type for console color
-type Color int
-
-const (
-	FgBlack = iota
-	FgRed
-	FgGreen
-	FgYellow
-	FgBlue
-	FgMagenta
-	FgCyan
-	FgWhite
-	BgBlack
-	BgRed
-	BgGreen
-	BgYellow
-	BgBlue
-	BgMagenta
-	BgCyan
-	BgWhite
-)
-
-func (c Color) isValid() bool {
-	return c >= FgBlack && c <= BgWhite
-}
-
-// ReportWriter extends io.Writer
-type ReportWriter struct {
-	io.Writer
-}
-
 // ReportFormatter is the interface implemented by report formatter
 type ReportFormatter interface {
 	OnRunStart(w *ReportWriter)
@@ -72,7 +41,7 @@ type Option func(r *Reporter) error
 // WithWriter is a option of New to specify output writer
 func WithWriter(w io.Writer) Option {
 	return func(r *Reporter) error {
-		r.w = &ReportWriter{w}
+		r.w = newReportWriter(w)
 		return nil
 	}
 }
