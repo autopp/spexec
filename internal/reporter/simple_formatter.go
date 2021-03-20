@@ -31,15 +31,15 @@ Example of output:
 type SimpleFormatter struct{}
 
 // OnRunStart is part of Reporter
-func (sr *SimpleFormatter) OnRunStart(w *ReportWriter) {
+func (sr *SimpleFormatter) OnRunStart(w *Writer) {
 }
 
 // OnTestStart is part of Reporter
-func (sr *SimpleFormatter) OnTestStart(w *ReportWriter, t *model.Test) {
+func (sr *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) {
 }
 
 // OnTestComplete is part of Reporter
-func (sr *SimpleFormatter) OnTestComplete(w *ReportWriter, t *model.Test, tr *model.TestResult) {
+func (sr *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
 	if tr.IsSuccess {
 		fmt.Fprint(w, ".")
 	} else {
@@ -48,7 +48,7 @@ func (sr *SimpleFormatter) OnTestComplete(w *ReportWriter, t *model.Test, tr *mo
 }
 
 // OnRunComplete is part of Reporter
-func (sr *SimpleFormatter) OnRunComplete(w *ReportWriter, trs []*model.TestResult) {
+func (sr *SimpleFormatter) OnRunComplete(w *Writer, trs []*model.TestResult) {
 	failures := 0
 	for _, tr := range trs {
 		if !tr.IsSuccess {

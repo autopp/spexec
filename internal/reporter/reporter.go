@@ -23,16 +23,16 @@ import (
 
 // Reporter provides formatted test reporter
 type Reporter struct {
-	w  *ReportWriter
+	w  *Writer
 	rf ReportFormatter
 }
 
 // ReportFormatter is the interface implemented by report formatter
 type ReportFormatter interface {
-	OnRunStart(w *ReportWriter)
-	OnTestStart(w *ReportWriter, t *model.Test)
-	OnTestComplete(w *ReportWriter, t *model.Test, tr *model.TestResult)
-	OnRunComplete(w *ReportWriter, trs []*model.TestResult)
+	OnRunStart(w *Writer)
+	OnTestStart(w *Writer, t *model.Test)
+	OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult)
+	OnRunComplete(w *Writer, trs []*model.TestResult)
 }
 
 // Option is functional option of New
@@ -41,7 +41,7 @@ type Option func(r *Reporter) error
 // WithWriter is a option of New to specify output writer
 func WithWriter(w io.Writer) Option {
 	return func(r *Reporter) error {
-		r.w = newReportWriter(w)
+		r.w = newWriter(w)
 		return nil
 	}
 }

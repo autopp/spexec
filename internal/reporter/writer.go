@@ -34,12 +34,12 @@ func (c Color) isValid() bool {
 	return c >= Black && c <= White
 }
 
-// ReportWriter extends io.Writer
-type ReportWriter struct {
+// Writer extends io.Writer
+type Writer struct {
 	io.Writer
 	colorStack []Color
 }
 
-func newReportWriter(w io.Writer) *ReportWriter {
-	return &ReportWriter{w, make([]Color, 0)}
+func newWriter(w io.Writer) *Writer {
+	return &Writer{w, make([]Color, 0)}
 }
