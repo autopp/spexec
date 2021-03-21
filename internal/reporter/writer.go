@@ -14,7 +14,11 @@
 
 package reporter
 
-import "io"
+import (
+	"fmt"
+	"io"
+	"log"
+)
 
 // Color is enum type for console color
 type Color int
@@ -28,10 +32,11 @@ const (
 	Magenta
 	Cyan
 	White
+	Reset
 )
 
 func (c Color) isValid() bool {
-	return c >= Black && c <= White
+	return c >= Black && c <= Reset
 }
 
 // Writer extends io.Writer
@@ -41,5 +46,40 @@ type Writer struct {
 }
 
 func newWriter(w io.Writer) *Writer {
-	return &Writer{w, make([]Color, 0)}
+	return &Writer{w, []Color{Reset}}
+}
+
+func (w *Writer) UseColor(c Color, f func()) {
+	w.writeEscapeSequense(c)
+	w.colorStack = append(w.colorStack, c)
+
+	f()
+
+	w.colorStack = w.colorStack[:len(w.colorStack)-1]
+	w.writeEscapeSequense(w.colorStack[len(w.colorStack)-1])
+}
+
+func (w *Writer) writeEscapeSequense(c Color) {
+	switch c {
+	case Black:
+		fmt.Fprint(w, "\033[30m")
+	case Red:
+		fmt.Fprint(w, "\033[31m")
+	case Green:
+		fmt.Fprint(w, "\033[32m")
+	case Yellow:
+		fmt.Fprint(w, "\033[33m")
+	case Blue:
+		fmt.Fprint(w, "\033[34m")
+	case Magenta:
+		fmt.Fprint(w, "\033[35m")
+	case Cyan:
+		fmt.Fprint(w, "\033[36m")
+	case White:
+		fmt.Fprint(w, "\033[37m")
+	case Reset:
+		fmt.Fprint(w, "\033[0m")
+	default:
+		log.Fatalf("color is not valid: %d", c)
+	}
 }
