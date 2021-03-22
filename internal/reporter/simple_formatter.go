@@ -41,9 +41,13 @@ func (sr *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) {
 // OnTestComplete is part of Reporter
 func (sr *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
 	if tr.IsSuccess {
-		fmt.Fprint(w, ".")
+		w.UseColor(Green, func() {
+			fmt.Fprint(w, ".")
+		})
 	} else {
-		fmt.Fprint(w, "F")
+		w.UseColor(Red, func() {
+			fmt.Fprint(w, "F")
+		})
 	}
 }
 
