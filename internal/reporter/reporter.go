@@ -27,6 +27,11 @@ type Reporter struct {
 	rf ReportFormatter
 }
 
+type Config struct {
+	colorMode bool
+	w         io.Writer
+}
+
 // ReportFormatter is the interface implemented by report formatter
 type ReportFormatter interface {
 	OnRunStart(w *Writer)
@@ -36,12 +41,19 @@ type ReportFormatter interface {
 }
 
 // Option is functional option of New
-type Option func(r *Reporter) error
+type Option func(c *Config) error
 
 // WithWriter is a option of New to specify output writer
 func WithWriter(w io.Writer) Option {
-	return func(r *Reporter) error {
-		r.w = newWriter(w)
+	return func(c *Config) error {
+		c.w = w
+		return nil
+	}
+}
+
+func WithColor(colorMode bool) Option {
+	return func(c *Config) error {
+		c.colorMode = colorMode
 		return nil
 	}
 }
@@ -50,11 +62,17 @@ func WithWriter(w io.Writer) Option {
 func New(opts ...Option) (*Reporter, error) {
 	r := &Reporter{rf: &SimpleFormatter{}}
 
+	c := Config{
+		w:         os.Stdout,
+		colorMode: false,
+	}
 	for _, o := range append([]Option{WithWriter(os.Stdout)}, opts...) {
-		if err := o(r); err != nil {
+		if err := o(&c); err != nil {
 			return nil, err
 		}
 	}
+	r.w = newWriter(c.w, c.colorMode)
+
 	return r, nil
 }
 

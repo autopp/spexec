@@ -42,11 +42,12 @@ func (c Color) isValid() bool {
 // Writer extends io.Writer
 type Writer struct {
 	io.Writer
+	colorMode  bool
 	colorStack []Color
 }
 
-func newWriter(w io.Writer) *Writer {
-	return &Writer{w, []Color{Reset}}
+func newWriter(w io.Writer, colorMode bool) *Writer {
+	return &Writer{w, colorMode, []Color{Reset}}
 }
 
 func (w *Writer) UseColor(c Color, f func()) {
