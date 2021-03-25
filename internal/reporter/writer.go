@@ -51,6 +51,11 @@ func newWriter(w io.Writer, colorMode bool) *Writer {
 }
 
 func (w *Writer) UseColor(c Color, f func()) {
+	if !w.colorMode {
+		f()
+		return
+	}
+
 	w.writeEscapeSequense(c)
 	w.colorStack = append(w.colorStack, c)
 

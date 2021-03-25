@@ -16,6 +16,7 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -23,6 +24,7 @@ import (
 	"github.com/autopp/spexec/internal/config"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
+	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
 
@@ -30,6 +32,7 @@ import (
 func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
 	const versionFlag = "version"
 	const outputFlag = "output"
+	const colorFlag = "color"
 
 	cmd := &cobra.Command{
 		Use:           "spexec file",
@@ -65,15 +68,32 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			if err != nil {
 				return err
 			}
+			out := os.Stdout
 			if len(output) != 0 {
-				f, err := os.Create(output)
+				out, err = os.Create(output)
 				if err != nil {
 					return err
 				}
 				defer f.Close()
-
-				reporterOpts = append(reporterOpts, reporter.WithWriter(f))
 			}
+			reporterOpts = append(reporterOpts, reporter.WithWriter(out))
+
+			color, err := cmd.Flags().GetString(colorFlag)
+			if err != nil {
+				return err
+			}
+			var colorMode bool
+			switch color {
+			case "always":
+				colorMode = true
+			case "never":
+				colorMode = false
+			case "auto":
+				colorMode = isatty.IsTerminal(out.Fd())
+			default:
+				return fmt.Errorf("invalid --color flag: %s", color)
+			}
+			reporterOpts = append(reporterOpts, reporter.WithColor(colorMode))
 
 			reporter, err := reporter.New(reporterOpts...)
 			if err != nil {
@@ -98,6 +118,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 
 	cmd.Flags().Bool(versionFlag, false, "print version")
 	cmd.Flags().StringP(outputFlag, "o", "", "output to file")
+	cmd.Flags().String(colorFlag, "auto", "color output")
 
 	cmd.SetIn(stdin)
 	cmd.SetOut(stdout)
