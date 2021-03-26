@@ -119,6 +119,9 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	cmd.Flags().Bool(versionFlag, false, "print version")
 	cmd.Flags().StringP(outputFlag, "o", "", "output to file")
 	cmd.Flags().String(colorFlag, "auto", "color output")
+	cmd.RegisterFlagCompletionFunc(colorFlag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"auto", "always", "never"}, cobra.ShellCompDirectiveDefault
+	})
 
 	cmd.SetIn(stdin)
 	cmd.SetOut(stdout)
