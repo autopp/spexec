@@ -30,7 +30,7 @@ func getVersion() string {
 }
 
 func main() {
-	if cmd.Main(getVersion(), os.Stdin, os.Stdout, os.Stderr, os.Args) != nil {
+	if cmd.Main(getVersion(), os.Stdin, os.Stdout, os.Stderr, os.Args[1:]) != nil {
 		os.Exit(1)
 	}
 }

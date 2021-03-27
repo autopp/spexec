@@ -126,7 +126,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	cmd.SetIn(stdin)
 	cmd.SetOut(stdout)
 	cmd.SetErr(stderr)
-	cmd.SetArgs(args[1:])
+	cmd.SetArgs(args)
 
 	return cmd.Execute()
 }
