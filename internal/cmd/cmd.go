@@ -33,6 +33,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	const versionFlag = "version"
 	const outputFlag = "output"
 	const colorFlag = "color"
+	const formatFlag = "format"
 
 	cmd := &cobra.Command{
 		Use:           "spexec file",
@@ -52,12 +53,12 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			if err != nil {
 				return err
 			}
-			format := config.JSONFormat
+			configFormat := config.JSONFormat
 			ext := filepath.Ext(filename)
 			if ext == ".yml" || ext == ".yaml" {
-				format = config.YAMLFormat
+				configFormat = config.YAMLFormat
 			}
-			tests, err := config.Load(f, format)
+			tests, err := config.Load(f, configFormat)
 			if err != nil {
 				return err
 			}
@@ -95,6 +96,18 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			}
 			reporterOpts = append(reporterOpts, reporter.WithColor(colorMode))
 
+			var formatter reporter.ReportFormatter
+			format, err := cmd.Flags().GetString(formatFlag)
+			switch format {
+			case "simple":
+				formatter = &reporter.SimpleFormatter{}
+			case "documentation":
+				formatter = &reporter.DocumentationFormatter{}
+			default:
+				return fmt.Errorf("invalid --format flag: %s", format)
+			}
+			reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
+
 			reporter, err := reporter.New(reporterOpts...)
 			if err != nil {
 				return err
@@ -121,6 +134,10 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	cmd.Flags().String(colorFlag, "auto", "color output")
 	cmd.RegisterFlagCompletionFunc(colorFlag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"auto", "always", "never"}, cobra.ShellCompDirectiveDefault
+	})
+	cmd.Flags().String(formatFlag, "simple", "format")
+	cmd.RegisterFlagCompletionFunc(formatFlag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		return []string{"simple", "documentation"}, cobra.ShellCompDirectiveDefault
 	})
 
 	cmd.SetIn(stdin)
