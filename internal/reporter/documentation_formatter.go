@@ -60,5 +60,11 @@ func (sr *DocumentationFormatter) OnRunComplete(w *Writer, trs []*model.TestResu
 			failures++
 		}
 	}
-	fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), failures)
+	var color Color = Green
+	if failures > 0 {
+		color = Red
+	}
+	w.UseColor(color, func() {
+		fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), failures)
+	})
 }
