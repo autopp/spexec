@@ -14,6 +14,8 @@
 
 package model
 
+import "strings"
+
 type Test struct {
 	Name    string
 	Command []string
@@ -21,4 +23,12 @@ type Test struct {
 	Stdout  *string
 	Stderr  *string
 	Env     map[string]string
+}
+
+func (t *Test) GetName() string {
+	if len(t.Name) != 0 {
+		return t.Name
+	}
+
+	return strings.Join(t.Command, " ")
 }
