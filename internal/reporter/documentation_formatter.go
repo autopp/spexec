@@ -48,7 +48,7 @@ func (sr *DocumentationFormatter) OnTestComplete(w *Writer, t *model.Test, tr *m
 	}
 
 	w.UseColor(color, func() {
-		fmt.Fprintln(w, t.Name)
+		fmt.Fprintln(w, t.GetName())
 	})
 }
 
