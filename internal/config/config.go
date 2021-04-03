@@ -110,6 +110,10 @@ func parseTest(v *validator, x interface{}) *test.Test {
 			c, _ := v.MustBeString(x)
 			t.Command[i] = c
 		})
+
+		if len(t.Command) == 0 {
+			v.AddViolation("shoud have one ore more elements")
+		}
 	})
 
 	v.MayHaveSeq(tc, "env", func(env configSeq) {
