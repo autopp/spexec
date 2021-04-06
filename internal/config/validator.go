@@ -16,9 +16,10 @@ package config
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/autopp/spexec/internal/errors"
 )
 
 type configMap = map[string]interface{}
@@ -211,5 +212,5 @@ func (v *validator) Error() error {
 		b.WriteString(violation.path + ": " + violation.message + "\n")
 	}
 
-	return errors.New(b.String())
+	return errors.New(errors.ErrInvalidConfig, b.String())
 }

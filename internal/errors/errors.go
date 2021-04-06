@@ -21,6 +21,11 @@ import (
 
 type Code string
 
+const (
+	ErrTestFailed    Code = "test failed"
+	ErrInvalidConfig Code = "invalid config"
+)
+
 type Error struct {
 	Code Code
 	err  error

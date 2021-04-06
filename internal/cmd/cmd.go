@@ -15,13 +15,13 @@
 package cmd
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"os"
 	"path/filepath"
 
 	"github.com/autopp/spexec/internal/config"
+	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
 	"github.com/mattn/go-isatty"
@@ -123,7 +123,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			}
 
 			if !allGreen {
-				return errors.New("test failed")
+				return errors.New(errors.ErrTestFailed, "test failed")
 			}
 			return nil
 		},
