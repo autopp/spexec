@@ -40,9 +40,13 @@ func (e *Error) Unwrap() error {
 }
 
 func Errorf(code Code, format string, a ...interface{}) error {
-	return &Error{Code: code, err: fmt.Errorf(format, a...)}
+	return Wrap(code, fmt.Errorf(format, a...))
 }
 
 func New(code Code, text string) error {
-	return &Error{Code: code, err: errors.New(text)}
+	return Wrap(code, errors.New(text))
+}
+
+func Wrap(code Code, err error) error {
+	return &Error{Code: code, err: err}
 }
