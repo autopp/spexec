@@ -51,7 +51,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			filename := args[0]
 			f, err := os.Open(filename)
 			if err != nil {
-				return err
+				return errors.Wrap(errors.ErrInvalidConfig, err)
 			}
 			configFormat := config.JSONFormat
 			ext := filepath.Ext(filename)

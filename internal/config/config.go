@@ -16,9 +16,9 @@ package config
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 
+	"github.com/autopp/spexec/internal/errors"
 	test "github.com/autopp/spexec/internal/model"
 	"gopkg.in/yaml.v3"
 )
@@ -50,7 +50,7 @@ const JSONFormat ConfigFormat = "json"
 func Load(r io.Reader, format ConfigFormat) ([]*test.Test, error) {
 	b, err := io.ReadAll(r)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errors.ErrInvalidConfig, err)
 	}
 
 	var x interface{}
@@ -58,16 +58,16 @@ func Load(r io.Reader, format ConfigFormat) ([]*test.Test, error) {
 	case YAMLFormat:
 		err = yaml.Unmarshal(b, &x)
 		if err != nil {
-			return nil, err
+			return nil, errors.Wrap(errors.ErrInvalidConfig, err)
 		}
 	case JSONFormat:
 		err = json.Unmarshal(b, &b)
 	default:
-		return nil, fmt.Errorf("unknown config format name: %q", format)
+		return nil, errors.Errorf(errors.ErrInvalidConfig, "unknown config format name: %q", format)
 	}
 
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(errors.ErrInvalidConfig, err)
 	}
 
 	ts, err := parseConfig(x)
