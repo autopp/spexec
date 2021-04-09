@@ -53,6 +53,8 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			if err != nil {
 				return errors.Wrap(errors.ErrInvalidConfig, err)
 			}
+			defer f.Close()
+
 			configFormat := config.JSONFormat
 			ext := filepath.Ext(filename)
 			if ext == ".yml" || ext == ".yaml" {
@@ -75,7 +77,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 				if err != nil {
 					return err
 				}
-				defer f.Close()
+				defer out.Close()
 			}
 			reporterOpts = append(reporterOpts, reporter.WithWriter(out))
 
