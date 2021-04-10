@@ -16,7 +16,6 @@ package config
 
 import (
 	"encoding/json"
-	"io"
 
 	"github.com/autopp/spexec/internal/errors"
 	test "github.com/autopp/spexec/internal/model"
@@ -47,13 +46,9 @@ type ConfigFormat string
 const YAMLFormat ConfigFormat = "yaml"
 const JSONFormat ConfigFormat = "json"
 
-func Load(r io.Reader, format ConfigFormat) ([]*test.Test, error) {
-	b, err := io.ReadAll(r)
-	if err != nil {
-		return nil, errors.Wrap(errors.ErrInvalidConfig, err)
-	}
-
+func Load(b []byte, format ConfigFormat) ([]*test.Test, error) {
 	var x interface{}
+	var err error
 	switch format {
 	case YAMLFormat:
 		err = yaml.Unmarshal(b, &x)

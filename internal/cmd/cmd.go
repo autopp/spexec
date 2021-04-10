@@ -49,11 +49,10 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			}
 
 			filename := args[0]
-			f, err := os.Open(filename)
+			f, err := os.ReadFile(filename)
 			if err != nil {
 				return errors.Wrap(errors.ErrInvalidConfig, err)
 			}
-			defer f.Close()
 
 			configFormat := config.JSONFormat
 			ext := filepath.Ext(filename)
