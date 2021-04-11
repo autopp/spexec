@@ -41,32 +41,22 @@ type testSchema struct {
 	}
 }
 
-type ConfigFormat string
+func LoadYAML(b []byte) ([]*test.Test, error) {
+	return load(b, yaml.Unmarshal)
+}
 
-const YAMLFormat ConfigFormat = "yaml"
-const JSONFormat ConfigFormat = "json"
+func LoadJSON(b []byte) ([]*test.Test, error) {
+	return load(b, json.Unmarshal)
+}
 
-func Load(b []byte, format ConfigFormat) ([]*test.Test, error) {
+func load(b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.Test, error) {
 	var x interface{}
-	var err error
-	switch format {
-	case YAMLFormat:
-		err = yaml.Unmarshal(b, &x)
-		if err != nil {
-			return nil, errors.Wrap(errors.ErrInvalidConfig, err)
-		}
-	case JSONFormat:
-		err = json.Unmarshal(b, &b)
-	default:
-		return nil, errors.Errorf(errors.ErrInvalidConfig, "unknown config format name: %q", format)
-	}
-
+	err := unmarchal(b, &x)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidConfig, err)
 	}
 
-	ts, err := parseConfig(x)
-	return ts, err
+	return parseConfig(x)
 }
 
 func parseConfig(c interface{}) ([]*test.Test, error) {

@@ -22,6 +22,7 @@ import (
 
 	"github.com/autopp/spexec/internal/config"
 	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
 	"github.com/mattn/go-isatty"
@@ -54,12 +55,13 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 				return errors.Wrap(errors.ErrInvalidConfig, err)
 			}
 
-			configFormat := config.JSONFormat
+			var tests []*model.Test
 			ext := filepath.Ext(filename)
 			if ext == ".yml" || ext == ".yaml" {
-				configFormat = config.YAMLFormat
+				tests, err = config.LoadYAML(f)
+			} else {
+				tests, err = config.LoadJSON(f)
 			}
-			tests, err := config.Load(f, configFormat)
 			if err != nil {
 				return err
 			}
