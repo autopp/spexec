@@ -14,7 +14,9 @@
 
 package model
 
-import "strings"
+import (
+	"github.com/Wing924/shellwords"
+)
 
 type Test struct {
 	Name    string
@@ -30,5 +32,5 @@ func (t *Test) GetName() string {
 		return t.Name
 	}
 
-	return strings.Join(t.Command, " ")
+	return shellwords.Join(t.Command)
 }
