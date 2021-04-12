@@ -1,7 +1,6 @@
 package config
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"testing"
@@ -10,20 +9,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func openConfig(name string) io.Reader {
+func openConfig(name string) []byte {
 	path := filepath.Join("testdata", name)
-	f, err := os.Open(path)
+	b, err := os.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
 
-	return f
+	return b
 }
 
-func TestLoad(t *testing.T) {
-	r := openConfig("test.yaml")
+func TestLoadYAML(t *testing.T) {
+	b := openConfig("test.yaml")
 
-	if c, err := Load(r, YAMLFormat); assert.NoError(t, err) {
+	if c, err := LoadYAML(b); assert.NoError(t, err) {
 		status := 0
 		stdout := "42\n"
 		expected := []*model.Test{
