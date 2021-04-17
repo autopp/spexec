@@ -1,32 +1,18 @@
 package model
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-func TestTestGetName(t *testing.T) {
-	cases := []struct {
-		name     string
-		test     *Test
-		expected string
-	}{
-		{
-			name:     "Name is not empty",
-			test:     &Test{Name: "test of echo", Command: []string{"echo", "hello"}},
-			expected: "test of echo",
+var _ = Describe("Test", func() {
+	DescribeTable("GetName()",
+		func(test *Test, expected string) {
+			Expect(test.GetName()).To(Equal(expected))
 		},
-		{
-			name:     "Name is empty",
-			test:     &Test{Name: "", Command: []string{"echo", "hello"}},
-			expected: "echo hello",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.expected, tt.test.GetName())
-		})
-	}
-}
+		Entry("Name is not empty", &Test{Name: "test of echo", Command: []string{"echo", "hello"}}, "test of echo"),
+		Entry("Name is empty", &Test{Name: "", Command: []string{"echo", "hello"}},
+			"echo hello"),
+	)
+})
