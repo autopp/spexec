@@ -1,40 +1,25 @@
 package runner
 
 import (
-	"testing"
-
-	"github.com/stretchr/testify/assert"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
+	. "github.com/onsi/gomega"
 )
 
-func TestExecRun(t *testing.T) {
-	cases := []struct {
-		name    string
-		command []string
-		status  int
-		stdout  string
-		stderr  string
-	}{
-		{
-			name:    "with `echo -n 42`",
-			command: []string{"echo", "-n", "42"},
-			status:  0,
-			stdout:  "42",
-			stderr:  "",
-		},
-	}
-
-	for _, tt := range cases {
-		t.Run(tt.name, func(t *testing.T) {
+var _ = Describe("Exec", func() {
+	DescribeTable("Run()",
+		func(command []string, status int, stdout, stderr string) {
 			e := Exec{
-				Command: tt.command,
+				Command: command,
 			}
 
 			expected := &ExecResult{
-				Stdout: []byte(tt.stdout),
-				Stderr: []byte(tt.stderr),
-				Status: tt.status,
+				Stdout: []byte(stdout),
+				Stderr: []byte(stderr),
+				Status: status,
 			}
-			assert.Equal(t, expected, e.Run())
-		})
-	}
-}
+			Expect(e.Run()).To(Equal(expected))
+		},
+		Entry("with `echo -n 42`", []string{"echo", "-n", "42"}, 0, "42", ""),
+	)
+})

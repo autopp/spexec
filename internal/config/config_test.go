@@ -3,10 +3,11 @@ package config
 import (
 	"os"
 	"path/filepath"
-	"testing"
 
 	"github.com/autopp/spexec/internal/model"
-	"github.com/stretchr/testify/assert"
+
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func openConfig(name string) []byte {
@@ -19,10 +20,9 @@ func openConfig(name string) []byte {
 	return b
 }
 
-func TestLoadYAML(t *testing.T) {
-	b := openConfig("test.yaml")
-
-	if c, err := LoadYAML(b); assert.NoError(t, err) {
+var _ = Describe("LoadYAML()", func() {
+	It("returns loaded []*Test", func() {
+		b := openConfig("test.yaml")
 		status := 0
 		stdout := "42\n"
 		expected := []*model.Test{
@@ -34,7 +34,6 @@ func TestLoadYAML(t *testing.T) {
 				Stdout:  &stdout,
 			},
 		}
-
-		assert.Equal(t, expected, c)
-	}
-}
+		Expect(LoadYAML(b)).To(Equal(expected))
+	})
+})
