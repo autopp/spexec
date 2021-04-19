@@ -24,4 +24,4 @@ tests:
     stdin: hello
     expect:
       status: 0
-      stdout: "hello\n"
+      stdout: "hello"

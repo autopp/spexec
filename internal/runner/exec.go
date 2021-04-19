@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/autopp/spexec/internal/model"
 )
@@ -31,18 +32,21 @@ type ExecResult struct {
 
 type Exec struct {
 	Command []string
+	Stdin   string
 	Env     map[string]string
 }
 
 func NewExec(t *model.Test) *Exec {
 	return &Exec{
 		Command: t.Command,
+		Stdin:   t.Stdin,
 		Env:     t.Env,
 	}
 }
 
 func (e *Exec) Run() *ExecResult {
 	cmd := exec.Command(e.Command[0], e.Command[1:]...)
+	cmd.Stdin = strings.NewReader(e.Stdin)
 	stdout := new(bytes.Buffer)
 	cmd.Stdout = stdout
 	stderr := new(bytes.Buffer)
