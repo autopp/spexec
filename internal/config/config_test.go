@@ -29,6 +29,7 @@ var _ = Describe("LoadYAML()", func() {
 			{
 				Name:    "test_answer",
 				Command: []string{"echo", "42"},
+				Stdin:   "hello",
 				Env:     map[string]string{"ANSWER": "42"},
 				Status:  &status,
 				Stdout:  &stdout,

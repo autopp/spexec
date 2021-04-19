@@ -19,3 +19,9 @@ tests:
     expect:
       status: 0
       stdout: "42\n"
+  - command:
+      - cat
+    stdin: hello
+    expect:
+      status: 0
+      stdout: "hello\n"

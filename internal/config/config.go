@@ -101,6 +101,10 @@ func parseTest(v *validator, x interface{}) *test.Test {
 		}
 	})
 
+	if stdin, exists, _ := v.MayHaveString(tc, "stdin"); exists {
+		t.Stdin = stdin
+	}
+
 	v.MayHaveSeq(tc, "env", func(env configSeq) {
 		t.Env = make(map[string]string)
 		v.ForInSeq(env, func(i int, x interface{}) {

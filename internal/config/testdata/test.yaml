@@ -3,6 +3,7 @@ tests:
     command:
       - echo
       - "42"
+    stdin: "hello"
     expect:
       status: 0
       stdout: "42\n"

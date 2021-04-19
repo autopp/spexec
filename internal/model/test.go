@@ -21,6 +21,7 @@ import (
 type Test struct {
 	Name    string
 	Command []string
+	Stdin   string
 	Status  *int
 	Stdout  *string
 	Stderr  *string
