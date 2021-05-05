@@ -22,6 +22,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
+type Map = map[string]interface{}
+type Seq = []interface{}
+
 // xxxSchema are structs for documentation, not used
 type configSchema struct {
 	tests []testSchema
@@ -60,14 +63,14 @@ func load(b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.T
 }
 
 func parseConfig(c interface{}) ([]*test.Test, error) {
-	v := newValidator()
+	v := NewValidator()
 	cmap, ok := v.MustBeMap(c)
 	if !ok {
 		return nil, v.Error()
 	}
 
 	ts := make([]*test.Test, 0)
-	v.MustHaveSeq(cmap, "tests", func(tcs configSeq) {
+	v.MustHaveSeq(cmap, "tests", func(tcs Seq) {
 		v.ForInSeq(tcs, func(i int, tc interface{}) {
 			t := parseTest(v, tc)
 			ts = append(ts, t)
@@ -77,7 +80,7 @@ func parseConfig(c interface{}) ([]*test.Test, error) {
 	return ts, v.Error()
 }
 
-func parseTest(v *validator, x interface{}) *test.Test {
+func parseTest(v *Validator, x interface{}) *test.Test {
 	tc, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
@@ -89,7 +92,7 @@ func parseTest(v *validator, x interface{}) *test.Test {
 		t.Name = name
 	}
 
-	v.MustHaveSeq(tc, "command", func(command configSeq) {
+	v.MustHaveSeq(tc, "command", func(command Seq) {
 		t.Command = make([]string, len(command))
 		v.ForInSeq(command, func(i int, x interface{}) {
 			c, _ := v.MustBeString(x)
@@ -105,7 +108,7 @@ func parseTest(v *validator, x interface{}) *test.Test {
 		t.Stdin = stdin
 	}
 
-	v.MayHaveSeq(tc, "env", func(env configSeq) {
+	v.MayHaveSeq(tc, "env", func(env Seq) {
 		t.Env = make(map[string]string)
 		v.ForInSeq(env, func(i int, x interface{}) {
 			envVar, ok := v.MustBeMap(x)
@@ -121,7 +124,7 @@ func parseTest(v *validator, x interface{}) *test.Test {
 		})
 	})
 
-	v.MayHaveMap(tc, "expect", func(expect configMap) {
+	v.MayHaveMap(tc, "expect", func(expect Map) {
 		status, exists, _ := v.MayHaveInt(expect, "status")
 		if exists {
 			t.Status = &status
