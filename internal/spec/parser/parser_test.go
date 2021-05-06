@@ -1,4 +1,4 @@
-package spec
+package parser
 
 import (
 	"os"
@@ -20,7 +20,7 @@ func openConfig(name string) []byte {
 	return b
 }
 
-var _ = Describe("LoadYAML()", func() {
+var _ = Describe("parseYAML()", func() {
 	It("returns loaded []*Test", func() {
 		b := openConfig("test.yaml")
 		status := 0
@@ -35,6 +35,6 @@ var _ = Describe("LoadYAML()", func() {
 				Stdout:  &stdout,
 			},
 		}
-		Expect(LoadYAML(b)).To(Equal(expected))
+		Expect(parseYAML(b)).To(Equal(expected))
 	})
 })

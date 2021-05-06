@@ -18,13 +18,11 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
 	"github.com/autopp/spexec/internal/errors"
-	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/spec/parser"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -50,18 +48,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			}
 
 			filename := args[0]
-			f, err := os.ReadFile(filename)
-			if err != nil {
-				return errors.Wrap(errors.ErrInvalidConfig, err)
-			}
-
-			var tests []*model.Test
-			ext := filepath.Ext(filename)
-			if ext == ".yml" || ext == ".yaml" {
-				tests, err = spec.LoadYAML(f)
-			} else {
-				tests, err = spec.LoadJSON(f)
-			}
+			tests, err := parser.ParseFile(filename)
 			if err != nil {
 				return err
 			}
