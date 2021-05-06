@@ -20,11 +20,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/autopp/spexec/internal/config"
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
+	"github.com/autopp/spexec/internal/spec"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -58,9 +58,9 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			var tests []*model.Test
 			ext := filepath.Ext(filename)
 			if ext == ".yml" || ext == ".yaml" {
-				tests, err = config.LoadYAML(f)
+				tests, err = spec.LoadYAML(f)
 			} else {
-				tests, err = config.LoadJSON(f)
+				tests, err = spec.LoadJSON(f)
 			}
 			if err != nil {
 				return err
