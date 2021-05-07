@@ -159,13 +159,13 @@ var _ = Describe("Validator", func() {
 			It("calls the callback with the map in map in path of the field and returns the it, true, true", func() {
 				contained := make(Map)
 				var passed Map
-				m, exists, ok := v.MayHaveMap(Map{"answer": contained}, "answer", func(m Map) {
+				m, exists, ok := v.MayHaveMap(Map{"field": contained}, "field", func(m Map) {
 					passed = m
 					v.AddViolation("error")
 				})
 
 				Expect(passed).To(Equal(contained))
-				Expect(v.Error()).To(BeValidationError("$.answer: error"))
+				Expect(v.Error()).To(BeValidationError("$.field: error"))
 				Expect(m).To(Equal(contained))
 				Expect(exists).To(BeTrue())
 				Expect(ok).To(BeTrue())
@@ -174,7 +174,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("dose not call the callback and returns something, false, true", func() {
-				_, exists, ok := v.MayHaveMap(make(Map), "answer", func(Map) {
+				_, exists, ok := v.MayHaveMap(make(Map), "field", func(Map) {
 					v.AddViolation("error")
 				})
 
@@ -185,12 +185,12 @@ var _ = Describe("Validator", func() {
 		})
 
 		Context("when the given map has specified field which is not a Map", func() {
-			It("dose not call the callback and returns something, false, false", func() {
-				_, exists, ok := v.MayHaveMap(Map{"answer": "hello"}, "answer", func(m Map) {
+			It("dose not call the callback, adds violation, and returns something, false, false", func() {
+				_, exists, ok := v.MayHaveMap(Map{"field": "hello"}, "field", func(Map) {
 					v.AddViolation("error")
 				})
 
-				Expect(v.Error()).To(BeNil())
+				Expect(v.Error()).To(BeValidationError("$.field: should be map, but is string"))
 				Expect(exists).To(BeFalse())
 				Expect(ok).To(BeFalse())
 			})
