@@ -204,10 +204,10 @@ func (v *Validator) Error() error {
 		return nil
 	}
 
-	b := strings.Builder{}
-	for _, violation := range v.violations {
-		b.WriteString(violation.path + ": " + violation.message + "\n")
+	messages := make([]string, len(v.violations))
+	for i, violation := range v.violations {
+		messages[i] = violation.path + ": " + violation.message
 	}
 
-	return errors.New(errors.ErrInvalidConfig, b.String())
+	return errors.New(errors.ErrInvalidConfig, strings.Join(messages, "\n"))
 }
