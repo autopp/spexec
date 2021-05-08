@@ -155,6 +155,10 @@ func (v *Validator) MayHaveSeq(m Map, key string, f func(Seq)) (Seq, bool, bool)
 func (v *Validator) MustHaveSeq(m Map, key string, f func(Seq)) (Seq, bool) {
 	s, exists, ok := v.MayHaveSeq(m, key, f)
 
+	if !exists && ok {
+		v.AddViolation("should have .%s as seq", key)
+	}
+
 	return s, exists && ok
 }
 

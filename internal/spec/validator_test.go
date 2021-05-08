@@ -196,4 +196,87 @@ var _ = Describe("Validator", func() {
 			})
 		})
 	})
+
+	Describe("MayHaveSeq()", func() {
+		Context("when the given map has specified field which is a Seq", func() {
+			It("calls the callback with the map in map in path of the field and returns the it, true, true", func() {
+				contained := make(Seq, 0)
+				var passed Seq
+				m, exists, ok := v.MayHaveSeq(Map{"field": contained}, "field", func(s Seq) {
+					passed = s
+					v.AddViolation("error")
+				})
+
+				Expect(passed).To(Equal(contained))
+				Expect(v.Error()).To(BeValidationError("$.field: error"))
+				Expect(m).To(Equal(contained))
+				Expect(exists).To(BeTrue())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("dose not call the callback and returns something, false, true", func() {
+				_, exists, ok := v.MayHaveSeq(make(Map), "field", func(Seq) {
+					v.AddViolation("error")
+				})
+
+				Expect(v.Error()).To(BeNil())
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map has specified field which is not a Seq", func() {
+			It("dose not call the callback, add violation and returns something, false, false", func() {
+				_, exists, ok := v.MayHaveSeq(Map{"field": "hello"}, "field", func(Seq) {
+					v.AddViolation("error")
+				})
+
+				Expect(v.Error()).To(BeValidationError("$.field: should be seq, but is string"))
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MustHaveSeq()", func() {
+		Context("when the given map has specified field which is a Seq", func() {
+			It("calls the callback with the map in map in path of the field and returns the it, true", func() {
+				contained := make(Seq, 0)
+				var passed Seq
+				m, ok := v.MustHaveSeq(Map{"field": contained}, "field", func(s Seq) {
+					passed = s
+					v.AddViolation("error")
+				})
+
+				Expect(passed).To(Equal(contained))
+				Expect(v.Error()).To(BeValidationError("$.field: error"))
+				Expect(m).To(Equal(contained))
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("dose not call the callback and returns something, false", func() {
+				_, ok := v.MustHaveSeq(make(Map), "field", func(Seq) {
+					v.AddViolation("error")
+				})
+
+				Expect(v.Error()).To(BeValidationError("$: should have .field as seq"))
+				Expect(ok).To(BeFalse())
+			})
+		})
+
+		Context("when the given map has specified field which is not a Seq", func() {
+			It("dose not call the callback, add violation and returns something, false", func() {
+				_, ok := v.MustHaveSeq(Map{"field": "hello"}, "field", func(Seq) {
+					v.AddViolation("error")
+				})
+
+				Expect(v.Error()).To(BeValidationError("$.field: should be seq, but is string"))
+				Expect(ok).To(BeFalse())
+			})
+		})
+	})
 })
