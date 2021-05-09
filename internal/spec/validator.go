@@ -186,6 +186,11 @@ func (v *Validator) MayHaveString(m Map, key string) (string, bool, bool) {
 
 func (v *Validator) MustHaveString(m Map, key string) (string, bool) {
 	s, exists, ok := v.MayHaveString(m, key)
+
+	if !exists && ok {
+		v.AddViolation("should have .%s as string", key)
+	}
+
 	return s, exists && ok
 }
 

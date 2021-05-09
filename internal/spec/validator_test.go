@@ -279,4 +279,46 @@ var _ = Describe("Validator", func() {
 			})
 		})
 	})
+
+	Describe("ForInSeq()", func() {
+		It("calls callback with each index and element in path of it", func() {
+			v.ForInSeq(Seq{42, "hello"}, func(i int, x interface{}) {
+				v.AddViolation("%d:%#v", i, x)
+			})
+
+			Expect(v.Error()).To(BeValidationError("$[0]: 0:42\n$[1]: 1:\"hello\""))
+		})
+	})
+
+	Describe("MayHaveString()", func() {
+		Context("when the given map has specified field which is a string", func() {
+			It("returns the it, true, true", func() {
+				s, exists, ok := v.MayHaveString(Map{"field": "hello"}, "field")
+
+				Expect(s).To(Equal("hello"))
+				Expect(exists).To(BeTrue())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("returns something, false, true", func() {
+				_, exists, ok := v.MayHaveString(Map{}, "field")
+
+				Expect(v.Error()).To(BeNil())
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map has specified field which is not a string", func() {
+			It("dose not call the callback, add violation and returns something, false, false", func() {
+				_, exists, ok := v.MayHaveString(Map{"field": 42}, "field")
+
+				Expect(v.Error()).To(BeValidationError("$.field: should be string, but is int"))
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeFalse())
+			})
+		})
+	})
 })
