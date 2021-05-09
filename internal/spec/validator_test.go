@@ -315,7 +315,68 @@ var _ = Describe("Validator", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
 				_, exists, ok := v.MayHaveString(Map{"field": 42}, "field")
 
-				Expect(v.Error()).To(BeValidationError("$.field: should be string, but is int"))
+				Expect(v.Error()).To(BeValidationError("$.field: should be string but is int"))
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MustHaveString()", func() {
+		Context("when the given map has specified field which is a string", func() {
+			It("returns the it, true, true", func() {
+				s, ok := v.MustHaveString(Map{"field": "hello"}, "field")
+
+				Expect(s).To(Equal("hello"))
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("returns something, false, true", func() {
+				_, ok := v.MustHaveString(Map{}, "field")
+
+				Expect(v.Error()).To(BeValidationError("$: should have .field as string"))
+				Expect(ok).To(BeFalse())
+			})
+		})
+
+		Context("when the given map has specified field which is not a string", func() {
+			It("dose not call the callback, add violation and returns something, false, false", func() {
+				_, ok := v.MustHaveString(Map{"field": 42}, "field")
+
+				Expect(v.Error()).To(BeValidationError("$.field: should be string but is int"))
+				Expect(ok).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MayHaveInt()", func() {
+		Context("when the given map has specified field which is a int", func() {
+			It("returns the it, true, true", func() {
+				s, exists, ok := v.MayHaveInt(Map{"field": 42}, "field")
+
+				Expect(s).To(Equal(42))
+				Expect(exists).To(BeTrue())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("returns something, false, true", func() {
+				_, exists, ok := v.MayHaveInt(Map{}, "field")
+
+				Expect(v.Error()).To(BeNil())
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map has specified field which is not a int", func() {
+			It("dose not call the callback, add violation and returns something, false, false", func() {
+				_, exists, ok := v.MayHaveInt(Map{"field": "hello"}, "field")
+
+				Expect(v.Error()).To(BeValidationError("$.field: should be integer but is string"))
 				Expect(exists).To(BeFalse())
 				Expect(ok).To(BeFalse())
 			})
