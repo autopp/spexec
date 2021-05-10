@@ -86,9 +86,10 @@ var _ = Describe("Validator", func() {
 		})
 
 		Context("with a not Map", func() {
-			It("returns something and false", func() {
+			It("adds violation and returns something and false", func() {
 				_, b := v.MustBeMap(42)
 
+				Expect(v.Error()).To(BeValidationError("$: should be map, but is int"))
 				Expect(b).To(BeFalse())
 			})
 		})
@@ -106,9 +107,10 @@ var _ = Describe("Validator", func() {
 		})
 
 		Context("with a not Seq", func() {
-			It("returns something and false", func() {
+			It("adds violation and returns something and false", func() {
 				_, b := v.MustBeSeq(42)
 
+				Expect(v.Error()).To(BeValidationError("$: should be seq, but is int"))
 				Expect(b).To(BeFalse())
 			})
 		})
@@ -126,9 +128,10 @@ var _ = Describe("Validator", func() {
 		})
 
 		Context("with a not string", func() {
-			It("returns something and false", func() {
+			It("adds violation and returns something and false", func() {
 				_, b := v.MustBeString(42)
 
+				Expect(v.Error()).To(BeValidationError("$: should be string, but is int"))
 				Expect(b).To(BeFalse())
 			})
 		})
@@ -146,9 +149,10 @@ var _ = Describe("Validator", func() {
 		})
 
 		Context("with a not int", func() {
-			It("returns something and false", func() {
+			It("adds violation and returns something and false", func() {
 				_, b := v.MustBeInt("hello")
 
+				Expect(v.Error()).To(BeValidationError("$: should be int, but is string"))
 				Expect(b).To(BeFalse())
 			})
 		})
