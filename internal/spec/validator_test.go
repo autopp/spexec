@@ -315,7 +315,7 @@ var _ = Describe("Validator", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
 				_, exists, ok := v.MayHaveString(Map{"field": 42}, "field")
 
-				Expect(v.Error()).To(BeValidationError("$.field: should be string but is int"))
+				Expect(v.Error()).To(BeValidationError("$.field: should be string, but is int"))
 				Expect(exists).To(BeFalse())
 				Expect(ok).To(BeFalse())
 			})
@@ -345,7 +345,7 @@ var _ = Describe("Validator", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
 				_, ok := v.MustHaveString(Map{"field": 42}, "field")
 
-				Expect(v.Error()).To(BeValidationError("$.field: should be string but is int"))
+				Expect(v.Error()).To(BeValidationError("$.field: should be string, but is int"))
 				Expect(ok).To(BeFalse())
 			})
 		})
@@ -376,7 +376,7 @@ var _ = Describe("Validator", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
 				_, exists, ok := v.MayHaveInt(Map{"field": "hello"}, "field")
 
-				Expect(v.Error()).To(BeValidationError("$.field: should be integer but is string"))
+				Expect(v.Error()).To(BeValidationError("$.field: should be int, but is string"))
 				Expect(exists).To(BeFalse())
 				Expect(ok).To(BeFalse())
 			})

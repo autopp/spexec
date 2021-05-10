@@ -88,7 +88,7 @@ func (v *Validator) MustBeSeq(x interface{}) (Seq, bool) {
 func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	s, ok := x.(string)
 	if !ok {
-		v.AddViolation("should be string but is %T", x)
+		v.AddViolation("should be string, but is %T", x)
 	}
 
 	return s, ok
@@ -99,13 +99,13 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 	case int:
 		return n, true
 	case json.Number:
-		i, ok := n.Int64()
-		if ok != nil {
-			v.AddViolation("should be integer but is %T", x)
+		i, err := n.Int64()
+		if err != nil {
+			v.AddViolation("should be int, but is %T", x)
 		}
-		return int(i), ok == nil
+		return int(i), err == nil
 	default:
-		v.AddViolation("should be integer but is %T", x)
+		v.AddViolation("should be int, but is %T", x)
 		return 0, false
 	}
 }
