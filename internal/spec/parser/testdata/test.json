@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "name": "test_answer",
+      "command": ["echo", "42"],
+      "stdin": "hello",
+      "expect": {
+        "status": 0,
+        "stdout": "42\n"
+      },
+      "env": [
+        {
+          "name": "ANSWER",
+          "value": "42"
+        }
+      ]
+    }
+  ]
+}

@@ -15,6 +15,7 @@
 package parser
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -66,7 +67,19 @@ func parseYAML(b []byte) ([]*test.Test, error) {
 }
 
 func parseJSON(b []byte) ([]*test.Test, error) {
-	return load(b, json.Unmarshal)
+	return load(b, func(b []byte, x interface{}) error {
+		d := json.NewDecoder(bytes.NewBuffer(b))
+		d.UseNumber()
+		err := d.Decode(x)
+		if err != nil {
+			return err
+		}
+		if d.More() {
+			// FIXME: recall json.Unmarshal to generate syntax error message
+			return errors.Wrap(errors.ErrInvalidConfig, json.Unmarshal(b, x))
+		}
+		return nil
+	})
 }
 
 func load(b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.Test, error) {

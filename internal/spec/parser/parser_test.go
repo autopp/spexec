@@ -18,7 +18,17 @@ var _ = Describe("ParseFile()", func() {
 		func(filename string, expected []*model.Test) {
 			Expect(ParseFile(filepath.Join("testdata", filename))).To(Equal(expected))
 		},
-		Entry("with YAML file", "test.yaml", []*model.Test{
+		Entry("testdata/test.yaml", "test.yaml", []*model.Test{
+			{
+				Name:    "test_answer",
+				Command: []string{"echo", "42"},
+				Stdin:   "hello",
+				Env:     map[string]string{"ANSWER": "42"},
+				Status:  &status,
+				Stdout:  &stdout,
+			},
+		}),
+		Entry("testdata/test.json", "test.json", []*model.Test{
 			{
 				Name:    "test_answer",
 				Command: []string{"echo", "42"},
