@@ -1,31 +1,24 @@
 package parser
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/autopp/spexec/internal/model"
 
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 )
 
-func openConfig(name string) []byte {
-	path := filepath.Join("testdata", name)
-	b, err := os.ReadFile(path)
-	if err != nil {
-		panic(err)
-	}
+var _ = Describe("ParseFile()", func() {
+	status := 0
+	stdout := "42\n"
 
-	return b
-}
-
-var _ = Describe("parseYAML()", func() {
-	It("returns loaded []*Test", func() {
-		b := openConfig("test.yaml")
-		status := 0
-		stdout := "42\n"
-		expected := []*model.Test{
+	DescribeTable("with valid file",
+		func(filename string, expected []*model.Test) {
+			Expect(ParseFile(filepath.Join("testdata", filename))).To(Equal(expected))
+		},
+		Entry("with YAML file", "test.yaml", []*model.Test{
 			{
 				Name:    "test_answer",
 				Command: []string{"echo", "42"},
@@ -34,7 +27,6 @@ var _ = Describe("parseYAML()", func() {
 				Status:  &status,
 				Stdout:  &stdout,
 			},
-		}
-		Expect(parseYAML(b)).To(Equal(expected))
-	})
+		}),
+	)
 })
