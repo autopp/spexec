@@ -18,6 +18,10 @@ type StatusMatcher interface {
 	MatchStatus(actual int) (bool, string, error)
 }
 
+type StatusMatcherParser func(r *StatusMatcherRegistry, x interface{}) (StatusMatcher, error)
+
 type StreamMatcher interface {
 	MatchStream(actual []byte) (bool, string, error)
 }
+
+type StreamMatcherParser func(r *StreamMatcherRegistry, fd int, x interface{}) (StreamMatcher, error)
