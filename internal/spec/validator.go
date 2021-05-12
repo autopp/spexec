@@ -218,5 +218,5 @@ func (v *Validator) Error() error {
 		messages[i] = violation.path + ": " + violation.message
 	}
 
-	return errors.New(errors.ErrInvalidConfig, strings.Join(messages, "\n"))
+	return errors.New(errors.ErrInvalidSpec, strings.Join(messages, "\n"))
 }

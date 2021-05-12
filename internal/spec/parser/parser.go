@@ -49,7 +49,7 @@ type testSchema struct {
 func ParseFile(filename string) ([]*test.Test, error) {
 	f, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, errors.Wrap(errors.ErrInvalidConfig, err)
+		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 	var tests []*model.Test
 	ext := filepath.Ext(filename)
@@ -76,7 +76,7 @@ func parseJSON(b []byte) ([]*test.Test, error) {
 		}
 		if d.More() {
 			// FIXME: recall json.Unmarshal to generate syntax error message
-			return errors.Wrap(errors.ErrInvalidConfig, json.Unmarshal(b, x))
+			return errors.Wrap(errors.ErrInvalidSpec, json.Unmarshal(b, x))
 		}
 		return nil
 	})
@@ -86,7 +86,7 @@ func load(b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.T
 	var x interface{}
 	err := unmarchal(b, &x)
 	if err != nil {
-		return nil, errors.Wrap(errors.ErrInvalidConfig, err)
+		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
 	return loadSpec(x)
