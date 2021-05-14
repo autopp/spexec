@@ -14,6 +14,8 @@
 
 package matcher
 
+import "github.com/autopp/spexec/internal/errors"
+
 type StatusMatcherRegistry struct {
 	matchers map[string]StatusMatcherParser
 }
@@ -23,11 +25,18 @@ func NewStatusMatcherRegistry() *StatusMatcherRegistry {
 }
 
 func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
-	panic("")
+	r.matchers[name] = p
+	return nil
 }
 
 func (r *StatusMatcherRegistry) Get(name string) (StatusMatcherParser, error) {
-	panic("")
+	p, ok := r.matchers[name]
+
+	if !ok {
+		return nil, errors.Errorf(errors.ErrInvalidSpec, "matcher %s is not defined", name)
+	}
+
+	return p, nil
 }
 
 type StreamMatcherRegistry struct {
