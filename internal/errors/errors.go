@@ -22,8 +22,9 @@ import (
 type Code string
 
 const (
-	ErrTestFailed  Code = "test failed"
-	ErrInvalidSpec Code = "invalid spec"
+	ErrTestFailed    Code = "test failed"
+	ErrInvalidSpec   Code = "invalid spec"
+	ErrInternalError Code = "internal error"
 )
 
 type Error struct {

@@ -25,6 +25,10 @@ func NewStatusMatcherRegistry() *StatusMatcherRegistry {
 }
 
 func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
+	_, ok := r.matchers[name]
+	if ok {
+		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
+	}
 	r.matchers[name] = p
 	return nil
 }

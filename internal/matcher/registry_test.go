@@ -26,6 +26,23 @@ var _ = Describe("StatusMatcherRegistry", func() {
 		r = NewStatusMatcherRegistry()
 	})
 
+	Describe("Add()", func() {
+		Context("when the given name is not registered yet", func() {
+			It("returns nil", func() {
+				err := r.Add(name, parseZeroMatcher)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when the given name is registered already", func() {
+			It("returns error", func() {
+				r.Add(name, parseZeroMatcher)
+				err := r.Add(name, parseZeroMatcher)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("Get()", func() {
 		Context("when not registered", func() {
 			It("returns error", func() {
