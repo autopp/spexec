@@ -52,9 +52,20 @@ func NewStreamMatcherRegistry() *StreamMatcherRegistry {
 }
 
 func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
-	panic("")
+	_, ok := r.matchers[name]
+	if ok {
+		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
+	}
+	r.matchers[name] = p
+	return nil
 }
 
 func (r *StreamMatcherRegistry) Get(name string) (StreamMatcherParser, error) {
-	panic("")
+	p, ok := r.matchers[name]
+
+	if !ok {
+		return nil, errors.Errorf(errors.ErrInvalidSpec, "matcher %s is not defined", name)
+	}
+
+	return p, nil
 }
