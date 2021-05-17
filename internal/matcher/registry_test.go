@@ -1,6 +1,7 @@
 package matcher
 
 import (
+	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -14,7 +15,7 @@ func (*zeroMatcher) MatchStatus(actual int) (bool, string, error) {
 	return false, "status should be zero", nil
 }
 
-func parseZeroMatcher(r *StatusMatcherRegistry, x interface{}) (StatusMatcher, error) {
+func parseZeroMatcher(_ *spec.Validator, r *StatusMatcherRegistry, x interface{}) (StatusMatcher, error) {
 	return &zeroMatcher{}, nil
 }
 
@@ -28,7 +29,7 @@ func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, "status should be empty", nil
 }
 
-func parseEmptyMatcher(r *StreamMatcherRegistry, fd int, x interface{}) (StreamMatcher, error) {
+func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, fd int, x interface{}) (StreamMatcher, error) {
 	return &emptyMatcher{}, nil
 }
 
@@ -70,7 +71,7 @@ var _ = Describe("StatusMatcherRegistry", func() {
 				r.Add(name, parseZeroMatcher)
 
 				callParser := func(m StatusMatcherParser) StatusMatcher {
-					p, _ := m(r, nil)
+					p, _ := m(nil, r, nil)
 					return p
 				}
 				Expect(r.Get(name)).To(WithTransform(callParser, BeAssignableToTypeOf(&zeroMatcher{})))
@@ -117,7 +118,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 				r.Add(name, parseEmptyMatcher)
 
 				callParser := func(p StreamMatcherParser) StreamMatcher {
-					m, _ := p(r, 1, []byte{})
+					m, _ := p(nil, r, 1, []byte{})
 					return m
 				}
 				Expect(r.Get(name)).To(WithTransform(callParser, BeAssignableToTypeOf(&emptyMatcher{})))
