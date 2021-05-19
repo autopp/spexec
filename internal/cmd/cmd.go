@@ -48,7 +48,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 			}
 
 			filename := args[0]
-			tests, err := parser.ParseFile(filename)
+			tests, err := parser.New().ParseFile(filename)
 			if err != nil {
 				return err
 			}

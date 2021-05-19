@@ -46,7 +46,14 @@ type testSchema struct {
 	}
 }
 
-func ParseFile(filename string) ([]*test.Test, error) {
+type Parser struct {
+}
+
+func New(() *Parser {
+	return &Parser{}
+}
+
+func (p *Parser) ParseFile(filename string) ([]*test.Test, error) {
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
@@ -54,20 +61,20 @@ func ParseFile(filename string) ([]*test.Test, error) {
 	var tests []*model.Test
 	ext := filepath.Ext(filename)
 	if ext == ".yml" || ext == ".yaml" {
-		tests, err = parseYAML(f)
+		tests, err = p.parseYAML(f)
 	} else {
-		tests, err = parseJSON(f)
+		tests, err = p.parseJSON(f)
 	}
 
 	return tests, err
 }
 
-func parseYAML(b []byte) ([]*test.Test, error) {
-	return load(b, yaml.Unmarshal)
+func (p *Parser) parseYAML(b []byte) ([]*test.Test, error) {
+	return p.load(b, yaml.Unmarshal)
 }
 
-func parseJSON(b []byte) ([]*test.Test, error) {
-	return load(b, func(b []byte, x interface{}) error {
+func (p *Parser) parseJSON(b []byte) ([]*test.Test, error) {
+	return p.load(b, func(b []byte, x interface{}) error {
 		d := json.NewDecoder(bytes.NewBuffer(b))
 		d.UseNumber()
 		err := d.Decode(x)
@@ -82,17 +89,17 @@ func parseJSON(b []byte) ([]*test.Test, error) {
 	})
 }
 
-func load(b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.Test, error) {
+func (p *Parser) load(b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.Test, error) {
 	var x interface{}
 	err := unmarchal(b, &x)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	return loadSpec(x)
+	return p.loadSpec(x)
 }
 
-func loadSpec(c interface{}) ([]*test.Test, error) {
+func (p *Parser) loadSpec(c interface{}) ([]*test.Test, error) {
 	v := spec.NewValidator()
 	cmap, ok := v.MustBeMap(c)
 	if !ok {
@@ -102,7 +109,7 @@ func loadSpec(c interface{}) ([]*test.Test, error) {
 	ts := make([]*test.Test, 0)
 	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
 		v.ForInSeq(tcs, func(i int, tc interface{}) {
-			t := loadTest(v, tc)
+			t := p.loadTest(v, tc)
 			ts = append(ts, t)
 		})
 	})
@@ -110,7 +117,7 @@ func loadSpec(c interface{}) ([]*test.Test, error) {
 	return ts, v.Error()
 }
 
-func loadTest(v *spec.Validator, x interface{}) *test.Test {
+func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	tc, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
