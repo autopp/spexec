@@ -16,6 +16,9 @@ package status
 
 import (
 	"fmt"
+
+	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/spec"
 )
 
 type EqMatcher struct {
@@ -28,4 +31,17 @@ func (m *EqMatcher) MatchStatus(actual int) (bool, string, error) {
 	}
 
 	return false, fmt.Sprintf("should be %d, but got %d", m.expected, actual), nil
+}
+
+func ParseEqMatcher(v *spec.Validator, r *matcher.StatusMatcherRegistry, x interface{}) (matcher.StatusMatcher, error) {
+	expected, ok := v.MustBeInt(x)
+	if !ok {
+		return nil, nil
+	}
+
+	if expected < 0 {
+		v.AddViolation("should be positive integer")
+	}
+
+	return &EqMatcher{expected: expected}, nil
 }
