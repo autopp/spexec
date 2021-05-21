@@ -14,7 +14,10 @@
 
 package matcher
 
-import "github.com/autopp/spexec/internal/errors"
+import (
+	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/internal/spec"
+)
 
 type StatusMatcherRegistry struct {
 	matchers map[string]StatusMatcherParser
@@ -41,6 +44,30 @@ func (r *StatusMatcherRegistry) Get(name string) (StatusMatcherParser, error) {
 	}
 
 	return p, nil
+}
+
+func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) (StatusMatcher, error) {
+	specifier, ok := x.(spec.Map)
+	if !ok {
+		v.AddViolation("matcher specifier should be a map with single key-value (got %T)", x)
+		return nil, nil
+	}
+	if len(specifier) != 1 {
+		v.AddViolation("matcher specifier should be a map with single key-value (got map with %d key-value)", len(specifier))
+		return nil, nil
+	}
+
+	var name string
+	var param interface{}
+	for name, param = range specifier {
+	}
+
+	p, ok := r.matchers[name]
+	if !ok {
+		v.AddViolation("matcher for status %s is not defined", name)
+		return nil, nil
+	}
+	return p(v, r, param)
 }
 
 type StreamMatcherRegistry struct {
