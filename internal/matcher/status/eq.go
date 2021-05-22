@@ -33,15 +33,16 @@ func (m *EqMatcher) MatchStatus(actual int) (bool, string, error) {
 	return false, fmt.Sprintf("should be %d, but got %d", m.expected, actual), nil
 }
 
-func ParseEqMatcher(v *spec.Validator, r *matcher.StatusMatcherRegistry, x interface{}) (matcher.StatusMatcher, error) {
+func ParseEqMatcher(v *spec.Validator, r *matcher.StatusMatcherRegistry, x interface{}) matcher.StatusMatcher {
 	expected, ok := v.MustBeInt(x)
 	if !ok {
-		return nil, nil
+		return nil
 	}
 
 	if expected < 0 {
 		v.AddViolation("should be positive integer")
+		return nil
 	}
 
-	return &EqMatcher{expected: expected}, nil
+	return &EqMatcher{expected: expected}
 }

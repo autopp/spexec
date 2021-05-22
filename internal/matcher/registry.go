@@ -46,15 +46,15 @@ func (r *StatusMatcherRegistry) Get(name string) (StatusMatcherParser, error) {
 	return p, nil
 }
 
-func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) (StatusMatcher, error) {
+func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StatusMatcher {
 	specifier, ok := x.(spec.Map)
 	if !ok {
 		v.AddViolation("matcher specifier should be a map with single key-value (got %T)", x)
-		return nil, nil
+		return nil
 	}
 	if len(specifier) != 1 {
 		v.AddViolation("matcher specifier should be a map with single key-value (got map with %d key-value)", len(specifier))
-		return nil, nil
+		return nil
 	}
 
 	var name string
@@ -65,7 +65,7 @@ func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) (
 	p, ok := r.matchers[name]
 	if !ok {
 		v.AddViolation("matcher for status %s is not defined", name)
-		return nil, nil
+		return nil
 	}
 	return p(v, r, param)
 }

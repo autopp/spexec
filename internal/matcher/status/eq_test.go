@@ -37,9 +37,9 @@ var _ = Describe("ParseEqMatcher", func() {
 
 	Describe("with natural number", func() {
 		It("returns matcher", func() {
-			m, err := ParseEqMatcher(v, r, 0)
+			m := ParseEqMatcher(v, r, 0)
 
-			Expect(err).NotTo(HaveOccurred())
+			Expect(m).NotTo(BeNil())
 			Expect(v.Error()).To(BeNil())
 
 			var eq *EqMatcher = m.(*EqMatcher)
@@ -49,9 +49,9 @@ var _ = Describe("ParseEqMatcher", func() {
 
 	DescribeTable("failure cases",
 		func(given interface{}) {
-			_, err := ParseEqMatcher(v, r, given)
+			m := ParseEqMatcher(v, r, given)
 
-			Expect(err).NotTo(HaveOccurred())
+			Expect(m).To(BeNil())
 			Expect(v.Error()).To(HaveOccurred())
 		},
 		Entry("with negative integer", -1),

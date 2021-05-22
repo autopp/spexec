@@ -20,10 +20,10 @@ type StatusMatcher interface {
 	MatchStatus(actual int) (bool, string, error)
 }
 
-type StatusMatcherParser func(v *spec.Validator, r *StatusMatcherRegistry, x interface{}) (StatusMatcher, error)
+type StatusMatcherParser func(v *spec.Validator, r *StatusMatcherRegistry, x interface{}) StatusMatcher
 
 type StreamMatcher interface {
 	MatchStream(actual []byte) (bool, string, error)
 }
 
-type StreamMatcherParser func(v *spec.Validator, r *StreamMatcherRegistry, fd int, x interface{}) (StreamMatcher, error)
+type StreamMatcherParser func(v *spec.Validator, r *StreamMatcherRegistry, fd int, x interface{}) StreamMatcher
