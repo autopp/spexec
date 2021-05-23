@@ -16,16 +16,17 @@ package model
 
 import (
 	"github.com/Wing924/shellwords"
+	"github.com/autopp/spexec/internal/matcher"
 )
 
 type Test struct {
-	Name    string
-	Command []string
-	Stdin   string
-	Status  *int
-	Stdout  *string
-	Stderr  *string
-	Env     map[string]string
+	Name          string
+	Command       []string
+	Stdin         string
+	StatusMatcher matcher.StatusMatcher
+	Stdout        *string
+	Stderr        *string
+	Env           map[string]string
 }
 
 func (t *Test) GetName() string {

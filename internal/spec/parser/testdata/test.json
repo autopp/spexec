@@ -5,7 +5,7 @@
       "command": ["echo", "42"],
       "stdin": "hello",
       "expect": {
-        "status": 0,
+        "status": { "eq": 0 },
         "stdout": "42\n"
       },
       "env": [

@@ -21,6 +21,7 @@ import (
 	"path/filepath"
 
 	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
 	test "github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
@@ -47,10 +48,12 @@ type testSchema struct {
 }
 
 type Parser struct {
+	statusMR *matcher.StatusMatcherRegistry
+	streamMR *matcher.StreamMatcherRegistry
 }
 
-func New(() *Parser {
-	return &Parser{}
+func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) *Parser {
+	return &Parser{statusMR, streamMR}
 }
 
 func (p *Parser) ParseFile(filename string) ([]*test.Test, error) {
@@ -162,9 +165,9 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	})
 
 	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
-		status, exists, _ := v.MayHaveInt(expect, "status")
-		if exists {
-			t.Status = &status
+		status, ok := expect["status"]
+		if ok {
+			t.StatusMatcher = p.statusMR.ParseMatcher(v, status)
 		}
 
 		stdout, exists, _ := v.MayHaveString(expect, "stdout")
