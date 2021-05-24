@@ -44,8 +44,13 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 }
 
 func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
+	statusOk := true
+	if t.StatusMatcher != nil {
+		statusOk, _, _ = t.StatusMatcher.MatchStatus(r.Status)
+	}
+
 	return &model.TestResult{
 		Name:      t.Name,
-		IsSuccess: (t.Status == nil || *t.Status == r.Status) && (t.Stdout == nil || bytes.Equal([]byte(*t.Stdout), r.Stdout)) && (t.Stderr == nil || bytes.Equal([]byte(*t.Stderr), r.Stderr)),
+		IsSuccess: statusOk && (t.Stdout == nil || bytes.Equal([]byte(*t.Stdout), r.Stdout)) && (t.Stderr == nil || bytes.Equal([]byte(*t.Stderr), r.Stderr)),
 	}
 }

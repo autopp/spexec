@@ -3,13 +3,15 @@ tests:
       - echo
       - "42"
     expect:
-      status: 0
+      status:
+        eq: 0
       stdout: "42\n"
       stderr: ""
   - command:
       - "false"
     expect:
-      status: 1
+      status:
+        eq: 1
   - command:
       - printenv
       - ANSWER
@@ -17,11 +19,13 @@ tests:
       - name: ANSWER
         value: "42"
     expect:
-      status: 0
+      status:
+        eq: 0
       stdout: "42\n"
   - command:
       - cat
     stdin: hello
     expect:
-      status: 0
+      status:
+        eq: 0
       stdout: "hello"
