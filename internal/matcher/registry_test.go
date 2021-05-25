@@ -67,28 +67,6 @@ var _ = Describe("StatusMatcherRegistry", func() {
 		})
 	})
 
-	Describe("Get()", func() {
-		Context("when not registered", func() {
-			It("returns error", func() {
-				_, err := r.Get(zeroName)
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when registered", func() {
-			It("returns registerd parser", func() {
-				r.Add(zeroName, parseZeroMatcher)
-
-				callParser := func(m StatusMatcherParser) StatusMatcher {
-					p := m(nil, r, nil)
-					return p
-				}
-
-				Expect(r.Get(zeroName)).To(WithTransform(callParser, BeAssignableToTypeOf(&zeroMatcher{})))
-			})
-		})
-	})
-
 	Describe("ParseMatcher", func() {
 		var v *spec.Validator
 		violationName := "violation"
@@ -162,27 +140,6 @@ var _ = Describe("StreamMatcherRegistry", func() {
 				r.Add(name, parseEmptyMatcher)
 				err := r.Add(name, parseEmptyMatcher)
 				Expect(err).To(HaveOccurred())
-			})
-		})
-	})
-
-	Describe("Get()", func() {
-		Context("when not registered", func() {
-			It("returns error", func() {
-				_, err := r.Get(name)
-				Expect(err).To(HaveOccurred())
-			})
-		})
-
-		Context("when registered", func() {
-			It("returns registerd parser", func() {
-				r.Add(name, parseEmptyMatcher)
-
-				callParser := func(p StreamMatcherParser) StreamMatcher {
-					m := p(nil, r, 1, []byte{})
-					return m
-				}
-				Expect(r.Get(name)).To(WithTransform(callParser, BeAssignableToTypeOf(&emptyMatcher{})))
 			})
 		})
 	})

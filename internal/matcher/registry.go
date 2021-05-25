@@ -36,16 +36,6 @@ func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
 	return nil
 }
 
-func (r *StatusMatcherRegistry) Get(name string) (StatusMatcherParser, error) {
-	p, ok := r.matchers[name]
-
-	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "matcher %s is not defined", name)
-	}
-
-	return p, nil
-}
-
 func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StatusMatcher {
 	specifier, ok := x.(spec.Map)
 	if !ok {
@@ -85,14 +75,4 @@ func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
 	}
 	r.matchers[name] = p
 	return nil
-}
-
-func (r *StreamMatcherRegistry) Get(name string) (StreamMatcherParser, error) {
-	p, ok := r.matchers[name]
-
-	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "matcher %s is not defined", name)
-	}
-
-	return p, nil
 }
