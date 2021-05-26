@@ -158,6 +158,27 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MustBeBool()", func() {
+		Context("with a bool", func() {
+			It("returns the given bool and true", func() {
+				given := true
+				m, b := v.MustBeBool(given)
+
+				Expect(m).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a not bool", func() {
+			It("adds violation and returns something and false", func() {
+				_, b := v.MustBeBool("hello")
+
+				Expect(v.Error()).To(BeValidationError("$: should be bool, but is string"))
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MayHaveMap()", func() {
 		Context("when the given map has specified field which is a Map", func() {
 			It("calls the callback with the map in map in path of the field and returns the it, true, true", func() {

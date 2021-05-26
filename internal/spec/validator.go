@@ -110,6 +110,15 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 	}
 }
 
+func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
+	b, ok := x.(bool)
+	if !ok {
+		v.AddViolation("should be bool, but is %T", x)
+	}
+
+	return b, ok
+}
+
 func (v *Validator) mustHave(m Map, key string) (interface{}, bool) {
 	x, ok := m[key]
 	if !ok {
