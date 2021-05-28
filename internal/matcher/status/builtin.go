@@ -19,5 +19,6 @@ import "github.com/autopp/spexec/internal/matcher"
 func NewStatusMatcherRegistryWithBuiltins() *matcher.StatusMatcherRegistry {
 	r := matcher.NewStatusMatcherRegistry()
 	r.Add("eq", ParseEqMatcher)
+	r.Add("success", ParseSuccessMatcher)
 	return r
 }

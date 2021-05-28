@@ -11,7 +11,7 @@ tests:
       - "false"
     expect:
       status:
-        eq: 1
+        success: false
   - command:
       - printenv
       - ANSWER
@@ -27,5 +27,5 @@ tests:
     stdin: hello
     expect:
       status:
-        eq: 0
+        success: true
       stdout: "hello"
