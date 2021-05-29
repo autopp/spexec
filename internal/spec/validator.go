@@ -127,6 +127,19 @@ func (v *Validator) mustHave(m Map, key string) (interface{}, bool) {
 	return x, ok
 }
 
+func (v *Validator) MayHave(m Map, key string, f func(interface{})) (interface{}, bool) {
+	x, ok := m[key]
+	if !ok {
+		return nil, false
+	}
+
+	v.InField(key, func() {
+		f(x)
+	})
+
+	return x, true
+}
+
 func (v *Validator) MayHaveMap(m Map, key string, f func(Map)) (Map, bool, bool) {
 	x, ok := m[key]
 	if !ok {

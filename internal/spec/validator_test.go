@@ -179,6 +179,35 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayHave()", func() {
+		Context("when the given map has specified field", func() {
+			It("calls the callback with the value in patch of the field and return it and true", func() {
+				contained := Seq{42, "hello"}
+				var passed interface{}
+				x, exists := v.MayHave(Map{"field": contained}, "field", func(x interface{}) {
+					passed = x
+					v.AddViolation("error")
+				})
+
+				Expect(passed).To(BeEquivalentTo(contained))
+				Expect(v.Error()).To(BeValidationError("$.field: error"))
+				Expect(x).To(Equal(contained))
+				Expect(exists).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("dose not call the callback and return something and false", func() {
+				_, exists := v.MayHave(make(Map), "field", func(x interface{}) {
+					v.AddViolation("error")
+				})
+
+				Expect(v.Error()).To(BeNil())
+				Expect(exists).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MayHaveMap()", func() {
 		Context("when the given map has specified field which is a Map", func() {
 			It("calls the callback with the map in map in path of the field and returns the it, true, true", func() {
