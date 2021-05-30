@@ -27,11 +27,20 @@ type SuccessMatcher struct {
 
 func (m *SuccessMatcher) MatchStatus(actual int) (bool, string, error) {
 	succeeded := actual == 0
+	unexpectedSuccessFormat := "should not succeed, but succeeded (status is %d)"
+	unexpectedFailureFormat := "should succeed, but not succeeded (status is %d)"
 	if succeeded == m.expected {
-		return true, fmt.Sprintf("should not succeed, but success"), nil
+		if m.expected {
+			return true, fmt.Sprintf(unexpectedSuccessFormat, actual), nil
+		}
+		return true, fmt.Sprintf(unexpectedFailureFormat, actual), nil
 	}
 
-	return false, fmt.Sprintf("should succeed, but got %d", actual), nil
+	if m.expected {
+		return false, fmt.Sprintf(unexpectedFailureFormat, actual), nil
+	}
+
+	return false, fmt.Sprintf(unexpectedSuccessFormat, actual), nil
 }
 
 func ParseSuccessMatcher(v *spec.Validator, r *matcher.StatusMatcherRegistry, x interface{}) matcher.StatusMatcher {

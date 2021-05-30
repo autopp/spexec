@@ -9,22 +9,17 @@ import (
 )
 
 var _ = Describe("SuccessMatcher", func() {
-	var m *SuccessMatcher
-	var expected bool
-	JustBeforeEach(func() {
-		m = &SuccessMatcher{expected: expected}
-	})
-
 	DescribeTable("MatchStatus",
 		func(expected bool, given int, expectedMatched bool, expectedMessage string) {
+			m := &SuccessMatcher{expected: expected}
 			matched, message, err := m.MatchStatus(given)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))
 		},
-		Entry("when expectation is success and actual is 0, returns true", true, 0, true, "should not succeed, but succeeded"),
+		Entry("when expectation is success and actual is 0, returns true", true, 0, true, "should not succeed, but succeeded (status is 0)"),
 		Entry("when expectation is success and actual is 1, returns false", true, 1, false, "should succeed, but not succeeded (status is 1)"),
-		Entry("when expectation is failure and actual is 0, returns false", false, 0, false, "should not succeed, but succeeded"),
+		Entry("when expectation is failure and actual is 0, returns false", false, 0, false, "should not succeed, but succeeded (status is 0)"),
 		Entry("when expectation is failure and actual is 0, returns false", false, 1, true, "should succeed, but not succeeded (status is 1)"),
 	)
 })
