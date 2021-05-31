@@ -76,3 +76,27 @@ func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
 	r.matchers[name] = p
 	return nil
 }
+
+func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, fd int, x interface{}) StreamMatcher {
+	specifier, ok := x.(spec.Map)
+	if !ok {
+		v.AddViolation("matcher specifier should be a map with single key-value (got %T)", x)
+		return nil
+	}
+	if len(specifier) != 1 {
+		v.AddViolation("matcher specifier should be a map with single key-value (got map with %d key-value)", len(specifier))
+		return nil
+	}
+
+	var name string
+	var param interface{}
+	for name, param = range specifier {
+	}
+
+	p, ok := r.matchers[name]
+	if !ok {
+		v.AddViolation("matcher for status %s is not defined", name)
+		return nil
+	}
+	return p(v, r, fd, param)
+}

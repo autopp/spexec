@@ -26,8 +26,6 @@ func parseViolationStatusMatcher(v *spec.Validator, _ *StatusMatcherRegistry, _ 
 	return &zeroMatcher{}
 }
 
-const errMessage = "some error"
-
 type emptyMatcher struct{}
 
 func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
@@ -39,6 +37,11 @@ func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 }
 
 func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, fd int, x interface{}) StreamMatcher {
+	return &emptyMatcher{}
+}
+
+func parseViolationStreamMatcher(v *spec.Validator, _ *StreamMatcherRegistry, _ int, x interface{}) StreamMatcher {
+	v.AddViolation(violationMessage)
 	return &emptyMatcher{}
 }
 
@@ -121,7 +124,7 @@ var _ = Describe("StatusMatcherRegistry", func() {
 
 var _ = Describe("StreamMatcherRegistry", func() {
 	var r *StreamMatcherRegistry
-	name := "empty"
+	emptyName := "empty"
 
 	JustBeforeEach(func() {
 		r = NewStreamMatcherRegistry()
@@ -130,16 +133,67 @@ var _ = Describe("StreamMatcherRegistry", func() {
 	Describe("Add()", func() {
 		Context("when the given name is not registered yet", func() {
 			It("returns nil", func() {
-				err := r.Add(name, parseEmptyMatcher)
+				err := r.Add(emptyName, parseEmptyMatcher)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		Context("when the given name is registered already", func() {
 			It("returns error", func() {
-				r.Add(name, parseEmptyMatcher)
-				err := r.Add(name, parseEmptyMatcher)
+				r.Add(emptyName, parseEmptyMatcher)
+				err := r.Add(emptyName, parseEmptyMatcher)
 				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
+	Describe("ParseMatcher", func() {
+		var v *spec.Validator
+		violationName := "violation"
+
+		JustBeforeEach(func() {
+			r.Add(emptyName, parseEmptyMatcher)
+			r.Add(violationName, parseViolationStreamMatcher)
+			v = spec.NewValidator()
+		})
+
+		Context("when the given name is registered and it returns matcher", func() {
+			It("returns the parsed matcher", func() {
+				m := r.ParseMatcher(v, 0, spec.Map{emptyName: nil})
+
+				Expect(m).To(BeAssignableToTypeOf(&emptyMatcher{}))
+				Expect(v.Error()).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when the given name is registered and it adds violations", func() {
+			It("cascades violations", func() {
+				r.ParseMatcher(v, 0, spec.Map{violationName: nil})
+				Expect(v.Error()).To(MatchError(ContainSubstring(violationMessage)))
+			})
+		})
+
+		Context("when the given name is not registered", func() {
+			It("adds violations", func() {
+				m := r.ParseMatcher(v, 0, spec.Map{"unknown": nil})
+				Expect(m).To(BeNil())
+				Expect(v.Error()).To(HaveOccurred())
+			})
+		})
+
+		Context("when size of the given map is not one", func() {
+			It("adds violations", func() {
+				m := r.ParseMatcher(v, 0, spec.Map{emptyName: nil, violationName: nil})
+				Expect(m).To(BeNil())
+				Expect(v.Error()).To(HaveOccurred())
+			})
+		})
+
+		Context("when the given is not a map", func() {
+			It("adds violations", func() {
+				m := r.ParseMatcher(v, 0, emptyName)
+				Expect(m).To(BeNil())
+				Expect(v.Error()).To(HaveOccurred())
 			})
 		})
 	})
