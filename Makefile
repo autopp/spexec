@@ -31,7 +31,7 @@ ARTIFACT=$(TARGET_DIR).zip
 
 .PHONY: test
 test:
-	go test -v ./...
+	ginkgo ./...
 
 .PHONY: run
 run:
