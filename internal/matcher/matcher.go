@@ -26,4 +26,4 @@ type StreamMatcher interface {
 	MatchStream(actual []byte) (bool, string, error)
 }
 
-type StreamMatcherParser func(v *spec.Validator, r *StreamMatcherRegistry, fd int, x interface{}) StreamMatcher
+type StreamMatcherParser func(v *spec.Validator, r *StreamMatcherRegistry, x interface{}) StreamMatcher

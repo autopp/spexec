@@ -98,5 +98,5 @@ func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, fd int, x interf
 		v.AddViolation("matcher for status %s is not defined", name)
 		return nil
 	}
-	return p(v, r, fd, param)
+	return p(v, r, param)
 }

@@ -36,11 +36,11 @@ func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, "status should be empty", nil
 }
 
-func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, fd int, x interface{}) StreamMatcher {
+func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, x interface{}) StreamMatcher {
 	return &emptyMatcher{}
 }
 
-func parseViolationStreamMatcher(v *spec.Validator, _ *StreamMatcherRegistry, _ int, x interface{}) StreamMatcher {
+func parseViolationStreamMatcher(v *spec.Validator, _ *StreamMatcherRegistry, x interface{}) StreamMatcher {
 	v.AddViolation(violationMessage)
 	return &emptyMatcher{}
 }
