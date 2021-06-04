@@ -77,7 +77,7 @@ func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
 	return nil
 }
 
-func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, fd int, x interface{}) StreamMatcher {
+func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StreamMatcher {
 	specifier, ok := x.(spec.Map)
 	if !ok {
 		v.AddViolation("matcher specifier should be a map with single key-value (got %T)", x)

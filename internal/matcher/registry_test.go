@@ -159,7 +159,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 
 		Context("when the given name is registered and it returns matcher", func() {
 			It("returns the parsed matcher", func() {
-				m := r.ParseMatcher(v, 0, spec.Map{emptyName: nil})
+				m := r.ParseMatcher(v, spec.Map{emptyName: nil})
 
 				Expect(m).To(BeAssignableToTypeOf(&emptyMatcher{}))
 				Expect(v.Error()).NotTo(HaveOccurred())
@@ -168,14 +168,14 @@ var _ = Describe("StreamMatcherRegistry", func() {
 
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
-				r.ParseMatcher(v, 0, spec.Map{violationName: nil})
+				r.ParseMatcher(v, spec.Map{violationName: nil})
 				Expect(v.Error()).To(MatchError(ContainSubstring(violationMessage)))
 			})
 		})
 
 		Context("when the given name is not registered", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, 0, spec.Map{"unknown": nil})
+				m := r.ParseMatcher(v, spec.Map{"unknown": nil})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -183,7 +183,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 
 		Context("when size of the given map is not one", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, 0, spec.Map{emptyName: nil, violationName: nil})
+				m := r.ParseMatcher(v, spec.Map{emptyName: nil, violationName: nil})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -191,7 +191,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 
 		Context("when the given is not a map", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, 0, emptyName)
+				m := r.ParseMatcher(v, emptyName)
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
