@@ -34,7 +34,7 @@ func (m *EqMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should be %q, but got %q", m.expected, string(actual)), nil
 }
 
-func ParseEqMatcher(v *spec.Validator, r *matcher.StatusMatcherRegistry, x interface{}) matcher.StreamMatcher {
+func ParseEqMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
 	expected, ok := v.MustBeString(x)
 	if !ok {
 		return nil

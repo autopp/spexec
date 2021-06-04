@@ -28,11 +28,11 @@ var _ = Describe("EqMatcher", func() {
 
 var _ = Describe("ParseEqMatcher", func() {
 	var v *spec.Validator
-	var r *matcher.StatusMatcherRegistry
+	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
 		v = spec.NewValidator()
-		r = matcher.NewStatusMatcherRegistry()
+		r = matcher.NewStreamMatcherRegistry()
 	})
 
 	Describe("with string", func() {
