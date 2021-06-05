@@ -170,14 +170,14 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 			t.StatusMatcher = p.statusMR.ParseMatcher(v, status)
 		}
 
-		stdout, exists, _ := v.MayHaveString(expect, "stdout")
-		if exists {
-			t.Stdout = &stdout
+		stdout, ok := expect["stdout"]
+		if ok {
+			t.StdoutMatcher = p.streamMR.ParseMatcher(v, stdout)
 		}
 
-		stderr, exists, _ := v.MayHaveString(expect, "stderr")
-		if exists {
-			t.Stderr = &stderr
+		stderr, ok := expect["stderr"]
+		if ok {
+			t.StderrMatcher = p.streamMR.ParseMatcher(v, stderr)
 		}
 	})
 

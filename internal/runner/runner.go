@@ -15,8 +15,6 @@
 package runner
 
 import (
-	"bytes"
-
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 )
@@ -49,8 +47,18 @@ func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
 		statusOk, _, _ = t.StatusMatcher.MatchStatus(r.Status)
 	}
 
+	stdoutOk := true
+	if t.StdoutMatcher != nil {
+		stdoutOk, _, _ = t.StdoutMatcher.MatchStream(r.Stdout)
+	}
+
+	stderrOk := true
+	if t.StderrMatcher != nil {
+		stderrOk, _, _ = t.StderrMatcher.MatchStream(r.Stderr)
+	}
+
 	return &model.TestResult{
 		Name:      t.Name,
-		IsSuccess: statusOk && (t.Stdout == nil || bytes.Equal([]byte(*t.Stdout), r.Stdout)) && (t.Stderr == nil || bytes.Equal([]byte(*t.Stderr), r.Stderr)),
+		IsSuccess: statusOk && stdoutOk && stderrOk,
 	}
 }

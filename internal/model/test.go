@@ -24,8 +24,8 @@ type Test struct {
 	Command       []string
 	Stdin         string
 	StatusMatcher matcher.StatusMatcher
-	Stdout        *string
-	Stderr        *string
+	StdoutMatcher matcher.StreamMatcher
+	StderrMatcher matcher.StreamMatcher
 	Env           map[string]string
 }
 

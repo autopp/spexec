@@ -5,6 +5,7 @@ import (
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/matcher/status"
+	"github.com/autopp/spexec/internal/matcher/stream"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -14,14 +15,15 @@ import (
 
 var _ = Describe("Parser", func() {
 	Describe("ParseFile()", func() {
-		var eqMatcher *status.EqMatcher
+		var statusEqMatcher *status.EqMatcher
+		var streamEqMatcher *stream.EqMatcher
 		var p *Parser
-		stdout := "42\n"
 
 		JustBeforeEach(func() {
 			statusMR := matcher.NewStatusMatcherRegistry()
 			statusMR.Add("eq", status.ParseEqMatcher)
 			streamMR := matcher.NewStreamMatcherRegistry()
+			streamMR.Add("eq", stream.ParseEqMatcher)
 			p = New(statusMR, streamMR)
 		})
 
@@ -39,9 +41,9 @@ var _ = Describe("Parser", func() {
 					"Command":       Equal([]string{"echo", "42"}),
 					"Stdin":         Equal("hello"),
 					"Env":           Equal(map[string]string{"ANSWER": "42"}),
-					"StatusMatcher": BeAssignableToTypeOf(eqMatcher),
-					"Stdout":        Equal(&stdout),
-					"Stderr":        BeNil(),
+					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
+					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
+					"StderrMatcher": BeNil(),
 				})),
 			}),
 			// Entry("testdata/test.json", "test.json", []*model.Test{

@@ -7,7 +7,8 @@ tests:
     expect:
       status:
         eq: 0
-      stdout: "42\n"
+      stdout:
+        eq: "42\n"
     env:
       - name: ANSWER
         value: "42"
