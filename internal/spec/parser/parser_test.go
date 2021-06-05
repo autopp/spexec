@@ -46,16 +46,17 @@ var _ = Describe("Parser", func() {
 					"StderrMatcher": BeNil(),
 				})),
 			}),
-			// Entry("testdata/test.json", "test.json", []*model.Test{
-			// 	{
-			// 		Name:    "test_answer",
-			// 		Command: []string{"echo", "42"},
-			// 		Stdin:   "hello",
-			// 		Env:     map[string]string{"ANSWER": "42"},
-			// 		Status:  &status,
-			// 		Stdout:  &stdout,
-			// 	},
-			// }),
+			Entry("testdata/test.json", "test.json", Elements{
+				"0": PointTo(MatchAllFields(Fields{
+					"Name":          Equal("test_answer"),
+					"Command":       Equal([]string{"echo", "42"}),
+					"Stdin":         Equal("hello"),
+					"Env":           Equal(map[string]string{"ANSWER": "42"}),
+					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
+					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
+					"StderrMatcher": BeNil(),
+				})),
+			}),
 		)
 	})
 })

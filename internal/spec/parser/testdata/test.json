@@ -6,7 +6,7 @@
       "stdin": "hello",
       "expect": {
         "status": { "eq": 0 },
-        "stdout": "42\n"
+        "stdout": { "eq": "42\n" }
       },
       "env": [
         {
