@@ -5,8 +5,10 @@ tests:
     expect:
       status:
         eq: 0
-      stdout: "42\n"
-      stderr: ""
+      stdout:
+        eq: "42\n"
+      stderr:
+        eq: ""
   - command:
       - "false"
     expect:
@@ -21,11 +23,13 @@ tests:
     expect:
       status:
         eq: 0
-      stdout: "42\n"
+      stdout:
+        eq: "42\n"
   - command:
       - cat
     stdin: hello
     expect:
       status:
         success: true
-      stdout: "hello"
+      stdout:
+        eq: "hello"

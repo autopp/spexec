@@ -20,8 +20,8 @@ import (
 	"os"
 
 	"github.com/autopp/spexec/internal/errors"
-	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/matcher/status"
+	"github.com/autopp/spexec/internal/matcher/stream"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
 	"github.com/autopp/spexec/internal/spec/parser"
@@ -51,7 +51,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 
 			filename := args[0]
 			statusMR := status.NewStatusMatcherRegistryWithBuiltins()
-			streamMR := matcher.NewStreamMatcherRegistry()
+			streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 			tests, err := parser.New(statusMR, streamMR).ParseFile(filename)
 			if err != nil {
 				return err
