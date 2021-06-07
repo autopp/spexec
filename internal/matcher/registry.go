@@ -95,7 +95,7 @@ func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 
 	p, ok := r.matchers[name]
 	if !ok {
-		v.AddViolation("matcher for status %s is not defined", name)
+		v.AddViolation("matcher for stream %s is not defined", name)
 		return nil
 	}
 	return p(v, r, param)
