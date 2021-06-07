@@ -165,20 +165,17 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	})
 
 	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
-		status, ok := expect["status"]
-		if ok {
+		v.MayHave(expect, "status", func(status interface{}) {
 			t.StatusMatcher = p.statusMR.ParseMatcher(v, status)
-		}
+		})
 
-		stdout, ok := expect["stdout"]
-		if ok {
+		v.MayHave(expect, "stdout", func(stdout interface{}) {
 			t.StdoutMatcher = p.streamMR.ParseMatcher(v, stdout)
-		}
+		})
 
-		stderr, ok := expect["stderr"]
-		if ok {
+		v.MayHave(expect, "stderr", func(stderr interface{}) {
 			t.StderrMatcher = p.streamMR.ParseMatcher(v, stderr)
-		}
+		})
 	})
 
 	return t
