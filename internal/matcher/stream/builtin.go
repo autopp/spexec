@@ -19,5 +19,6 @@ import "github.com/autopp/spexec/internal/matcher"
 func NewStreamMatcherRegistryWithBuiltins() *matcher.StreamMatcherRegistry {
 	r := matcher.NewStreamMatcherRegistry()
 	r.Add("eq", ParseEqMatcher)
+	r.Add("beEmpty", ParseBeEmptyMatcher)
 	return r
 }

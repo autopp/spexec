@@ -8,7 +8,7 @@ tests:
       stdout:
         eq: "42\n"
       stderr:
-        eq: ""
+        beEmpty: true
   - command:
       - "false"
     expect:
