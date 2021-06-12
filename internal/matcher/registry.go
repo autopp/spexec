@@ -57,7 +57,13 @@ func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 		v.AddViolation("matcher for status %s is not defined", name)
 		return nil
 	}
-	return p(v, r, param)
+
+	var m StatusMatcher
+	v.InField(name, func() {
+		m = p(v, r, param)
+	})
+
+	return m
 }
 
 type StreamMatcherRegistry struct {
@@ -98,5 +104,11 @@ func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 		v.AddViolation("matcher for stream %s is not defined", name)
 		return nil
 	}
-	return p(v, r, param)
+
+	var m StreamMatcher
+	v.InField(name, func() {
+		m = p(v, r, param)
+	})
+
+	return m
 }

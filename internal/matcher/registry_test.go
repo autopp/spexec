@@ -1,6 +1,8 @@
 package matcher
 
 import (
+	"fmt"
+
 	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -92,7 +94,7 @@ var _ = Describe("StatusMatcherRegistry", func() {
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
 				r.ParseMatcher(v, spec.Map{violationName: nil})
-				Expect(v.Error()).To(MatchError(ContainSubstring(violationMessage)))
+				Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: %s", violationName, violationMessage)))
 			})
 		})
 
@@ -169,7 +171,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
 				r.ParseMatcher(v, spec.Map{violationName: nil})
-				Expect(v.Error()).To(MatchError(ContainSubstring(violationMessage)))
+				Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: %s", violationName, violationMessage)))
 			})
 		})
 
