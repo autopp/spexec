@@ -242,3 +242,37 @@ func (v *Validator) Error() error {
 
 	return errors.New(errors.ErrInvalidSpec, strings.Join(messages, "\n"))
 }
+
+func Typeof(x interface{}) string {
+	if x == nil {
+		return "nil"
+	}
+
+	if _, ok := x.(int); ok {
+		return "int"
+	}
+
+	if i, ok := x.(json.Number); ok {
+		if _, err := i.Int64(); err == nil {
+			return "int"
+		}
+	}
+
+	if _, ok := x.(bool); ok {
+		return "bool"
+	}
+
+	if _, ok := x.(string); ok {
+		return "string"
+	}
+
+	if _, ok := x.(Seq); ok {
+		return "seq"
+	}
+
+	if _, ok := x.(Map); ok {
+		return "map"
+	}
+
+	return fmt.Sprintf("%T", x)
+}

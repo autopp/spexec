@@ -1,7 +1,10 @@
 package spec
 
 import (
+	"encoding/json"
+
 	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 )
@@ -437,3 +440,16 @@ var _ = Describe("Validator", func() {
 		})
 	})
 })
+
+var _ = DescribeTable("Typeof()",
+	func(x interface{}, expected string) {
+		Expect(Typeof(x)).To(Equal(expected))
+	},
+	Entry(`when 42 given, returns "int"`, 42, "int"),
+	Entry(`when json.Number("42") given, returns "int"`, json.Number("42"), "int"),
+	Entry(`when true given, returns "bool"`, true, "bool"),
+	Entry(`when "hello" given, returns "string"`, "hello", "string"),
+	Entry(`when slice given, returns "seq"`, Seq{42, true, "hello"}, "seq"),
+	Entry(`when string key map given, returns "map"`, Map{"message": "hello"}, "map"),
+	Entry(`when nil given, returns "nil"`, nil, "nil"),
+)
