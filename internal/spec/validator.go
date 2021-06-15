@@ -73,7 +73,7 @@ func (v *Validator) MustBeMap(x interface{}) (Map, bool) {
 	if m, ok := x.(Map); ok {
 		return m, true
 	}
-	v.AddViolation("should be map, but is %T", x)
+	v.AddViolation("should be map, but is %s", Typeof(x))
 	return nil, false
 }
 
@@ -81,14 +81,14 @@ func (v *Validator) MustBeSeq(x interface{}) (Seq, bool) {
 	if s, ok := x.(Seq); ok {
 		return s, true
 	}
-	v.AddViolation("should be seq, but is %T", x)
+	v.AddViolation("should be seq, but is %s", Typeof(x))
 	return nil, false
 }
 
 func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	s, ok := x.(string)
 	if !ok {
-		v.AddViolation("should be string, but is %T", x)
+		v.AddViolation("should be string, but is %s", Typeof(x))
 	}
 
 	return s, ok
@@ -101,11 +101,11 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 	case json.Number:
 		i, err := n.Int64()
 		if err != nil {
-			v.AddViolation("should be int, but is %T", x)
+			v.AddViolation("should be int, but is %s", Typeof(x))
 		}
 		return int(i), err == nil
 	default:
-		v.AddViolation("should be int, but is %T", x)
+		v.AddViolation("should be int, but is %s", Typeof(x))
 		return 0, false
 	}
 }
@@ -113,7 +113,7 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
 	b, ok := x.(bool)
 	if !ok {
-		v.AddViolation("should be bool, but is %T", x)
+		v.AddViolation("should be bool, but is %s", Typeof(x))
 	}
 
 	return b, ok

@@ -39,7 +39,7 @@ func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
 func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StatusMatcher {
 	specifier, ok := x.(spec.Map)
 	if !ok {
-		v.AddViolation("matcher specifier should be a map with single key-value (got %T)", x)
+		v.AddViolation("matcher specifier should be a map with single key-value (got %s)", spec.Typeof(x))
 		return nil
 	}
 	if len(specifier) != 1 {
@@ -86,7 +86,7 @@ func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
 func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StreamMatcher {
 	specifier, ok := x.(spec.Map)
 	if !ok {
-		v.AddViolation("matcher specifier should be a map with single key-value (got %T)", x)
+		v.AddViolation("matcher specifier should be a map with single key-value (got %s)", spec.Typeof(x))
 		return nil
 	}
 	if len(specifier) != 1 {
