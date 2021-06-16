@@ -16,5 +16,6 @@ package model
 
 type TestResult struct {
 	Name      string
+	Messages  []string
 	IsSuccess bool
 }

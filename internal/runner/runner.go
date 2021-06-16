@@ -42,23 +42,35 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 }
 
 func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
+	messages := make([]string, 0)
+	var message string
 	statusOk := true
 	if t.StatusMatcher != nil {
-		statusOk, _, _ = t.StatusMatcher.MatchStatus(r.Status)
+		statusOk, message, _ = t.StatusMatcher.MatchStatus(r.Status)
+		if !statusOk {
+			messages = append(messages, message)
+		}
 	}
 
 	stdoutOk := true
 	if t.StdoutMatcher != nil {
-		stdoutOk, _, _ = t.StdoutMatcher.MatchStream(r.Stdout)
+		stdoutOk, message, _ = t.StdoutMatcher.MatchStream(r.Stdout)
+		if !stdoutOk {
+			messages = append(messages, message)
+		}
 	}
 
 	stderrOk := true
 	if t.StderrMatcher != nil {
-		stderrOk, _, _ = t.StderrMatcher.MatchStream(r.Stderr)
+		stderrOk, message, _ = t.StderrMatcher.MatchStream(r.Stderr)
+		if !stderrOk {
+			messages = append(messages, message)
+		}
 	}
 
 	return &model.TestResult{
 		Name:      t.Name,
+		Messages:  messages,
 		IsSuccess: statusOk && stdoutOk && stderrOk,
 	}
 }
