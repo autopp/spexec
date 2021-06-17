@@ -54,17 +54,19 @@ func (sr *DocumentationFormatter) OnTestComplete(w *Writer, t *model.Test, tr *m
 
 // OnRunComplete is part of Reporter
 func (sr *DocumentationFormatter) OnRunComplete(w *Writer, trs []*model.TestResult) {
-	failures := 0
+	failures := make([]*model.TestResult, 0)
 	for _, tr := range trs {
 		if !tr.IsSuccess {
-			failures++
+			failures = append(failures, tr)
 		}
 	}
 	var color Color = Green
-	if failures > 0 {
+	if len(failures) > 0 {
 		color = Red
 	}
+
+	printFailures(w, failures)
 	w.UseColor(color, func() {
-		fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), failures)
+		fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), len(failures))
 	})
 }
