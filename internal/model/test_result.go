@@ -14,8 +14,13 @@
 
 package model
 
+type AssertionMessage struct {
+	Name    string
+	Message string
+}
+
 type TestResult struct {
 	Name      string
-	Messages  []string
+	Messages  []*AssertionMessage
 	IsSuccess bool
 }

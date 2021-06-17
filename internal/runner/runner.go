@@ -42,13 +42,13 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 }
 
 func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
-	messages := make([]string, 0)
+	messages := make([]*model.AssertionMessage, 0)
 	var message string
 	statusOk := true
 	if t.StatusMatcher != nil {
 		statusOk, message, _ = t.StatusMatcher.MatchStatus(r.Status)
 		if !statusOk {
-			messages = append(messages, message)
+			messages = append(messages, &model.AssertionMessage{Name: "status", Message: message})
 		}
 	}
 
@@ -56,7 +56,8 @@ func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
 	if t.StdoutMatcher != nil {
 		stdoutOk, message, _ = t.StdoutMatcher.MatchStream(r.Stdout)
 		if !stdoutOk {
-			messages = append(messages, message)
+			messages = append(messages, &model.AssertionMessage{Name: "stdout", Message: message})
+
 		}
 	}
 
@@ -64,7 +65,7 @@ func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
 	if t.StderrMatcher != nil {
 		stderrOk, message, _ = t.StderrMatcher.MatchStream(r.Stderr)
 		if !stderrOk {
-			messages = append(messages, message)
+			messages = append(messages, &model.AssertionMessage{Name: "stderr", Message: message})
 		}
 	}
 
