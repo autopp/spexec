@@ -70,7 +70,7 @@ func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
 	}
 
 	return &model.TestResult{
-		Name:      t.Name,
+		Name:      t.GetName(),
 		Messages:  messages,
 		IsSuccess: statusOk && stdoutOk && stderrOk,
 	}
