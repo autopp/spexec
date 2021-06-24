@@ -29,8 +29,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type options struct {
+	filename string
+	output   string
+	color    string
+	format   string
+}
+
 // Main is the entrypoint of command line
 func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
+	opts := &options{}
+
 	const versionFlag = "version"
 	const outputFlag = "output"
 	const colorFlag = "color"
@@ -49,87 +58,21 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 				return nil
 			}
 
-			filename := args[0]
-			statusMR := status.NewStatusMatcherRegistryWithBuiltins()
-			streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
-			tests, err := parser.New(statusMR, streamMR).ParseFile(filename)
-			if err != nil {
+			if err := opts.complete(cmd, args); err != nil {
 				return err
 			}
 
-			runner := runner.NewRunner()
-			reporterOpts := make([]reporter.Option, 0)
-			output, err := cmd.Flags().GetString(outputFlag)
-			if err != nil {
-				return err
-			}
-			out := os.Stdout
-			if len(output) != 0 {
-				out, err = os.Create(output)
-				if err != nil {
-					return err
-				}
-				defer out.Close()
-			}
-			reporterOpts = append(reporterOpts, reporter.WithWriter(out))
-
-			color, err := cmd.Flags().GetString(colorFlag)
-			if err != nil {
-				return err
-			}
-			var colorMode bool
-			switch color {
-			case "always":
-				colorMode = true
-			case "never":
-				colorMode = false
-			case "auto":
-				colorMode = isatty.IsTerminal(out.Fd())
-			default:
-				return fmt.Errorf("invalid --color flag: %s", color)
-			}
-			reporterOpts = append(reporterOpts, reporter.WithColor(colorMode))
-
-			var formatter reporter.ReportFormatter
-			format, err := cmd.Flags().GetString(formatFlag)
-			switch format {
-			case "simple":
-				formatter = &reporter.SimpleFormatter{}
-			case "documentation":
-				formatter = &reporter.DocumentationFormatter{}
-			default:
-				return fmt.Errorf("invalid --format flag: %s", format)
-			}
-			reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
-
-			reporter, err := reporter.New(reporterOpts...)
-			if err != nil {
-				return err
-			}
-			results := runner.RunTests(tests, reporter)
-
-			allGreen := true
-			for _, r := range results {
-				if !r.IsSuccess {
-					allGreen = false
-					break
-				}
-			}
-
-			if !allGreen {
-				return errors.New(errors.ErrTestFailed, "test failed")
-			}
-			return nil
+			return opts.run()
 		},
 	}
 
 	cmd.Flags().Bool(versionFlag, false, "print version")
-	cmd.Flags().StringP(outputFlag, "o", "", "output to file")
-	cmd.Flags().String(colorFlag, "auto", "color output")
+	cmd.Flags().StringVarP(&opts.output, outputFlag, "o", "", "output to file")
+	cmd.Flags().StringVar(&opts.color, colorFlag, "auto", "color output")
 	cmd.RegisterFlagCompletionFunc(colorFlag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"auto", "always", "never"}, cobra.ShellCompDirectiveDefault
 	})
-	cmd.Flags().String(formatFlag, "simple", "format")
+	cmd.Flags().StringVar(&opts.format, formatFlag, "simple", "format")
 	cmd.RegisterFlagCompletionFunc(formatFlag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"simple", "documentation"}, cobra.ShellCompDirectiveDefault
 	})
@@ -140,4 +83,91 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	cmd.SetArgs(args)
 
 	return cmd.Execute()
+}
+
+func (o *options) complete(cmd *cobra.Command, args []string) error {
+	o.filename = args[0]
+
+	if err := validateEnumFlag(o.color, "always", "never", "auto"); err != nil {
+		return err
+	}
+
+	if err := validateEnumFlag(o.format, "simple", "documentation"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func validateEnumFlag(value string, validValues ...string) error {
+	for _, v := range validValues {
+		if value == v {
+			return nil
+		}
+	}
+
+	return fmt.Errorf("invalid --color flag: %s", value)
+}
+
+func (o *options) run() error {
+	statusMR := status.NewStatusMatcherRegistryWithBuiltins()
+	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
+	tests, err := parser.New(statusMR, streamMR).ParseFile(o.filename)
+	if err != nil {
+		return err
+	}
+
+	runner := runner.NewRunner()
+	reporterOpts := make([]reporter.Option, 0)
+	out := os.Stdout
+	if len(o.output) != 0 {
+		out, err = os.Create(o.output)
+		if err != nil {
+			return err
+		}
+		defer out.Close()
+	}
+	reporterOpts = append(reporterOpts, reporter.WithWriter(out))
+
+	if err != nil {
+		return err
+	}
+	var colorMode bool
+	switch o.color {
+	case "always":
+		colorMode = true
+	case "never":
+		colorMode = false
+	case "auto":
+		colorMode = isatty.IsTerminal(out.Fd())
+	}
+	reporterOpts = append(reporterOpts, reporter.WithColor(colorMode))
+
+	var formatter reporter.ReportFormatter
+	switch o.format {
+	case "simple":
+		formatter = &reporter.SimpleFormatter{}
+	case "documentation":
+		formatter = &reporter.DocumentationFormatter{}
+	}
+	reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
+
+	reporter, err := reporter.New(reporterOpts...)
+	if err != nil {
+		return err
+	}
+	results := runner.RunTests(tests, reporter)
+
+	allGreen := true
+	for _, r := range results {
+		if !r.IsSuccess {
+			allGreen = false
+			break
+		}
+	}
+
+	if !allGreen {
+		return errors.New(errors.ErrTestFailed, "test failed")
+	}
+	return nil
 }
