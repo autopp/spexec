@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"regexp"
 
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
@@ -46,6 +47,8 @@ type testSchema struct {
 		stderr *string
 	}
 }
+
+var evnVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
 
 type Parser struct {
 	statusMR *matcher.StatusMatcherRegistry
@@ -159,6 +162,11 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 			value, valueOk := v.MustHaveString(envVar, "value")
 
 			if nameOk && valueOk {
+				v.InField("name", func() {
+					if !evnVarNamePattern.MatchString(name) {
+						v.AddViolation("environment variable name shoud be match to /%s/", evnVarNamePattern.String())
+					}
+				})
 				t.Env[name] = value
 			}
 		})
