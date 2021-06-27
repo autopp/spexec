@@ -26,7 +26,10 @@ type Test struct {
 	StatusMatcher matcher.StatusMatcher
 	StdoutMatcher matcher.StreamMatcher
 	StderrMatcher matcher.StreamMatcher
-	Env           map[string]string
+	Env           []struct {
+		Name  string
+		Value string
+	}
 }
 
 func (t *Test) GetName() string {

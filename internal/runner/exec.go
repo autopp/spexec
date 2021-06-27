@@ -33,7 +33,10 @@ type ExecResult struct {
 type Exec struct {
 	Command []string
 	Stdin   string
-	Env     map[string]string
+	Env     []struct {
+		Name  string
+		Value string
+	}
 }
 
 func NewExec(t *model.Test) *Exec {
@@ -52,8 +55,8 @@ func (e *Exec) Run() *ExecResult {
 	stderr := new(bytes.Buffer)
 	cmd.Stderr = stderr
 	cmd.Env = os.Environ()
-	for name, v := range e.Env {
-		kv := fmt.Sprintf("%s=%s", name, v)
+	for _, v := range e.Env {
+		kv := fmt.Sprintf("%s=%s", v.Name, v.Value)
 		cmd.Env = append(cmd.Env, kv)
 	}
 	cmd.Run()

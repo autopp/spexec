@@ -152,7 +152,10 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	}
 
 	v.MayHaveSeq(tc, "env", func(env spec.Seq) {
-		t.Env = make(map[string]string)
+		t.Env = []struct {
+			Name  string
+			Value string
+		}{}
 		v.ForInSeq(env, func(i int, x interface{}) {
 			envVar, ok := v.MustBeMap(x)
 			if !ok {
@@ -167,7 +170,10 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 						v.AddViolation("environment variable name shoud be match to /%s/", evnVarNamePattern.String())
 					}
 				})
-				t.Env[name] = value
+				t.Env = append(t.Env, struct {
+					Name  string
+					Value string
+				}{Name: name, Value: value})
 			}
 		})
 	})
