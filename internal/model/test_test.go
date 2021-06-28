@@ -14,5 +14,16 @@ var _ = Describe("Test", func() {
 		Entry("Name is not empty", &Test{Name: "test of echo", Command: []string{"echo", "hello"}}, "test of echo"),
 		Entry("Name is empty", &Test{Name: "", Command: []string{"echo", "hello"}},
 			"echo hello"),
+		Entry("Name is empty and Env is given", &Test{
+			Name:    "",
+			Command: []string{"make", "build"},
+			Env: []struct {
+				Name  string
+				Value string
+			}{
+				{Name: "GOOS", Value: "linux"},
+				{Name: "GOARCH", Value: "amd64"},
+			},
+		}, "GOOS=linux GOARCH=amd64 make build"),
 	)
 })

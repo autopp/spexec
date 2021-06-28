@@ -37,5 +37,9 @@ func (t *Test) GetName() string {
 		return t.Name
 	}
 
-	return shellwords.Join(t.Command)
+	envStr := ""
+	for _, v := range t.Env {
+		envStr += v.Name + "=" + v.Value + " "
+	}
+	return envStr + shellwords.Join(t.Command)
 }
