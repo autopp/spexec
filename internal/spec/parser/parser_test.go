@@ -37,10 +37,15 @@ var _ = Describe("Parser", func() {
 
 			Entry("testdata/test.yaml", "test.yaml", Elements{
 				"0": PointTo(MatchAllFields(Fields{
-					"Name":          Equal("test_answer"),
-					"Command":       Equal([]string{"echo", "42"}),
-					"Stdin":         Equal("hello"),
-					"Env":           Equal(map[string]string{"ANSWER": "42"}),
+					"Name":    Equal("test_answer"),
+					"Command": Equal([]string{"echo", "42"}),
+					"Stdin":   Equal("hello"),
+					"Env": Equal([]struct {
+						Name  string
+						Value string
+					}{
+						{Name: "ANSWER", Value: "42"},
+					}),
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
 					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
 					"StderrMatcher": BeNil(),
@@ -48,10 +53,15 @@ var _ = Describe("Parser", func() {
 			}),
 			Entry("testdata/test.json", "test.json", Elements{
 				"0": PointTo(MatchAllFields(Fields{
-					"Name":          Equal("test_answer"),
-					"Command":       Equal([]string{"echo", "42"}),
-					"Stdin":         Equal("hello"),
-					"Env":           Equal(map[string]string{"ANSWER": "42"}),
+					"Name":    Equal("test_answer"),
+					"Command": Equal([]string{"echo", "42"}),
+					"Stdin":   Equal("hello"),
+					"Env": Equal([]struct {
+						Name  string
+						Value string
+					}{
+						{Name: "ANSWER", Value: "42"},
+					}),
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
 					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
 					"StderrMatcher": BeNil(),
