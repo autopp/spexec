@@ -6,6 +6,7 @@ import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/matcher/status"
 	"github.com/autopp/spexec/internal/matcher/stream"
+	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -40,10 +41,7 @@ var _ = Describe("Parser", func() {
 					"Name":    Equal("test_answer"),
 					"Command": Equal([]string{"echo", "42"}),
 					"Stdin":   Equal("hello"),
-					"Env": Equal([]struct {
-						Name  string
-						Value string
-					}{
+					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},
 					}),
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
@@ -56,10 +54,7 @@ var _ = Describe("Parser", func() {
 					"Name":    Equal("test_answer"),
 					"Command": Equal([]string{"echo", "42"}),
 					"Stdin":   Equal("hello"),
-					"Env": Equal([]struct {
-						Name  string
-						Value string
-					}{
+					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},
 					}),
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),

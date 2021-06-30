@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -17,10 +18,7 @@ var _ = Describe("Test", func() {
 		Entry("Name is empty and Env is given", &Test{
 			Name:    "",
 			Command: []string{"make", "build"},
-			Env: []struct {
-				Name  string
-				Value string
-			}{
+			Env: []util.StringVar{
 				{Name: "GOOS", Value: "linux"},
 				{Name: "GOARCH", Value: "amd64"},
 			},

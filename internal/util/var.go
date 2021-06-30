@@ -12,32 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package util
 
-import (
-	"github.com/Wing924/shellwords"
-	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/util"
-)
-
-type Test struct {
-	Name          string
-	Command       []string
-	Stdin         string
-	StatusMatcher matcher.StatusMatcher
-	StdoutMatcher matcher.StreamMatcher
-	StderrMatcher matcher.StreamMatcher
-	Env           []util.StringVar
-}
-
-func (t *Test) GetName() string {
-	if len(t.Name) != 0 {
-		return t.Name
-	}
-
-	envStr := ""
-	for _, v := range t.Env {
-		envStr += v.Name + "=" + v.Value + " "
-	}
-	return envStr + shellwords.Join(t.Command)
+type StringVar struct {
+	Name  string
+	Value string
 }

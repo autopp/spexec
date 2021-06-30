@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/util"
 )
 
 type ExecResult struct {
@@ -33,10 +34,7 @@ type ExecResult struct {
 type Exec struct {
 	Command []string
 	Stdin   string
-	Env     []struct {
-		Name  string
-		Value string
-	}
+	Env     []util.StringVar
 }
 
 func NewExec(t *model.Test) *Exec {

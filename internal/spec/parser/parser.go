@@ -26,6 +26,7 @@ import (
 	"github.com/autopp/spexec/internal/model"
 	test "github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
 )
 
@@ -37,11 +38,8 @@ type specSchema struct {
 type testSchema struct {
 	name    string
 	command []string
-	env     []struct {
-		name  string
-		value string
-	}
-	expect *struct {
+	env     []util.StringVar
+	expect  *struct {
 		status *int
 		stdout *string
 		stderr *string
@@ -152,10 +150,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	}
 
 	v.MayHaveSeq(tc, "env", func(env spec.Seq) {
-		t.Env = []struct {
-			Name  string
-			Value string
-		}{}
+		t.Env = []util.StringVar{}
 		v.ForInSeq(env, func(i int, x interface{}) {
 			envVar, ok := v.MustBeMap(x)
 			if !ok {
@@ -170,10 +165,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 						v.AddViolation("environment variable name shoud be match to /%s/", evnVarNamePattern.String())
 					}
 				})
-				t.Env = append(t.Env, struct {
-					Name  string
-					Value string
-				}{Name: name, Value: value})
+				t.Env = append(t.Env, util.StringVar{Name: name, Value: value})
 			}
 		})
 	})
