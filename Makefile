@@ -38,10 +38,8 @@ run:
 	go run cmd/spexec/main.go $(ARGS)
 
 .PHONY: build
-build: $(EXEFILE)
-
-$(EXEFILE):
-	go build -o $@ -ldflags="-s -w" ./cmd/spexec
+build:
+	go build -o '$(EXEFILE)' -ldflags="-s -w" ./cmd/spexec
 
 .PHONY: release
 release: $(ARTIFACT)
