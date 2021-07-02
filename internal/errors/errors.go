@@ -59,6 +59,10 @@ func Wrap(code Code, err error) error {
 }
 
 func StatusOf(err error) int {
+	if err == nil {
+		return 0
+	}
+
 	var e *Error
 	if !errors.As(err, &e) {
 		return statuses[ErrInternalError]
