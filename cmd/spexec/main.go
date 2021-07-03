@@ -19,6 +19,7 @@ import (
 	"runtime/debug"
 
 	"github.com/autopp/spexec/internal/cmd"
+	"github.com/autopp/spexec/internal/errors"
 )
 
 func getVersion() string {
@@ -30,7 +31,6 @@ func getVersion() string {
 }
 
 func main() {
-	if cmd.Main(getVersion(), os.Stdin, os.Stdout, os.Stderr, os.Args[1:]) != nil {
-		os.Exit(1)
-	}
+	err := cmd.Main(getVersion(), os.Stdin, os.Stdout, os.Stderr, os.Args[1:])
+	os.Exit(errors.StatusOf(err))
 }
