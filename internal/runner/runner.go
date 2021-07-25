@@ -15,6 +15,8 @@
 package runner
 
 import (
+	"fmt"
+
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 )
@@ -45,8 +47,15 @@ func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
 	messages := make([]*model.AssertionMessage, 0)
 	var message string
 	statusOk := true
-	if t.StatusMatcher != nil {
-		statusOk, message, _ = t.StatusMatcher.MatchStatus(r.Status)
+
+	if status, sig, err := r.WaitStatus(); err != nil {
+		statusOk = false
+		messages = append(messages, &model.AssertionMessage{Name: "status", Message: err.Error()})
+	} else if sig != nil {
+		statusOk = false
+		messages = append(messages, &model.AssertionMessage{Name: "status", Message: fmt.Sprintf("process signaled (%s)", sig.String())})
+	} else if t.StatusMatcher != nil {
+		statusOk, message, _ = t.StatusMatcher.MatchStatus(status)
 		if !statusOk {
 			messages = append(messages, &model.AssertionMessage{Name: "status", Message: message})
 		}
@@ -57,7 +66,6 @@ func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
 		stdoutOk, message, _ = t.StdoutMatcher.MatchStream(r.Stdout)
 		if !stdoutOk {
 			messages = append(messages, &model.AssertionMessage{Name: "stdout", Message: message})
-
 		}
 	}
 

@@ -20,15 +20,18 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"syscall"
 
+	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
+	"golang.org/x/sys/unix"
 )
 
 type ExecResult struct {
 	Stdout []byte
 	Stderr []byte
-	Status int
+	ps     *os.ProcessState
 }
 
 type Exec struct {
@@ -43,6 +46,24 @@ func NewExec(t *model.Test) *Exec {
 		Stdin:   t.Stdin,
 		Env:     t.Env,
 	}
+}
+
+func (er *ExecResult) WaitStatus() (int, os.Signal, error) {
+	if er.ps.Exited() {
+		return er.ps.ExitCode(), nil, nil
+	}
+
+	sys, ok := er.ps.Sys().(syscall.WaitStatus)
+	if !ok {
+		return -1, nil, errors.Errorf(errors.ErrInternalError, "unknown (*ProcessState).Sys() type: %T", er.ps.Sys())
+	}
+
+	ws := unix.WaitStatus(sys)
+	if !ws.Signaled() {
+		return -1, nil, errors.New(errors.ErrInternalError, "process is neither exited nor signaled")
+	}
+
+	return -1, ws.Signal(), nil
 }
 
 func (e *Exec) Run() *ExecResult {
@@ -62,6 +83,6 @@ func (e *Exec) Run() *ExecResult {
 	return &ExecResult{
 		Stdout: stdout.Bytes(),
 		Stderr: stderr.Bytes(),
-		Status: cmd.ProcessState.ExitCode(),
+		ps:     cmd.ProcessState,
 	}
 }
