@@ -21,7 +21,9 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/Songmu/timeout"
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
@@ -38,13 +40,18 @@ type Exec struct {
 	Command []string
 	Stdin   string
 	Env     []util.StringVar
+	Timeout time.Duration
 }
+
+const defaultTimeout = 10 * time.Second
 
 func NewExec(t *model.Test) *Exec {
 	return &Exec{
 		Command: t.Command,
 		Stdin:   t.Stdin,
 		Env:     t.Env,
+		// TODO: make configuable
+		Timeout: defaultTimeout,
 	}
 }
 
@@ -78,7 +85,20 @@ func (e *Exec) Run() *ExecResult {
 		kv := fmt.Sprintf("%s=%s", v.Name, v.Value)
 		cmd.Env = append(cmd.Env, kv)
 	}
-	cmd.Run()
+
+	tio := &timeout.Timeout{
+		Cmd:      cmd,
+		Duration: e.Timeout,
+		Signal:   unix.SIGKILL,
+	}
+	ch, err := tio.RunCommand()
+
+	if err != nil {
+		return nil
+	}
+	es := <-ch
+
+	fmt.Printf("IsTimeout: %#v\n", es.IsTimedOut())
 
 	return &ExecResult{
 		Stdout: stdout.Bytes(),

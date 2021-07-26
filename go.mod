@@ -3,6 +3,7 @@ module github.com/autopp/spexec
 go 1.16
 
 require (
+	github.com/Songmu/timeout v0.4.0 // indirect
 	github.com/Wing924/shellwords v1.0.0
 	github.com/mattn/go-isatty v0.0.12
 	github.com/mattn/go-shellwords v1.0.11 // indirect

@@ -9,11 +9,10 @@ import (
 var _ = Describe("Exec", func() {
 	DescribeTable("Run()",
 		// TODO: test about of signal
-		func(command []string, status int, stdout, stderr string) {
-			e := Exec{
-				Command: command,
+		func(e *Exec, status int, stdout, stderr string) {
+			if e.Timeout == 0 {
+				e.Timeout = defaultTimeout
 			}
-
 			er := e.Run()
 			Expect(er.Stdout).To(Equal([]byte(stdout)))
 			Expect(er.Stderr).To(Equal([]byte(stderr)))
@@ -23,6 +22,11 @@ var _ = Describe("Exec", func() {
 			Expect(st).To(Equal(status))
 			Expect(sig).To(BeNil())
 		},
-		Entry("with `echo -n 42`", []string{"echo", "-n", "42"}, 0, "42", ""),
+		Entry("with `echo -n 42`",
+			&Exec{
+				Command: []string{"echo", "-n", "42"},
+			},
+			0, "42", "",
+		),
 	)
 })
