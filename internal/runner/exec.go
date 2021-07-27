@@ -96,9 +96,7 @@ func (e *Exec) Run() *ExecResult {
 	if err != nil {
 		return nil
 	}
-	es := <-ch
-
-	fmt.Printf("IsTimeout: %#v\n", es.IsTimedOut())
+	<-ch
 
 	return &ExecResult{
 		Stdout: stdout.Bytes(),
