@@ -2,6 +2,7 @@ package spec
 
 import (
 	"encoding/json"
+	"time"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -180,6 +181,22 @@ var _ = Describe("Validator", func() {
 				Expect(b).To(BeFalse())
 			})
 		})
+	})
+
+	Describe("MustBeDuration()", func() {
+		DescribeTable("wuth a duration string (success)",
+			func(given string, expected time.Duration) {
+				d, b := v.MustBeDuration(given)
+
+				Expect(d).To(Equal(expected))
+				Expect(b).To(BeTrue())
+				Expect(v.Error()).To(BeNil())
+			},
+			Entry(`given: "3s"`, "3s", 3*time.Second),
+			Entry(`given: "1m"`, "1m", 1*time.Minute),
+			Entry(`given: "500ms"`, "500ms", 500*time.Millisecond),
+		)
+
 	})
 
 	Describe("MayHave()", func() {

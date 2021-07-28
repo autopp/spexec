@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/autopp/spexec/internal/errors"
 )
@@ -117,6 +118,21 @@ func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
 	}
 
 	return b, ok
+}
+
+func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
+	s, ok := x.(string)
+	if !ok {
+		v.AddViolation("should be duration string, but is %s", Typeof(x))
+		return 0, false
+	}
+	d, err := time.ParseDuration(s)
+	if err != nil {
+		v.AddViolation("should be duration string, but cannot parse (%s)", err)
+		return 0, false
+	}
+
+	return d, true
 }
 
 func (v *Validator) mustHave(m Map, key string) (interface{}, bool) {
