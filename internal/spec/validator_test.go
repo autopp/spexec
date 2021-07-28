@@ -13,8 +13,13 @@ import (
 var _ = Describe("Validator", func() {
 	var v *Validator
 
-	BeValidationError := func(message string) types.GomegaMatcher {
-		return And(HaveOccurred(), WithTransform(func(err error) string { return err.Error() }, Equal(message)))
+	BeValidationError := func(message interface{}) types.GomegaMatcher {
+		matcher, ok := message.(types.GomegaMatcher)
+		if !ok {
+			matcher = Equal(message)
+		}
+
+		return And(HaveOccurred(), WithTransform(func(err error) string { return err.Error() }, matcher))
 	}
 
 	JustBeforeEach(func() {
@@ -451,6 +456,38 @@ var _ = Describe("Validator", func() {
 				_, exists, ok := v.MayHaveInt(Map{"field": "hello"}, "field")
 
 				Expect(v.Error()).To(BeValidationError("$.field: should be int, but is string"))
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MayHaveDuration()", func() {
+		Context("when the given map has specified field which is a duration string", func() {
+			It("returns the duration, true, true", func() {
+				d, exists, ok := v.MayHaveDuration(Map{"field": "1s"}, "field")
+
+				Expect(d).To(Equal(1 * time.Second))
+				Expect(exists).To(BeTrue())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("returns something, false, true", func() {
+				_, exists, ok := v.MayHaveDuration(Map{}, "field")
+
+				Expect(v.Error()).To(BeNil())
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map has specified field which is not a duration string", func() {
+			It("dose not call the callback, add violation and returns something, false, false", func() {
+				_, exists, ok := v.MayHaveDuration(Map{"field": "666"}, "field")
+
+				Expect(v.Error()).To(BeValidationError(MatchRegexp(`\$\.field: should be duration string, but cannot parse`)))
 				Expect(exists).To(BeFalse())
 				Expect(ok).To(BeFalse())
 			})
