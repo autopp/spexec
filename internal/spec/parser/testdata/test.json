@@ -13,7 +13,8 @@
           "name": "ANSWER",
           "value": "42"
         }
-      ]
+      ],
+      "timeout": "3s"
     }
   ]
 }

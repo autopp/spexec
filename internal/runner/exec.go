@@ -46,12 +46,15 @@ type Exec struct {
 const defaultTimeout = 10 * time.Second
 
 func NewExec(t *model.Test) *Exec {
+	timeout := defaultTimeout
+	if t.Timeout > 0 {
+		timeout = t.Timeout
+	}
 	return &Exec{
 		Command: t.Command,
 		Stdin:   t.Stdin,
 		Env:     t.Env,
-		// TODO: make configuable
-		Timeout: defaultTimeout,
+		Timeout: timeout,
 	}
 }
 

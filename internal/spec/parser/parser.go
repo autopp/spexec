@@ -170,6 +170,10 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 		})
 	})
 
+	if timeout, exists, _ := v.MayHaveDuration(tc, "timeout"); exists {
+		t.Timeout = timeout
+	}
+
 	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
 		v.MayHave(expect, "status", func(status interface{}) {
 			t.StatusMatcher = p.statusMR.ParseMatcher(v, status)

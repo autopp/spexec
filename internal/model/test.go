@@ -15,6 +15,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/Wing924/shellwords"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/util"
@@ -28,6 +30,7 @@ type Test struct {
 	StdoutMatcher matcher.StreamMatcher
 	StderrMatcher matcher.StreamMatcher
 	Env           []util.StringVar
+	Timeout       time.Duration
 }
 
 func (t *Test) GetName() string {

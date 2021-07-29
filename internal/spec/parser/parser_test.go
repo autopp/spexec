@@ -2,6 +2,7 @@ package parser
 
 import (
 	"path/filepath"
+	"time"
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/matcher/status"
@@ -44,6 +45,7 @@ var _ = Describe("Parser", func() {
 					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},
 					}),
+					"Timeout":       Equal(3 * time.Second),
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
 					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
 					"StderrMatcher": BeNil(),
@@ -57,6 +59,7 @@ var _ = Describe("Parser", func() {
 					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},
 					}),
+					"Timeout":       Equal(3 * time.Second),
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
 					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
 					"StderrMatcher": BeNil(),
