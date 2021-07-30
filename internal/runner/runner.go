@@ -48,14 +48,17 @@ func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
 	var message string
 	statusOk := true
 
-	if status, sig, err := r.WaitStatus(); err != nil {
+	if r.Err != nil {
 		statusOk = false
-		messages = append(messages, &model.AssertionMessage{Name: "status", Message: err.Error()})
-	} else if sig != nil {
+		messages = append(messages, &model.AssertionMessage{Name: "status", Message: r.Err.Error()})
+	} else if r.IsTimeout {
 		statusOk = false
-		messages = append(messages, &model.AssertionMessage{Name: "status", Message: fmt.Sprintf("process signaled (%s)", sig.String())})
+		messages = append(messages, &model.AssertionMessage{Name: "status", Message: fmt.Sprintf("process was timeout")})
+	} else if r.Signal != nil {
+		statusOk = false
+		messages = append(messages, &model.AssertionMessage{Name: "status", Message: fmt.Sprintf("process signaled (%s)", r.Signal.String())})
 	} else if t.StatusMatcher != nil {
-		statusOk, message, _ = t.StatusMatcher.MatchStatus(status)
+		statusOk, message, _ = t.StatusMatcher.MatchStatus(r.Status)
 		if !statusOk {
 			messages = append(messages, &model.AssertionMessage{Name: "status", Message: message})
 		}

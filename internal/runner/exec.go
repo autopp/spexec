@@ -31,9 +31,12 @@ import (
 )
 
 type ExecResult struct {
-	Stdout []byte
-	Stderr []byte
-	ps     *os.ProcessState
+	Stdout    []byte
+	Stderr    []byte
+	Status    int
+	Signal    os.Signal
+	IsTimeout bool
+	Err       error
 }
 
 type Exec struct {
@@ -58,24 +61,6 @@ func NewExec(t *model.Test) *Exec {
 	}
 }
 
-func (er *ExecResult) WaitStatus() (int, os.Signal, error) {
-	if er.ps.Exited() {
-		return er.ps.ExitCode(), nil, nil
-	}
-
-	sys, ok := er.ps.Sys().(syscall.WaitStatus)
-	if !ok {
-		return -1, nil, errors.Errorf(errors.ErrInternalError, "unknown (*ProcessState).Sys() type: %T", er.ps.Sys())
-	}
-
-	ws := unix.WaitStatus(sys)
-	if !ws.Signaled() {
-		return -1, nil, errors.New(errors.ErrInternalError, "process is neither exited nor signaled")
-	}
-
-	return -1, ws.Signal(), nil
-}
-
 func (e *Exec) Run() *ExecResult {
 	cmd := exec.Command(e.Command[0], e.Command[1:]...)
 	cmd.Stdin = strings.NewReader(e.Stdin)
@@ -97,13 +82,53 @@ func (e *Exec) Run() *ExecResult {
 	ch, err := tio.RunCommand()
 
 	if err != nil {
-		return nil
+		return &ExecResult{
+			Stdout: stdout.Bytes(),
+			Stderr: stderr.Bytes(),
+			Err:    err,
+		}
 	}
-	<-ch
+	es := <-ch
+	es.GetExitCode()
+	ps := cmd.ProcessState
+
+	if ps.Exited() {
+		return &ExecResult{
+			Stdout: stdout.Bytes(),
+			Stderr: stderr.Bytes(),
+			Status: es.GetExitCode(),
+		}
+	}
+
+	if es.IsTimedOut() {
+		return &ExecResult{
+			Stdout:    stdout.Bytes(),
+			Stderr:    stderr.Bytes(),
+			IsTimeout: true,
+		}
+	}
+
+	sys, ok := ps.Sys().(syscall.WaitStatus)
+	if !ok {
+		return &ExecResult{
+			Stdout: stdout.Bytes(),
+			Stderr: stderr.Bytes(),
+			Err:    errors.Errorf(errors.ErrInternalError, "unknown (*ProcessState).Sys() type: %T", ps.Sys()),
+		}
+	}
+
+	ws := unix.WaitStatus(sys)
+	if !ws.Signaled() {
+		return &ExecResult{
+			Stdout: stdout.Bytes(),
+			Stderr: stderr.Bytes(),
+			Err:    errors.New(errors.ErrInternalError, "process is neither exited nor signaled"),
+		}
+	}
 
 	return &ExecResult{
 		Stdout: stdout.Bytes(),
 		Stderr: stderr.Bytes(),
-		ps:     cmd.ProcessState,
+		Signal: ws.Signal(),
 	}
 }
