@@ -39,7 +39,7 @@ run:
 
 .PHONY: build
 build:
-	go build -o '$(EXEFILE)' -ldflags="-s -w" ./cmd/spexec
+	goreleaser build --single-target --snapshot --rm-dist
 
 .PHONY: release
 release: $(ARTIFACT)
