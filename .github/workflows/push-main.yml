@@ -30,12 +30,15 @@ jobs:
     - name: Run Test
       run: make test
     - name: Build
-      run: make build
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        version: latest
+        args: build --snapshot --rm-dist
     - name: Save Artifact
       uses: actions/upload-artifact@v2
       with:
         name: artifact
-        path: ${{ github.workspace }}/build/*/spexec
+        path: ${{ github.workspace }}/dist/*/spexec
     - name: Notify to Slack
       uses: 8398a7/action-slack@v3
       with:

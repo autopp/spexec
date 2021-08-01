@@ -20,11 +20,9 @@ jobs:
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
-    - name: Set version
-      run: |
-        echo "VERSION=${GITHUB_HEAD_REF#release/}" >> $GITHUB_ENV
     - name: Check existing release
       run: |
+        VERSION=${GITHUB_HEAD_REF#release/}
         echo target version is ${VERSION}
         if hub release -f "%T:%s%n" | grep -x -F "${VERSION}:" >/dev/null; then
           echo ${VERSION} is already published
@@ -41,24 +39,24 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         go mod download
-    - name: Build artifacts
+    - name: "Run test"
+      run: make test
+    - name: Create Tag
       run: |
-        make release GOOS=windows GOARCH=amd64 VERSION="${VERSION}"
-        make release GOOS=darwin GOARCH=amd64 VERSION="${VERSION}"
-        make release GOOS=linux GOARCH=amd64 VERSION="${VERSION}"
-    - name: Edit release
-      run: |
+        VERSION=${GITHUB_HEAD_REF#release/}
         if hub release --include-drafts -f "%t:%S%n" | grep -x -F "${VERSION}:draft" >/dev/null; then
           echo Delete existing release
-          hub release delete "${VERSION}"
+          gh release delete "${VERSION}"
         fi
-
-        hub release create "${VERSION}" -t "${{ github.event.pull_request.head.sha }}" $(ls build/*.zip | xargs -n 1 echo -a) -m "${VERSION}" --draft
-    - name: Notify to Slack
-      uses: 8398a7/action-slack@v3
+        if git fetch origin tag "${VERSION}" >/dev/null; then
+          echo Delete existing tag
+          git tag -d "${VERSION}"
+          git push origin :"${VERSION}"
+        fi
+        git tag "${VERSION}"
+        git push origin "${VERSION}"
+    - name: Create draft release
+      uses: goreleaser/goreleaser-action@v2
       with:
-        status: ${{ job.status }}
-        fields: repo,took,workflow,job,ref,message
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      if: always()
+        version: latest
+        args: release --rm-dist

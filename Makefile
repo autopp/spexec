@@ -12,23 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-GOVERSION=$(shell go version)
-GOOS=$(word 1,$(subst /, ,$(lastword $(GOVERSION))))
-GOARCH=$(word 2,$(subst /, ,$(lastword $(GOVERSION))))
-VERSION?=$(shell git rev-parse --short HEAD)
-ifeq ($(GOOS),windows)
-EXT=.exe
-else
-EXT=
-endif
-
-PRODUCT=spexec
-BUILD_DIR=$(CURDIR)/build
-TARGET_DIR_NAME=$(PRODUCT)-$(GOOS)-$(GOARCH)
-TARGET_DIR=$(BUILD_DIR)/$(TARGET_DIR_NAME)
-EXEFILE=$(TARGET_DIR)/$(PRODUCT)$(EXT)
-ARTIFACT=$(TARGET_DIR).zip
-
 .PHONY: test
 test:
 	ginkgo ./...
@@ -40,13 +23,3 @@ run:
 .PHONY: build
 build:
 	goreleaser build --single-target --snapshot --rm-dist
-
-.PHONY: release
-release: $(ARTIFACT)
-
-$(ARTIFACT): build
-	cd $(BUILD_DIR) && zip $@ $(TARGET_DIR_NAME)/*
-
-.PHONY: clean
-clean:
-	rm -fR $(BUILD_DIR)

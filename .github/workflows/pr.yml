@@ -31,12 +31,15 @@ jobs:
     - name: Run Test
       run: make test
     - name: Build
-      run: make build
+      uses: goreleaser/goreleaser-action@v2
+      with:
+        version: latest
+        args: build --snapshot --rm-dist
     - name: Save Artifact
       uses: actions/upload-artifact@v2
       with:
         name: artifact
-        path: ${{ github.workspace }}/build/*/spexec
+        path: ${{ github.workspace }}/dist/*/spexec
     - name: Auto Merge
       if: contains(github.event.pull_request.body, '[auto merge]') && !contains(github.event.pull_request.title, '[WIP]') && !contains(github.event.pull_request.title, '[DNM]') && !github.event.pull_request.head.fork
       run: |
