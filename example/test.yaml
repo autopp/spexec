@@ -32,4 +32,4 @@ tests:
       status:
         success: true
       stdout:
-        eq: "hello"
+        eq: "hell"
