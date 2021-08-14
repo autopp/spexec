@@ -121,14 +121,19 @@ func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
 }
 
 func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
+	n, ok := toInt(x)
+	if ok {
+		return time.Duration(n) * time.Second, true
+	}
+
 	s, ok := x.(string)
 	if !ok {
-		v.AddViolation("should be duration string, but is %s", Typeof(x))
+		v.AddViolation("should be positive integer or duration string, but is %s", Typeof(x))
 		return 0, false
 	}
 	d, err := time.ParseDuration(s)
 	if err != nil {
-		v.AddViolation("should be duration string, but cannot parse (%s)", err)
+		v.AddViolation("should be positive integer or duration string, but cannot parse (%s)", err)
 		return 0, false
 	}
 
@@ -305,4 +310,16 @@ func Typeof(x interface{}) string {
 	}
 
 	return fmt.Sprintf("%T", x)
+}
+
+func toInt(x interface{}) (int, bool) {
+	switch n := x.(type) {
+	case int:
+		return n, true
+	case json.Number:
+		i, err := n.Int64()
+		return int(i), err == nil
+	default:
+		return 0, false
+	}
 }

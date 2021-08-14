@@ -189,8 +189,8 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MustBeDuration()", func() {
-		DescribeTable("wuth a duration string (success)",
-			func(given string, expected time.Duration) {
+		DescribeTable("with a duration string or positive integer (success)",
+			func(given interface{}, expected time.Duration) {
 				d, b := v.MustBeDuration(given)
 
 				Expect(d).To(Equal(expected))
@@ -200,8 +200,8 @@ var _ = Describe("Validator", func() {
 			Entry(`given: "3s"`, "3s", 3*time.Second),
 			Entry(`given: "1m"`, "1m", 1*time.Minute),
 			Entry(`given: "500ms"`, "500ms", 500*time.Millisecond),
+			Entry(`given: 10`, 10, 10*time.Second),
 		)
-
 	})
 
 	Describe("MayHave()", func() {
@@ -487,7 +487,7 @@ var _ = Describe("Validator", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
 				_, exists, ok := v.MayHaveDuration(Map{"field": "666"}, "field")
 
-				Expect(v.Error()).To(BeValidationError(MatchRegexp(`\$\.field: should be duration string, but cannot parse`)))
+				Expect(v.Error()).To(BeValidationError(MatchRegexp(`\$\.field: should be positive integer or duration string, but cannot parse`)))
 				Expect(exists).To(BeFalse())
 				Expect(ok).To(BeFalse())
 			})
