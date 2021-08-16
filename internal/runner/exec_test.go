@@ -9,7 +9,7 @@ import (
 var _ = Describe("Exec", func() {
 	DescribeTable("Run()",
 		// TODO: test about of signal
-		func(e *Exec, status int, stdout, stderr string) {
+		func(e *Exec, exited bool, status int, signal string, stdout, stderr string) {
 			if e.Timeout == 0 {
 				e.Timeout = defaultTimeout
 			}
@@ -18,14 +18,29 @@ var _ = Describe("Exec", func() {
 			Expect(er.Stderr).To(Equal([]byte(stderr)))
 
 			Expect(er.Err).NotTo(HaveOccurred())
-			Expect(er.Status).To(Equal(status))
-			Expect(er.Err).To(BeNil())
+			if exited {
+				Expect(er.Status).To(Equal(status))
+			} else {
+				Expect(er.Signal.String()).To(Equal(signal))
+			}
 		},
 		Entry("with `echo -n 42`",
 			&Exec{
 				Command: []string{"echo", "-n", "42"},
 			},
-			0, "42", "",
+			true, 0, "", "42", "",
+		),
+		Entry("with `echo -n 42 >&2`",
+			&Exec{
+				Command: []string{"testdata/stderr.sh"},
+			},
+			true, 0, "", "", "42",
+		),
+		Entry("with `kill -TERM $$`",
+			&Exec{
+				Command: []string{"testdata/signal.sh"},
+			},
+			false, 0, "terminated", "", "",
 		),
 	)
 })
