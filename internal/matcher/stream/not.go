@@ -14,13 +14,26 @@
 
 package stream
 
-import "github.com/autopp/spexec/internal/matcher"
+import (
+	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/spec"
+)
 
-func NewStreamMatcherRegistryWithBuiltins() *matcher.StreamMatcherRegistry {
-	r := matcher.NewStreamMatcherRegistry()
-	r.Add("eq", ParseEqMatcher)
-	r.Add("beEmpty", ParseBeEmptyMatcher)
-	r.Add("contain", ParseContainMatcher)
-	r.Add("not", ParseNotMatcher)
-	return r
+type NotMatcher struct {
+	matcher matcher.StreamMatcher
+}
+
+func (m *NotMatcher) MatchStream(actual []byte) (bool, string, error) {
+	matched, message, err := m.matcher.MatchStream(actual)
+
+	return !matched, message, err
+}
+
+func ParseNotMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+	m := r.ParseMatcher(v, x)
+	if m == nil {
+		return nil
+	}
+
+	return &NotMatcher{matcher: m}
 }

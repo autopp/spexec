@@ -6,7 +6,9 @@ tests:
       status:
         eq: 0
       stdout:
-        eq: "42\n"
+        not:
+          not:
+            eq: "421\n"
       stderr:
         beEmpty: true
   - command:
