@@ -18,8 +18,14 @@ func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, "should be empty", nil
 }
 
-func parseEmptyMatcher(_ *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
-	return &emptyMatcher{}
+func parseEmptyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+	switch x.(type) {
+	case bool:
+		return &emptyMatcher{}
+	default:
+		v.AddViolation("parameter should be bool")
+		return nil
+	}
 }
 
 var _ = Describe("NotMatcher", func() {
@@ -52,7 +58,7 @@ var _ = Describe("ParseNotMatcher", func() {
 
 	Describe("with defined matcher", func() {
 		It("returns matcher", func() {
-			m := ParseNotMatcher(v, r, spec.Map{"empty": nil})
+			m := ParseNotMatcher(v, r, spec.Map{"empty": true})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -64,13 +70,16 @@ var _ = Describe("ParseNotMatcher", func() {
 	})
 
 	DescribeTable("failure cases",
-		func(given interface{}) {
+		func(given interface{}, prefix string) {
 			m := ParseNotMatcher(v, r, given)
 
 			Expect(m).To(BeNil())
-			Expect(v.Error()).To(HaveOccurred())
+			err := v.Error()
+			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(HavePrefix(prefix))
 		},
-		Entry("with not map", 42),
-		Entry("with undefined matcher", spec.Map{"foo": 42}),
+		Entry("with not map", 42, "$: "),
+		Entry("with undefined matcher", spec.Map{"foo": 42}, "$: "),
+		Entry("with invalid inner matcher parameter", spec.Map{"empty": 42}, "$.empty: "),
 	)
 })
