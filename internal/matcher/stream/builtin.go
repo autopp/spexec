@@ -22,5 +22,6 @@ func NewStreamMatcherRegistryWithBuiltins() *matcher.StreamMatcherRegistry {
 	r.Add("beEmpty", ParseBeEmptyMatcher)
 	r.Add("contain", ParseContainMatcher)
 	r.Add("not", ParseNotMatcher)
+	r.Add("any", ParseAnyMatcher)
 	return r
 }
