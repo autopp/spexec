@@ -19,12 +19,18 @@ import (
 	"github.com/autopp/spexec/internal/spec"
 )
 
+type statusMatcherParserEntry struct {
+	parser       StatusMatcherParser
+	hasDefault   bool
+	defaultParam interface{}
+}
+
 type StatusMatcherRegistry struct {
-	matchers map[string]StatusMatcherParser
+	matchers map[string]*statusMatcherParserEntry
 }
 
 func NewStatusMatcherRegistry() *StatusMatcherRegistry {
-	return &StatusMatcherRegistry{matchers: make(map[string]StatusMatcherParser)}
+	return &StatusMatcherRegistry{matchers: make(map[string]*statusMatcherParserEntry)}
 }
 
 func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
@@ -32,24 +38,46 @@ func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
 	}
-	r.matchers[name] = p
+	r.matchers[name] = &statusMatcherParserEntry{
+		parser:     p,
+		hasDefault: false,
+	}
+	return nil
+}
+
+func (r *StatusMatcherRegistry) AddWithDefault(name string, p StatusMatcherParser, defaultParam interface{}) error {
+	_, ok := r.matchers[name]
+	if ok {
+		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
+	}
+	r.matchers[name] = &statusMatcherParserEntry{
+		parser:       p,
+		hasDefault:   true,
+		defaultParam: defaultParam,
+	}
 	return nil
 }
 
 func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StatusMatcher {
-	specifier, ok := x.(spec.Map)
-	if !ok {
-		v.AddViolation("matcher specifier should be a map with single key-value (got %s)", spec.Typeof(x))
-		return nil
-	}
-	if len(specifier) != 1 {
-		v.AddViolation("matcher specifier should be a map with single key-value (got map with %d key-value)", len(specifier))
-		return nil
-	}
-
 	var name string
 	var param interface{}
-	for name, param = range specifier {
+	withParam := false
+
+	switch specifier := x.(type) {
+	case string:
+		name = specifier
+	case spec.Map:
+		if len(specifier) != 1 {
+			v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got map with %d key-value)", len(specifier))
+			return nil
+		}
+
+		for name, param = range specifier {
+		}
+		withParam = true
+	default:
+		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", spec.Typeof(x))
+		return nil
 	}
 
 	p, ok := r.matchers[name]
@@ -58,9 +86,19 @@ func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 		return nil
 	}
 
+	if !withParam {
+		if !p.hasDefault {
+			v.InField(name, func() {
+				v.AddViolation("parameter is required")
+			})
+			return nil
+		}
+		param = p.defaultParam
+	}
+
 	var m StatusMatcher
 	v.InField(name, func() {
-		m = p(v, r, param)
+		m = p.parser(v, r, param)
 	})
 
 	return m
