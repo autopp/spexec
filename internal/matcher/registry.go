@@ -25,32 +25,42 @@ type statusMatcherParserEntry struct {
 	defaultParam interface{}
 }
 
+type matcherParserEntry struct {
+	parser       interface{}
+	hasDefault   bool
+	defaultParam interface{}
+}
+
+type matcherParserRegistry struct {
+	matchers map[string]*matcherParserEntry
+}
+
 type StatusMatcherRegistry struct {
-	matchers map[string]*statusMatcherParserEntry
+	registry *matcherParserRegistry
 }
 
-func NewStatusMatcherRegistry() *StatusMatcherRegistry {
-	return &StatusMatcherRegistry{matchers: make(map[string]*statusMatcherParserEntry)}
+func newMatcherParserRegistry() *matcherParserRegistry {
+	return &matcherParserRegistry{matchers: make(map[string]*matcherParserEntry)}
 }
 
-func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
+func (r *matcherParserRegistry) add(name string, p interface{}) error {
 	_, ok := r.matchers[name]
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
 	}
-	r.matchers[name] = &statusMatcherParserEntry{
+	r.matchers[name] = &matcherParserEntry{
 		parser:     p,
 		hasDefault: false,
 	}
 	return nil
 }
 
-func (r *StatusMatcherRegistry) AddWithDefault(name string, p StatusMatcherParser, defaultParam interface{}) error {
+func (r *matcherParserRegistry) addWithDefault(name string, p interface{}, defaultParam interface{}) error {
 	_, ok := r.matchers[name]
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
 	}
-	r.matchers[name] = &statusMatcherParserEntry{
+	r.matchers[name] = &matcherParserEntry{
 		parser:       p,
 		hasDefault:   true,
 		defaultParam: defaultParam,
@@ -58,7 +68,7 @@ func (r *StatusMatcherRegistry) AddWithDefault(name string, p StatusMatcherParse
 	return nil
 }
 
-func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StatusMatcher {
+func (r *matcherParserRegistry) get(v *spec.Validator, x interface{}) (string, interface{}, interface{}) {
 	var name string
 	var param interface{}
 	withParam := false
@@ -69,7 +79,7 @@ func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 	case spec.Map:
 		if len(specifier) != 1 {
 			v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got map with %d key-value)", len(specifier))
-			return nil
+			return "", nil, nil
 		}
 
 		for name, param = range specifier {
@@ -77,13 +87,13 @@ func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 		withParam = true
 	default:
 		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", spec.Typeof(x))
-		return nil
+		return "", nil, nil
 	}
 
 	p, ok := r.matchers[name]
 	if !ok {
 		v.AddViolation("matcher for status %s is not defined", name)
-		return nil
+		return "", nil, nil
 	}
 
 	if !withParam {
@@ -91,14 +101,34 @@ func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 			v.InField(name, func() {
 				v.AddViolation("parameter is required")
 			})
-			return nil
+			return "", nil, nil
 		}
 		param = p.defaultParam
 	}
 
+	return name, p.parser, param
+}
+
+func NewStatusMatcherRegistry() *StatusMatcherRegistry {
+	return &StatusMatcherRegistry{registry: newMatcherParserRegistry()}
+}
+
+func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
+	return r.registry.add(name, p)
+}
+
+func (r *StatusMatcherRegistry) AddWithDefault(name string, p StatusMatcherParser, defaultParam interface{}) error {
+	return r.registry.addWithDefault(name, p, defaultParam)
+}
+
+func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StatusMatcher {
+	name, parser, param := r.registry.get(v, x)
+	if parser == nil {
+		return nil
+	}
 	var m StatusMatcher
 	v.InField(name, func() {
-		m = p.parser(v, r, param)
+		m = parser.(StatusMatcherParser)(v, r, param)
 	})
 
 	return m
