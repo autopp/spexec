@@ -135,47 +135,29 @@ func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 }
 
 type StreamMatcherRegistry struct {
-	matchers map[string]StreamMatcherParser
+	registry *matcherParserRegistry
 }
 
 func NewStreamMatcherRegistry() *StreamMatcherRegistry {
-	return &StreamMatcherRegistry{matchers: make(map[string]StreamMatcherParser)}
+	return &StreamMatcherRegistry{registry: newMatcherParserRegistry()}
 }
 
 func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
-	_, ok := r.matchers[name]
-	if ok {
-		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
-	}
-	r.matchers[name] = p
-	return nil
+	return r.registry.add(name, p)
+}
+
+func (r *StreamMatcherRegistry) AddWithDefault(name string, p StreamMatcherParser, defaultParam interface{}) error {
+	return r.registry.addWithDefault(name, p, defaultParam)
 }
 
 func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StreamMatcher {
-	specifier, ok := x.(spec.Map)
-	if !ok {
-		v.AddViolation("matcher specifier should be a map with single key-value (got %s)", spec.Typeof(x))
+	name, parser, param := r.registry.get(v, x)
+	if parser == nil {
 		return nil
 	}
-	if len(specifier) != 1 {
-		v.AddViolation("matcher specifier should be a map with single key-value (got map with %d key-value)", len(specifier))
-		return nil
-	}
-
-	var name string
-	var param interface{}
-	for name, param = range specifier {
-	}
-
-	p, ok := r.matchers[name]
-	if !ok {
-		v.AddViolation("matcher for stream %s is not defined", name)
-		return nil
-	}
-
 	var m StreamMatcher
 	v.InField(name, func() {
-		m = p(v, r, param)
+		m = parser.(StreamMatcherParser)(v, r, param)
 	})
 
 	return m

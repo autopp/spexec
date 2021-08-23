@@ -38,18 +38,26 @@ func parseViolationStatusMatcher(v *spec.Validator, _ *StatusMatcherRegistry, _ 
 	return &zeroMatcher{}
 }
 
-type emptyMatcher struct{}
+type emptyMatcher struct {
+	expected bool
+}
 
-func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	if len(actual) == 0 {
-		return true, "stream should not be empty", nil
+		if m.expected {
+			return true, "stream should not be empty", nil
+		}
+		return false, "status should be empty", nil
 	}
 
-	return false, "status should be empty", nil
+	if m.expected {
+		return false, "status should be empty", nil
+	}
+	return true, "stream should not be empty", nil
 }
 
 func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, x interface{}) StreamMatcher {
-	return &emptyMatcher{}
+	return &emptyMatcher{expected: x.(bool)}
 }
 
 func parseViolationStreamMatcher(v *spec.Validator, _ *StreamMatcherRegistry, x interface{}) StreamMatcher {
@@ -63,23 +71,6 @@ var _ = Describe("StatusMatcherRegistry", func() {
 
 	JustBeforeEach(func() {
 		r = NewStatusMatcherRegistry()
-	})
-
-	Describe("Add()", func() {
-		Context("when the given name is not registered yet", func() {
-			It("returns nil", func() {
-				err := r.Add(zeroName, parseZeroMatcher)
-				Expect(err).NotTo(HaveOccurred())
-			})
-		})
-
-		Context("when the given name is registered already", func() {
-			It("returns error", func() {
-				r.Add(zeroName, parseZeroMatcher)
-				err := r.Add(zeroName, parseZeroMatcher)
-				Expect(err).To(HaveOccurred())
-			})
-		})
 	})
 
 	Describe("Add()", func() {
@@ -191,9 +182,9 @@ var _ = Describe("StatusMatcherRegistry", func() {
 			})
 		})
 
-		Context("when the given is not a map", func() {
+		Context("when the given is not a map and string", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, zeroName)
+				m := r.ParseMatcher(v, 42)
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -204,6 +195,7 @@ var _ = Describe("StatusMatcherRegistry", func() {
 var _ = Describe("StreamMatcherRegistry", func() {
 	var r *StreamMatcherRegistry
 	emptyName := "empty"
+	emptyWithDefaultName := "emptyWithDefault"
 
 	JustBeforeEach(func() {
 		r = NewStreamMatcherRegistry()
@@ -226,29 +218,71 @@ var _ = Describe("StreamMatcherRegistry", func() {
 		})
 	})
 
+	Describe("AddWithDefault()", func() {
+		Context("when the given name is not registered yet", func() {
+			It("returns nil", func() {
+				err := r.AddWithDefault(emptyName, parseEmptyMatcher, true)
+				Expect(err).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when the given name is registered already", func() {
+			It("returns error", func() {
+				r.AddWithDefault(emptyName, parseEmptyMatcher, true)
+				err := r.AddWithDefault(emptyName, parseEmptyMatcher, true)
+				Expect(err).To(HaveOccurred())
+			})
+		})
+	})
+
 	Describe("ParseMatcher", func() {
 		var v *spec.Validator
 		violationName := "violation"
 
 		JustBeforeEach(func() {
 			r.Add(emptyName, parseEmptyMatcher)
+			r.AddWithDefault(emptyWithDefaultName, parseEmptyMatcher, true)
 			r.Add(violationName, parseViolationStreamMatcher)
 			v = spec.NewValidator()
 		})
 
-		Context("when the given name is registered and it returns matcher", func() {
-			It("returns the parsed matcher", func() {
-				m := r.ParseMatcher(v, spec.Map{emptyName: nil})
+		Context("for matcher without default parameter", func() {
+			Context("when param is passed and it returns matcher", func() {
+				It("returns the parsed matcher", func() {
+					m := r.ParseMatcher(v, spec.Map{emptyName: true})
 
-				Expect(m).To(BeAssignableToTypeOf(&emptyMatcher{}))
-				Expect(v.Error()).NotTo(HaveOccurred())
+					Expect(m).To(BeAssignableToTypeOf(&emptyMatcher{}))
+					Expect(v.Error()).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when param is not passed", func() {
+				It("adds violation", func() {
+					r.ParseMatcher(v, emptyName)
+
+					Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: parameter is required", emptyName)))
+				})
 			})
 		})
 
-		Context("when the given name is registered and it adds violations", func() {
-			It("cascades violations", func() {
-				r.ParseMatcher(v, spec.Map{violationName: nil})
-				Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: %s", violationName, violationMessage)))
+		Context("for matcher with default parameter", func() {
+			Context("when param is passed and it returns matcher", func() {
+				It("returns the parsed matcher", func() {
+					m := r.ParseMatcher(v, spec.Map{emptyWithDefaultName: false})
+
+					Expect(m).To(BeAssignableToTypeOf(&emptyMatcher{}))
+					Expect(v.Error()).NotTo(HaveOccurred())
+				})
+			})
+
+			Context("when param is not passed", func() {
+				It("returns the parsed matcher", func() {
+					m := r.ParseMatcher(v, emptyWithDefaultName)
+
+					Expect(m).To(BeAssignableToTypeOf(&emptyMatcher{}))
+					Expect(m.(*emptyMatcher).expected).To(Equal(true))
+					Expect(v.Error()).NotTo(HaveOccurred())
+				})
 			})
 		})
 
@@ -268,9 +302,9 @@ var _ = Describe("StreamMatcherRegistry", func() {
 			})
 		})
 
-		Context("when the given is not a map", func() {
+		Context("when the given is not a map and string", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, emptyName)
+				m := r.ParseMatcher(v, 42)
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
