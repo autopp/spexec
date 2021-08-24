@@ -310,4 +310,50 @@ var _ = Describe("StreamMatcherRegistry", func() {
 			})
 		})
 	})
+
+	Describe("ParseMatchers", func() {
+		var v *spec.Validator
+		violationName := "violation"
+
+		JustBeforeEach(func() {
+			r.Add(emptyName, parseEmptyMatcher)
+			r.AddWithDefault(emptyWithDefaultName, parseEmptyMatcher, true)
+			r.Add(violationName, parseViolationStreamMatcher)
+			v = spec.NewValidator()
+		})
+
+		Context("when params are valid", func() {
+			It("returns the parsed matchers", func() {
+				m := r.ParseMatchers(v, spec.Seq{spec.Map{emptyName: true}, emptyWithDefaultName})
+
+				Expect(m[0]).To(BeAssignableToTypeOf(&emptyMatcher{}))
+				Expect(m[1]).To(BeAssignableToTypeOf(&emptyMatcher{}))
+				Expect(v.Error()).NotTo(HaveOccurred())
+			})
+		})
+
+		Context("when the given name is not registered", func() {
+			It("adds violations", func() {
+				m := r.ParseMatcher(v, spec.Seq{spec.Map{"unknown": false}})
+				Expect(m).To(BeNil())
+				Expect(v.Error()).To(HaveOccurred())
+			})
+		})
+
+		Context("when the given name is registered and it adds violations", func() {
+			It("cascades violations", func() {
+				m := r.ParseMatcher(v, spec.Seq{spec.Map{violationName: nil}})
+				Expect(m).To(BeNil())
+				Expect(v.Error()).To(HaveOccurred())
+			})
+		})
+
+		Context("when the given is not a seq", func() {
+			It("adds violations", func() {
+				m := r.ParseMatcher(v, 42)
+				Expect(m).To(BeNil())
+				Expect(v.Error()).To(HaveOccurred())
+			})
+		})
+	})
 })
