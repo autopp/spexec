@@ -43,25 +43,8 @@ func (m *AnyMatcher) MatchStream(actual []byte) (bool, string, error) {
 }
 
 func ParseAnyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
-	params, ok := v.MustBeSeq(x)
-	if !ok {
-		return nil
-	}
-
-	var hasError bool
-	matchers := []matcher.StreamMatcher{}
-	for i, param := range params {
-		v.InIndex(i, func() {
-			m := r.ParseMatcher(v, param)
-			if m != nil {
-				matchers = append(matchers, m)
-			} else {
-				hasError = true
-			}
-		})
-	}
-
-	if hasError {
+	matchers := r.ParseMatchers(v, x)
+	if matchers == nil {
 		return nil
 	}
 
