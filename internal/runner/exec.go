@@ -25,7 +25,6 @@ import (
 
 	"github.com/Songmu/timeout"
 	"github.com/autopp/spexec/internal/errors"
-	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 	"golang.org/x/sys/unix"
 )
@@ -48,17 +47,37 @@ type Exec struct {
 
 const defaultTimeout = 10 * time.Second
 
-func NewExec(t *model.Test) *Exec {
-	timeout := defaultTimeout
-	if t.Timeout > 0 {
-		timeout = t.Timeout
+type Option interface {
+	Apply(e *Exec) error
+}
+
+type OptionTimeout time.Duration
+
+func (t OptionTimeout) Apply(e *Exec) error {
+	if t > 0 {
+		e.Timeout = time.Duration(t)
 	}
-	return &Exec{
-		Command: t.Command,
-		Stdin:   t.Stdin,
-		Env:     t.Env,
-		Timeout: timeout,
+	return nil
+}
+
+func WithTimeout(t time.Duration) Option {
+	return OptionTimeout(t)
+}
+
+func NewExec(command []string, stdin string, env []util.StringVar, opts ...Option) (*Exec, error) {
+	e := &Exec{
+		Command: command,
+		Stdin:   stdin,
+		Env:     env,
 	}
+
+	for _, o := range append([]Option{WithTimeout(defaultTimeout)}, opts...) {
+		if err := o.Apply(e); err != nil {
+			return nil, err
+		}
+	}
+
+	return e, nil
 }
 
 func (e *Exec) Run() *ExecResult {
