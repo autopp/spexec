@@ -17,6 +17,7 @@ package runner
 import (
 	"fmt"
 
+	"github.com/autopp/spexec/internal/exec"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 )
@@ -35,7 +36,7 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 		reporter.OnTestStart(t)
 
 		// TODO: error handling
-		e, err := NewExec(t.Command, t.Stdin, t.Env, WithTimeout(t.Timeout))
+		e, err := exec.NewExec(t.Command, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
 		if err != nil {
 			panic(err)
 		}
@@ -50,7 +51,7 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 	return results
 }
 
-func assertResult(t *model.Test, r *ExecResult) *model.TestResult {
+func assertResult(t *model.Test, r *exec.ExecResult) *model.TestResult {
 	messages := make([]*model.AssertionMessage, 0)
 	var message string
 	statusOk := true
