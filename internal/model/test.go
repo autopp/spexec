@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/Wing924/shellwords"
+	"github.com/autopp/spexec/internal/exec"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/util"
 )
@@ -43,4 +44,13 @@ func (t *Test) GetName() string {
 		envStr += v.Name + "=" + v.Value + " "
 	}
 	return envStr + shellwords.Join(t.Command)
+}
+
+func (t *Test) Run() (*exec.ExecResult, error) {
+	e, err := exec.New(t.Command, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
+	if err != nil {
+		return nil, err
+	}
+
+	return e.Run(), nil
 }

@@ -35,13 +35,11 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 	for _, t := range tests {
 		reporter.OnTestStart(t)
 
+		er, err := t.Run()
 		// TODO: error handling
-		e, err := exec.NewExec(t.Command, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
 		if err != nil {
 			panic(err)
 		}
-
-		er := e.Run()
 		tr := assertResult(t, er)
 		reporter.OnTestComplete(t, tr)
 		results = append(results, tr)

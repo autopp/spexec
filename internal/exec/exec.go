@@ -64,7 +64,7 @@ func WithTimeout(t time.Duration) Option {
 	return OptionTimeout(t)
 }
 
-func NewExec(command []string, stdin string, env []util.StringVar, opts ...Option) (*Exec, error) {
+func New(command []string, stdin string, env []util.StringVar, opts ...Option) (*Exec, error) {
 	e := &Exec{
 		Command: command,
 		Stdin:   stdin,
