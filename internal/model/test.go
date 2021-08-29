@@ -15,6 +15,7 @@
 package model
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Wing924/shellwords"
@@ -46,11 +47,52 @@ func (t *Test) GetName() string {
 	return envStr + shellwords.Join(t.Command)
 }
 
-func (t *Test) Run() (*exec.ExecResult, error) {
+func (t *Test) Run() (*TestResult, error) {
 	e, err := exec.New(t.Command, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
 	if err != nil {
 		return nil, err
 	}
 
-	return e.Run(), nil
+	r := e.Run()
+	messages := make([]*AssertionMessage, 0)
+	var message string
+	statusOk := true
+
+	if r.Err != nil {
+		statusOk = false
+		messages = append(messages, &AssertionMessage{Name: "status", Message: r.Err.Error()})
+	} else if r.IsTimeout {
+		statusOk = false
+		messages = append(messages, &AssertionMessage{Name: "status", Message: fmt.Sprintf("process was timeout")})
+	} else if r.Signal != nil {
+		statusOk = false
+		messages = append(messages, &AssertionMessage{Name: "status", Message: fmt.Sprintf("process signaled (%s)", r.Signal.String())})
+	} else if t.StatusMatcher != nil {
+		statusOk, message, _ = t.StatusMatcher.MatchStatus(r.Status)
+		if !statusOk {
+			messages = append(messages, &AssertionMessage{Name: "status", Message: message})
+		}
+	}
+
+	stdoutOk := true
+	if t.StdoutMatcher != nil {
+		stdoutOk, message, _ = t.StdoutMatcher.MatchStream(r.Stdout)
+		if !stdoutOk {
+			messages = append(messages, &AssertionMessage{Name: "stdout", Message: message})
+		}
+	}
+
+	stderrOk := true
+	if t.StderrMatcher != nil {
+		stderrOk, message, _ = t.StderrMatcher.MatchStream(r.Stderr)
+		if !stderrOk {
+			messages = append(messages, &AssertionMessage{Name: "stderr", Message: message})
+		}
+	}
+
+	return &TestResult{
+		Name:      t.GetName(),
+		Messages:  messages,
+		IsSuccess: statusOk && stdoutOk && stderrOk,
+	}, nil
 }

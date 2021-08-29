@@ -15,9 +15,6 @@
 package runner
 
 import (
-	"fmt"
-
-	"github.com/autopp/spexec/internal/exec"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 )
@@ -35,60 +32,15 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 	for _, t := range tests {
 		reporter.OnTestStart(t)
 
-		er, err := t.Run()
-		// TODO: error handling
+		tr, err := t.Run()
 		if err != nil {
 			panic(err)
 		}
-		tr := assertResult(t, er)
+
 		reporter.OnTestComplete(t, tr)
 		results = append(results, tr)
 	}
 	reporter.OnRunComplete(results)
 
 	return results
-}
-
-func assertResult(t *model.Test, r *exec.ExecResult) *model.TestResult {
-	messages := make([]*model.AssertionMessage, 0)
-	var message string
-	statusOk := true
-
-	if r.Err != nil {
-		statusOk = false
-		messages = append(messages, &model.AssertionMessage{Name: "status", Message: r.Err.Error()})
-	} else if r.IsTimeout {
-		statusOk = false
-		messages = append(messages, &model.AssertionMessage{Name: "status", Message: fmt.Sprintf("process was timeout")})
-	} else if r.Signal != nil {
-		statusOk = false
-		messages = append(messages, &model.AssertionMessage{Name: "status", Message: fmt.Sprintf("process signaled (%s)", r.Signal.String())})
-	} else if t.StatusMatcher != nil {
-		statusOk, message, _ = t.StatusMatcher.MatchStatus(r.Status)
-		if !statusOk {
-			messages = append(messages, &model.AssertionMessage{Name: "status", Message: message})
-		}
-	}
-
-	stdoutOk := true
-	if t.StdoutMatcher != nil {
-		stdoutOk, message, _ = t.StdoutMatcher.MatchStream(r.Stdout)
-		if !stdoutOk {
-			messages = append(messages, &model.AssertionMessage{Name: "stdout", Message: message})
-		}
-	}
-
-	stderrOk := true
-	if t.StderrMatcher != nil {
-		stderrOk, message, _ = t.StderrMatcher.MatchStream(r.Stderr)
-		if !stderrOk {
-			messages = append(messages, &model.AssertionMessage{Name: "stderr", Message: message})
-		}
-	}
-
-	return &model.TestResult{
-		Name:      t.GetName(),
-		Messages:  messages,
-		IsSuccess: statusOk && stdoutOk && stderrOk,
-	}
 }
