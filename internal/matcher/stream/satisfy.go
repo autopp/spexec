@@ -15,6 +15,7 @@
 package stream
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/autopp/spexec/internal/exec"
@@ -43,5 +44,44 @@ func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
 }
 
 func ParseSatisfyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
-	return nil
+	p, ok := v.MustBeMap(x)
+	if !ok {
+		return nil
+	}
+
+	m := &SatisfyMatcher{}
+	_, ok = v.MustHaveSeq(p, "command", func(command spec.Seq) {
+		m.Command = make([]string, len(command))
+		v.ForInSeq(command, func(i int, x interface{}) {
+			c, _ := v.MustBeString(x)
+			m.Command[i] = c
+		})
+	})
+	if !ok {
+		return nil
+	}
+
+	if len(m.Command) == 0 {
+		v.InField("command", func() {
+			v.AddViolation("shoud have one ore more elements")
+		})
+		return nil
+	}
+
+	m.Env, _, ok = v.MayHaveEnvSeq(p, "env")
+	fmt.Printf("%#v %#v\n", m.Env, ok)
+	if !ok {
+		return nil
+	}
+
+	var exist bool
+	m.Timeout, exist, ok = v.MayHaveDuration(p, "timeout")
+	if !ok {
+		return nil
+	}
+	if !exist {
+		m.Timeout = 5 * time.Second
+	}
+
+	return m
 }

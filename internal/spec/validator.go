@@ -17,11 +17,15 @@ package spec
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/internal/util"
 )
+
+var envVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
 
 type violation struct {
 	path    string
@@ -263,6 +267,39 @@ func (v *Validator) MayHaveDuration(m Map, key string) (time.Duration, bool, boo
 	})
 
 	return d, ok, ok
+}
+
+func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bool) {
+	var ret []util.StringVar
+	ok := true
+	_, _, isSeq := v.MayHaveSeq(m, "env", func(env Seq) {
+		ret = []util.StringVar{}
+		v.ForInSeq(env, func(i int, x interface{}) {
+			envVar, ok := v.MustBeMap(x)
+			if !ok {
+				return
+			}
+			name, nameOk := v.MustHaveString(envVar, "name")
+			value, valueOk := v.MustHaveString(envVar, "value")
+
+			if nameOk && valueOk {
+				v.InField("name", func() {
+					if !envVarNamePattern.MatchString(name) {
+						v.AddViolation("environment variable name shoud be match to /%s/", envVarNamePattern.String())
+					}
+				})
+				ret = append(ret, util.StringVar{Name: name, Value: value})
+			} else {
+				ok = false
+			}
+		})
+	})
+
+	if !isSeq || !ok {
+		return nil, false, false
+	}
+
+	return ret, ret != nil, ok
 }
 
 func (v *Validator) Error() error {
