@@ -209,12 +209,19 @@ func (v *Validator) MustHaveSeq(m Map, key string, f func(Seq)) (Seq, bool) {
 	return s, exists && ok
 }
 
-func (v *Validator) ForInSeq(s Seq, f func(i int, x interface{})) {
+func (v *Validator) ForInSeq(s Seq, f func(i int, x interface{}) bool) bool {
+	ok := true
 	for i, x := range s {
 		v.InIndex(i, func() {
-			f(i, x)
+			ok = f(i, x)
 		})
+
+		if !ok {
+			break
+		}
 	}
+
+	return ok
 }
 
 func (v *Validator) MayHaveString(m Map, key string) (string, bool, bool) {
@@ -274,24 +281,26 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	ok := true
 	_, _, isSeq := v.MayHaveSeq(m, "env", func(env Seq) {
 		ret = []util.StringVar{}
-		v.ForInSeq(env, func(i int, x interface{}) {
-			envVar, ok := v.MustBeMap(x)
+		v.ForInSeq(env, func(i int, x interface{}) bool {
+			var envVar Map
+			envVar, ok = v.MustBeMap(x)
 			if !ok {
-				return
+				return false
 			}
 			name, nameOk := v.MustHaveString(envVar, "name")
 			value, valueOk := v.MustHaveString(envVar, "value")
-
-			if nameOk && valueOk {
-				v.InField("name", func() {
-					if !envVarNamePattern.MatchString(name) {
-						v.AddViolation("environment variable name shoud be match to /%s/", envVarNamePattern.String())
-					}
-				})
-				ret = append(ret, util.StringVar{Name: name, Value: value})
-			} else {
+			if !nameOk || !valueOk {
 				ok = false
+				return false
 			}
+
+			v.InField("name", func() {
+				if !envVarNamePattern.MatchString(name) {
+					v.AddViolation("environment variable name shoud be match to /%s/", envVarNamePattern.String())
+				}
+			})
+			ret = append(ret, util.StringVar{Name: name, Value: value})
+			return true
 		})
 	})
 

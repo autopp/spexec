@@ -15,7 +15,6 @@
 package stream
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/autopp/spexec/internal/exec"
@@ -52,9 +51,10 @@ func ParseSatisfyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x 
 	m := &SatisfyMatcher{}
 	_, ok = v.MustHaveSeq(p, "command", func(command spec.Seq) {
 		m.Command = make([]string, len(command))
-		v.ForInSeq(command, func(i int, x interface{}) {
-			c, _ := v.MustBeString(x)
+		v.ForInSeq(command, func(i int, x interface{}) bool {
+			c, ok := v.MustBeString(x)
 			m.Command[i] = c
+			return ok
 		})
 	})
 	if !ok {
@@ -69,7 +69,6 @@ func ParseSatisfyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x 
 	}
 
 	m.Env, _, ok = v.MayHaveEnvSeq(p, "env")
-	fmt.Printf("%#v %#v\n", m.Env, ok)
 	if !ok {
 		return nil
 	}

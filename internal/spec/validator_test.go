@@ -361,11 +361,22 @@ var _ = Describe("Validator", func() {
 
 	Describe("ForInSeq()", func() {
 		It("calls callback with each index and element in path of it", func() {
-			v.ForInSeq(Seq{42, "hello"}, func(i int, x interface{}) {
+			v.ForInSeq(Seq{42, "hello"}, func(i int, x interface{}) bool {
 				v.AddViolation("%d:%#v", i, x)
+				return true
 			})
 
 			Expect(v.Error()).To(BeValidationError("$[0]: 0:42\n$[1]: 1:\"hello\""))
+		})
+
+		It("stops calling callback when it returns false", func() {
+			calls := make([]int, 0)
+			v.ForInSeq(Seq{"a", "b", "c", "d"}, func(i int, x interface{}) bool {
+				calls = append(calls, i)
+				return i < 2
+			})
+
+			Expect(calls).To(Equal([]int{0, 1, 2}))
 		})
 	})
 

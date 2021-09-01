@@ -170,12 +170,13 @@ func (r *StreamMatcherRegistry) ParseMatchers(v *spec.Validator, x interface{}) 
 	}
 
 	matchers := make([]StreamMatcher, len(params))
-	v.ForInSeq(params, func(i int, param interface{}) {
+	ok = v.ForInSeq(params, func(i int, param interface{}) bool {
 		m := r.ParseMatcher(v, param)
 		if m == nil {
-			ok = false
+			return false
 		}
 		matchers[i] = m
+		return true
 	})
 
 	if !ok {

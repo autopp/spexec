@@ -112,9 +112,10 @@ func (p *Parser) loadSpec(c interface{}) ([]*test.Test, error) {
 
 	ts := make([]*test.Test, 0)
 	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
-		v.ForInSeq(tcs, func(i int, tc interface{}) {
+		v.ForInSeq(tcs, func(i int, tc interface{}) bool {
 			t := p.loadTest(v, tc)
 			ts = append(ts, t)
+			return t != nil
 		})
 	})
 
@@ -135,9 +136,10 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 
 	v.MustHaveSeq(tc, "command", func(command spec.Seq) {
 		t.Command = make([]string, len(command))
-		v.ForInSeq(command, func(i int, x interface{}) {
-			c, _ := v.MustBeString(x)
+		v.ForInSeq(command, func(i int, x interface{}) bool {
+			c, ok := v.MustBeString(x)
 			t.Command[i] = c
+			return ok
 		})
 
 		if len(t.Command) == 0 {
