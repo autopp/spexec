@@ -25,7 +25,7 @@ import (
 	"github.com/autopp/spexec/internal/util"
 )
 
-var envVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
+var envVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w*$`)
 
 type violation struct {
 	path    string

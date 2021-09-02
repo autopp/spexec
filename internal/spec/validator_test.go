@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -501,6 +502,33 @@ var _ = Describe("Validator", func() {
 				Expect(v.Error()).To(BeValidationError(MatchRegexp(`\$\.field: should be positive integer or duration string, but cannot parse`)))
 				Expect(exists).To(BeFalse())
 				Expect(ok).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MayHaveEnvSeq", func() {
+		Context("when the given map has specified field which is a seq of key-value", func() {
+			It("returns parsed array", func() {
+				e, exists, ok := v.MayHaveEnvSeq(Map{"env": Seq{Map{"name": "a", "value": "foo"}, Map{"name": "b", "value": "bar"}}}, "env")
+
+				Expect(v.Error()).To(BeNil())
+				Expect(e).To(Equal([]util.StringVar{
+					{Name: "a", Value: "foo"},
+					{Name: "b", Value: "bar"},
+				}))
+				Expect(exists).To(BeTrue())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("returns nil", func() {
+				e, exists, ok := v.MayHaveEnvSeq(Map{}, "env")
+
+				Expect(v.Error()).To(BeNil())
+				Expect(e).To(BeNil())
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeTrue())
 			})
 		})
 	})
