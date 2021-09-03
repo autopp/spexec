@@ -294,11 +294,13 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 				return false
 			}
 
-			v.InField("name", func() {
-				if !envVarNamePattern.MatchString(name) {
+			if !envVarNamePattern.MatchString(name) {
+				v.InField("name", func() {
 					v.AddViolation("environment variable name shoud be match to /%s/", envVarNamePattern.String())
-				}
-			})
+				})
+				ok = false
+				return false
+			}
 			ret = append(ret, util.StringVar{Name: name, Value: value})
 			return true
 		})

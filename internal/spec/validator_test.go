@@ -531,6 +531,37 @@ var _ = Describe("Validator", func() {
 				Expect(ok).To(BeTrue())
 			})
 		})
+
+		DescribeTable("adds vioration",
+			func(env interface{}, prefix string) {
+				e, _, ok := v.MayHaveEnvSeq(Map{"env": env}, "env")
+
+				Expect(e).To(BeNil())
+				Expect(ok).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(HavePrefix(prefix)))
+			},
+			Entry("when the filed is not seq", Map{}, "$.env:"),
+			Entry("when the field contains invalid key-value (name is not string)",
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": 0, "value": "foo"}},
+				"$.env[1].name:",
+			),
+			Entry("when the field contains invalid key-value (name is not var name)",
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "0a", "value": "foo"}},
+				"$.env[1].name:",
+			),
+			Entry("when the field contains invalid key-value (name is missing)",
+				Seq{Map{"name": "a", "value": "foo"}, Map{"value": "foo"}},
+				"$.env[1]:",
+			),
+			Entry("when the field contains invalid key-value (value is not string)",
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "a", "value": 42}},
+				"$.env[1].value:",
+			),
+			Entry("when the field contains invalid key-value (value is missing)",
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "a"}},
+				"$.env[1]:",
+			),
+		)
 	})
 })
 
