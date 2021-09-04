@@ -151,26 +151,6 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 		t.Stdin = stdin
 	}
 
-	// v.MayHaveSeq(tc, "env", func(env spec.Seq) {
-	// 	t.Env = []util.StringVar{}
-	// 	v.ForInSeq(env, func(i int, x interface{}) {
-	// 		envVar, ok := v.MustBeMap(x)
-	// 		if !ok {
-	// 			return
-	// 		}
-	// 		name, nameOk := v.MustHaveString(envVar, "name")
-	// 		value, valueOk := v.MustHaveString(envVar, "value")
-
-	// 		if nameOk && valueOk {
-	// 			v.InField("name", func() {
-	// 				if !evnVarNamePattern.MatchString(name) {
-	// 					v.AddViolation("environment variable name shoud be match to /%s/", evnVarNamePattern.String())
-	// 				}
-	// 			})
-	// 			t.Env = append(t.Env, util.StringVar{Name: name, Value: value})
-	// 		}
-	// 	})
-	// })
 	t.Env, _, _ = v.MayHaveEnvSeq(tc, "env")
 
 	if timeout, exists, _ := v.MayHaveDuration(tc, "timeout"); exists {
