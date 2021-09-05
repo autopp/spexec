@@ -313,6 +313,31 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	return ret, ret != nil, ok
 }
 
+func (v *Validator) MayHaveCommand(m Map, key string) ([]string, bool, bool) {
+	var ret []string
+	ok := true
+	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
+		ret = make([]string, len(command))
+		v.ForInSeq(command, func(i int, x interface{}) bool {
+			var c string
+			c, ok = v.MustBeString(x)
+			ret[i] = c
+			return ok
+		})
+
+		if len(ret) == 0 {
+			v.AddViolation("should have one ore more elements")
+			ok = false
+		}
+	})
+
+	if !isSeq || !ok {
+		return nil, false, false
+	}
+
+	return ret, ret != nil, ok
+}
+
 func (v *Validator) Error() error {
 	if len(v.violations) == 0 {
 		return nil
