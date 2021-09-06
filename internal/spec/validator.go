@@ -338,6 +338,16 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]string, bool, bool) {
 	return ret, ret != nil, ok
 }
 
+func (v *Validator) MustHaveCommand(m Map, key string) ([]string, bool) {
+	c, exists, ok := v.MayHaveCommand(m, key)
+
+	if !exists && ok {
+		v.AddViolation("should have .%s as command seq", key)
+	}
+
+	return c, exists && ok
+}
+
 func (v *Validator) Error() error {
 	if len(v.violations) == 0 {
 		return nil

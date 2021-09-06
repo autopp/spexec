@@ -587,9 +587,44 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		DescribeTable("adds vioration",
+		DescribeTable("adds violation",
 			func(command interface{}, prefix string) {
 				e, _, ok := v.MayHaveCommand(Map{"command": command}, "command")
+
+				Expect(e).To(BeNil())
+				Expect(ok).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(HavePrefix(prefix)))
+			},
+			Entry("when the filed is not seq", Map{}, "$.command:"),
+			Entry("when the field contains not string", Seq{"sh", 1}, "$.command[1]:"),
+			Entry("when the field is empty seq", Seq{}, "$.command"),
+		)
+	})
+
+	Describe("MustHaveCommand", func() {
+		Context("when the given map has specified field which is array of string", func() {
+			It("returns parsed array", func() {
+				e, ok := v.MustHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
+
+				Expect(v.Error()).To(BeNil())
+				Expect(e).To(Equal([]string{"sh", "-c", "true"}))
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("adds ", func() {
+				e, ok := v.MustHaveCommand(Map{}, "command")
+
+				Expect(e).To(BeNil())
+				Expect(ok).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(HavePrefix("$: should have .command as command seq")))
+			})
+		})
+
+		DescribeTable("adds violation",
+			func(command interface{}, prefix string) {
+				e, ok := v.MustHaveCommand(Map{"command": command}, "command")
 
 				Expect(e).To(BeNil())
 				Expect(ok).To(BeFalse())
