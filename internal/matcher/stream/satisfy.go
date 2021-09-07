@@ -49,22 +49,8 @@ func ParseSatisfyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x 
 	}
 
 	m := &SatisfyMatcher{}
-	_, ok = v.MustHaveSeq(p, "command", func(command spec.Seq) {
-		m.Command = make([]string, len(command))
-		v.ForInSeq(command, func(i int, x interface{}) bool {
-			c, ok := v.MustBeString(x)
-			m.Command[i] = c
-			return ok
-		})
-	})
+	m.Command, ok = v.MustHaveCommand(p, "command")
 	if !ok {
-		return nil
-	}
-
-	if len(m.Command) == 0 {
-		v.InField("command", func() {
-			v.AddViolation("shoud have one ore more elements")
-		})
 		return nil
 	}
 

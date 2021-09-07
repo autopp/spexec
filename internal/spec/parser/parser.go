@@ -134,18 +134,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 		t.Name = name
 	}
 
-	v.MustHaveSeq(tc, "command", func(command spec.Seq) {
-		t.Command = make([]string, len(command))
-		v.ForInSeq(command, func(i int, x interface{}) bool {
-			c, ok := v.MustBeString(x)
-			t.Command[i] = c
-			return ok
-		})
-
-		if len(t.Command) == 0 {
-			v.AddViolation("shoud have one ore more elements")
-		}
-	})
+	t.Command, _ = v.MustHaveCommand(tc, "command")
 
 	if stdin, exists, _ := v.MayHaveString(tc, "stdin"); exists {
 		t.Stdin = stdin
