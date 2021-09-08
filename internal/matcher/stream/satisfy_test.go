@@ -1,8 +1,11 @@
 package stream
 
 import (
+	"time"
+
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -38,7 +41,7 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 	})
 
 	DescribeTable("success cases",
-		func(given interface{}) {
+		func(given interface{}, expectedCommand []string, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
 			m := ParseSatisfyMatcher(v, r, given)
 
 			Expect(v.Error()).To(BeNil())
@@ -46,6 +49,10 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 
 			var satisfyMatcher *SatisfyMatcher
 			Expect(m).To(BeAssignableToTypeOf(satisfyMatcher))
+			satisfyMatcher = m.(*SatisfyMatcher)
+			Expect(satisfyMatcher.Command).To(Equal(expectedCommand))
+			Expect(satisfyMatcher.Env).To(Equal(expectedEnv))
+			Expect(satisfyMatcher.Timeout).To(Equal(expectedTimeout))
 		},
 		Entry("with full field",
 			spec.Map{
@@ -53,18 +60,21 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 				"timeout": 1,
 			},
+			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
 		),
 		Entry("without env",
 			spec.Map{
 				"command": spec.Seq{"test.sh"},
 				"timeout": 1,
 			},
+			[]string{"test.sh"}, nil, 1*time.Second,
 		),
 		Entry("without timeout",
 			spec.Map{
 				"command": spec.Seq{"test.sh"},
 				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 			},
+			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
 		),
 	)
 
