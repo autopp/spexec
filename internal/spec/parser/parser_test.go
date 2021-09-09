@@ -41,6 +41,7 @@ var _ = Describe("Parser", func() {
 				"0": PointTo(MatchAllFields(Fields{
 					"Name":    Equal("test_answer"),
 					"Command": Equal([]string{"echo", "42"}),
+					"Dir":     HaveSuffix("/testdata"),
 					"Stdin":   Equal("hello"),
 					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},
@@ -55,6 +56,7 @@ var _ = Describe("Parser", func() {
 				"0": PointTo(MatchAllFields(Fields{
 					"Name":    Equal("test_answer"),
 					"Command": Equal([]string{"echo", "42"}),
+					"Dir":     HaveSuffix("/testdata"),
 					"Stdin":   Equal("hello"),
 					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},

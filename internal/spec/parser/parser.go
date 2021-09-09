@@ -65,20 +65,20 @@ func (p *Parser) ParseFile(filename string) ([]*test.Test, error) {
 	var tests []*model.Test
 	ext := filepath.Ext(filename)
 	if ext == ".yml" || ext == ".yaml" {
-		tests, err = p.parseYAML(f)
+		tests, err = p.parseYAML(filename, f)
 	} else {
-		tests, err = p.parseJSON(f)
+		tests, err = p.parseJSON(filename, f)
 	}
 
 	return tests, err
 }
 
-func (p *Parser) parseYAML(b []byte) ([]*test.Test, error) {
-	return p.load(b, yaml.Unmarshal)
+func (p *Parser) parseYAML(filename string, b []byte) ([]*test.Test, error) {
+	return p.load(filename, b, yaml.Unmarshal)
 }
 
-func (p *Parser) parseJSON(b []byte) ([]*test.Test, error) {
-	return p.load(b, func(b []byte, x interface{}) error {
+func (p *Parser) parseJSON(filename string, b []byte) ([]*test.Test, error) {
+	return p.load(filename, b, func(b []byte, x interface{}) error {
 		d := json.NewDecoder(bytes.NewBuffer(b))
 		d.UseNumber()
 		err := d.Decode(x)
@@ -93,18 +93,21 @@ func (p *Parser) parseJSON(b []byte) ([]*test.Test, error) {
 	})
 }
 
-func (p *Parser) load(b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.Test, error) {
+func (p *Parser) load(filename string, b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.Test, error) {
 	var x interface{}
 	err := unmarchal(b, &x)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	return p.loadSpec(x)
+	return p.loadSpec(filename, x)
 }
 
-func (p *Parser) loadSpec(c interface{}) ([]*test.Test, error) {
-	v := spec.NewValidator()
+func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) {
+	v, err := spec.NewValidator(filename)
+	if err != nil {
+		return nil, err
+	}
 	cmap, ok := v.MustBeMap(c)
 	if !ok {
 		return nil, v.Error()
@@ -159,6 +162,8 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 			t.StderrMatcher = p.streamMR.ParseMatcher(v, stderr)
 		})
 	})
+
+	t.Dir = v.GetDir()
 
 	return t
 }

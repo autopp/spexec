@@ -26,6 +26,7 @@ import (
 
 type Test struct {
 	Name          string
+	Dir           string
 	Command       []string
 	Stdin         string
 	StatusMatcher matcher.StatusMatcher
@@ -48,7 +49,7 @@ func (t *Test) GetName() string {
 }
 
 func (t *Test) Run() (*TestResult, error) {
-	e, err := exec.New(t.Command, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
+	e, err := exec.New(t.Command, t.Dir, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
 	if err != nil {
 		return nil, err
 	}

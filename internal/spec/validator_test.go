@@ -24,7 +24,7 @@ var _ = Describe("Validator", func() {
 	}
 
 	JustBeforeEach(func() {
-		v = NewValidator()
+		v, _ = NewValidator("")
 	})
 
 	Describe("AddViolation() and Error()", func() {

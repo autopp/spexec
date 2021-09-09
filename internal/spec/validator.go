@@ -17,6 +17,7 @@ package spec
 import (
 	"encoding/json"
 	"fmt"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -33,15 +34,28 @@ type violation struct {
 }
 
 type Validator struct {
+	filename   string
 	paths      []string
 	violations []violation
 }
 
-func NewValidator() *Validator {
+func NewValidator(filename string) (*Validator, error) {
+	if len(filename) != 0 {
+		absFilename, err := filepath.Abs(filename)
+		if err != nil {
+			return nil, err
+		}
+		filename = absFilename
+	}
 	return &Validator{
+		filename:   filename,
 		paths:      []string{"$"},
 		violations: make([]violation, 0),
-	}
+	}, nil
+}
+
+func (v *Validator) GetDir() string {
+	return filepath.Dir(v.filename)
 }
 
 func (v *Validator) pushPath(path string) {

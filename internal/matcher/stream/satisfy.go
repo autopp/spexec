@@ -25,12 +25,13 @@ import (
 
 type SatisfyMatcher struct {
 	Command []string
+	Dir     string
 	Env     []util.StringVar
 	Timeout time.Duration
 }
 
 func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
-	e, err := exec.New(m.Command, string(actual), m.Env, exec.WithTimeout(m.Timeout))
+	e, err := exec.New(m.Command, m.Dir, string(actual), m.Env, exec.WithTimeout(m.Timeout))
 	if err != nil {
 		return false, "", err
 	}
@@ -53,6 +54,8 @@ func ParseSatisfyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x 
 	if !ok {
 		return nil
 	}
+
+	m.Dir = v.GetDir()
 
 	m.Env, _, ok = v.MayHaveEnvSeq(p, "env")
 	if !ok {

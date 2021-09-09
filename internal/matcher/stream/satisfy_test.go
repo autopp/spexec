@@ -36,7 +36,7 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v = spec.NewValidator()
+		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 	})
 

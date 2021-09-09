@@ -116,7 +116,7 @@ var _ = Describe("StatusMatcherRegistry", func() {
 			r.Add(zeroName, parseZeroMatcher)
 			r.AddWithDefault(zeroWithDefaultName, parseZeroMatcher, true)
 			r.Add(violationName, parseViolationStatusMatcher)
-			v = spec.NewValidator()
+			v, _ = spec.NewValidator("")
 		})
 
 		Context("for matcher without default parameter", func() {
@@ -243,7 +243,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 			r.Add(emptyName, parseEmptyMatcher)
 			r.AddWithDefault(emptyWithDefaultName, parseEmptyMatcher, true)
 			r.Add(violationName, parseViolationStreamMatcher)
-			v = spec.NewValidator()
+			v, _ = spec.NewValidator("")
 		})
 
 		Context("for matcher without default parameter", func() {
@@ -319,7 +319,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 			r.Add(emptyName, parseEmptyMatcher)
 			r.AddWithDefault(emptyWithDefaultName, parseEmptyMatcher, true)
 			r.Add(violationName, parseViolationStreamMatcher)
-			v = spec.NewValidator()
+			v, _ = spec.NewValidator("")
 		})
 
 		Context("when params are valid", func() {

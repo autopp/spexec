@@ -40,6 +40,7 @@ type ExecResult struct {
 
 type Exec struct {
 	Command []string
+	Dir     string
 	Stdin   string
 	Env     []util.StringVar
 	Timeout time.Duration
@@ -64,9 +65,10 @@ func WithTimeout(t time.Duration) Option {
 	return OptionTimeout(t)
 }
 
-func New(command []string, stdin string, env []util.StringVar, opts ...Option) (*Exec, error) {
+func New(command []string, dir, stdin string, env []util.StringVar, opts ...Option) (*Exec, error) {
 	e := &Exec{
 		Command: command,
+		Dir:     dir,
 		Stdin:   stdin,
 		Env:     env,
 	}
@@ -82,6 +84,7 @@ func New(command []string, stdin string, env []util.StringVar, opts ...Option) (
 
 func (e *Exec) Run() *ExecResult {
 	cmd := exec.Command(e.Command[0], e.Command[1:]...)
+	cmd.Dir = e.Dir
 	cmd.Stdin = strings.NewReader(e.Stdin)
 	stdout := new(bytes.Buffer)
 	cmd.Stdout = stdout

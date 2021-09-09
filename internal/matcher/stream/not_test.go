@@ -51,7 +51,7 @@ var _ = Describe("ParseNotMatcher", func() {
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v = spec.NewValidator()
+		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 		r.Add("empty", parseEmptyMatcher)
 	})
