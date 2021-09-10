@@ -36,6 +36,13 @@ var _ = Describe("Exec", func() {
 			},
 			true, 0, "", "", "42",
 		),
+		Entry("with `echo -n 42 >&2 (in ./testdata)`",
+			&Exec{
+				Command: []string{"./stderr.sh"},
+				Dir:     "testdata",
+			},
+			true, 0, "", "", "42",
+		),
 		Entry("with `kill -TERM $$`",
 			&Exec{
 				Command: []string{"testdata/signal.sh"},
