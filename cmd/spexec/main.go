@@ -16,21 +16,14 @@ package main
 
 import (
 	"os"
-	"runtime/debug"
 
 	"github.com/autopp/spexec/internal/cmd"
 	"github.com/autopp/spexec/internal/errors"
 )
 
-func getVersion() string {
-	info, ok := debug.ReadBuildInfo()
-	if !ok {
-		return "(devel)"
-	}
-	return info.Main.Version
-}
+var version = "HEAD"
 
 func main() {
-	err := cmd.Main(getVersion(), os.Stdin, os.Stdout, os.Stderr, os.Args[1:])
+	err := cmd.Main(version, os.Stdin, os.Stdout, os.Stderr, os.Args[1:])
 	os.Exit(errors.StatusOf(err))
 }
