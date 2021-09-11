@@ -39,6 +39,7 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         go mod download
+        go install github.com/onsi/ginkgo/ginkgo@latest
     - name: "Run test"
       run: make test
     - name: Create Tag
