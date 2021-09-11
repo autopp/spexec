@@ -49,7 +49,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 		Use:           "spexec file",
 		SilenceUsage:  true,
 		SilenceErrors: false,
-		Args:          cobra.ExactArgs(1),
+		Args:          cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if v, err := cmd.Flags().GetBool(versionFlag); err != nil {
 				return err
