@@ -1,5 +1,15 @@
 # spexec
 
+## Install
+
+Download from [releases page](https://github.com/autopp/spexec/releases).
+
+## Usage
+
+```
+$ spexec spec.yaml
+```
+
 ## Exit Status
 
 | code | description |
