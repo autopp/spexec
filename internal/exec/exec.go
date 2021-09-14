@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"strings"
 	"syscall"
 	"time"
 
@@ -41,7 +40,7 @@ type ExecResult struct {
 type Exec struct {
 	Command []string
 	Dir     string
-	Stdin   string
+	Stdin   []byte
 	Env     []util.StringVar
 	Timeout time.Duration
 }
@@ -65,7 +64,7 @@ func WithTimeout(t time.Duration) Option {
 	return OptionTimeout(t)
 }
 
-func New(command []string, dir, stdin string, env []util.StringVar, opts ...Option) (*Exec, error) {
+func New(command []string, dir string, stdin []byte, env []util.StringVar, opts ...Option) (*Exec, error) {
 	e := &Exec{
 		Command: command,
 		Dir:     dir,
@@ -85,7 +84,7 @@ func New(command []string, dir, stdin string, env []util.StringVar, opts ...Opti
 func (e *Exec) Run() *ExecResult {
 	cmd := exec.Command(e.Command[0], e.Command[1:]...)
 	cmd.Dir = e.Dir
-	cmd.Stdin = strings.NewReader(e.Stdin)
+	cmd.Stdin = bytes.NewReader(e.Stdin)
 	stdout := new(bytes.Buffer)
 	cmd.Stdout = stdout
 	stderr := new(bytes.Buffer)

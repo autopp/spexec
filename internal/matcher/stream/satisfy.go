@@ -31,7 +31,7 @@ type SatisfyMatcher struct {
 }
 
 func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
-	e, err := exec.New(m.Command, m.Dir, string(actual), m.Env, exec.WithTimeout(m.Timeout))
+	e, err := exec.New(m.Command, m.Dir, actual, m.Env, exec.WithTimeout(m.Timeout))
 	if err != nil {
 		return false, "", err
 	}
