@@ -27,9 +27,9 @@ func printFailures(w *Writer, failures []*model.TestResult) {
 
 	fmt.Fprintln(w, "\nFailures:")
 	for i, tr := range failures {
-		fmt.Printf("\n  %d) %s\n", i+1, tr.Name)
+		fmt.Fprintf(w, "\n  %d) %s\n", i+1, tr.Name)
 		for _, m := range tr.Messages {
-			fmt.Printf("    %s: %s\n", m.Name, m.Message)
+			fmt.Fprintf(w, "    %s: %s\n", m.Name, m.Message)
 		}
 	}
 }
