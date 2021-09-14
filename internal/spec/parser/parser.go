@@ -140,7 +140,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	t.Command, _ = v.MustHaveCommand(tc, "command")
 
 	if stdin, exists, _ := v.MayHaveString(tc, "stdin"); exists {
-		t.Stdin = stdin
+		t.Stdin = []byte(stdin)
 	}
 
 	t.Env, _, _ = v.MayHaveEnvSeq(tc, "env")

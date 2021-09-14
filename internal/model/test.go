@@ -28,7 +28,7 @@ type Test struct {
 	Name          string
 	Dir           string
 	Command       []string
-	Stdin         string
+	Stdin         []byte
 	StatusMatcher matcher.StatusMatcher
 	StdoutMatcher matcher.StreamMatcher
 	StderrMatcher matcher.StreamMatcher
