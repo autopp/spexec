@@ -22,6 +22,7 @@ import (
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher/status"
 	"github.com/autopp/spexec/internal/matcher/stream"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
 	"github.com/autopp/spexec/internal/spec/parser"
@@ -31,6 +32,7 @@ import (
 
 type options struct {
 	filename string
+	isStdin  bool
 	output   string
 	color    string
 	format   string
@@ -86,7 +88,13 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 }
 
 func (o *options) complete(cmd *cobra.Command, args []string) error {
-	o.filename = args[0]
+	if len(args) == 0 {
+		o.filename = "<stdin>"
+		o.isStdin = true
+	} else {
+		o.filename = args[0]
+		o.isStdin = false
+	}
 
 	if err := validateEnumFlag(o.color, "always", "never", "auto"); err != nil {
 		return err
@@ -112,7 +120,15 @@ func validateEnumFlag(value string, validValues ...string) error {
 func (o *options) run() error {
 	statusMR := status.NewStatusMatcherRegistryWithBuiltins()
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
-	tests, err := parser.New(statusMR, streamMR).ParseFile(o.filename)
+
+	p := parser.New(statusMR, streamMR)
+	var tests []*model.Test
+	var err error
+	if o.isStdin {
+		tests, err = p.ParseStdin()
+	} else {
+		tests, err = p.ParseFile(o.filename)
+	}
 	if err != nil {
 		return err
 	}

@@ -17,6 +17,7 @@ package parser
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -55,6 +56,16 @@ type Parser struct {
 
 func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) *Parser {
 	return &Parser{statusMR, streamMR}
+}
+
+func (p *Parser) ParseStdin() ([]*test.Test, error) {
+	f, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
+	}
+
+	tests, err := p.parseYAML("", f)
+	return tests, err
 }
 
 func (p *Parser) ParseFile(filename string) ([]*test.Test, error) {
