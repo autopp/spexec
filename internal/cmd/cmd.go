@@ -89,6 +89,8 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 
 func (o *options) complete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
+		return errors.Errorf(errors.ErrInvalidSpec, "spec is not given")
+	} else if args[0] == "-" {
 		o.filename = "<stdin>"
 		o.isStdin = true
 	} else {
