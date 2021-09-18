@@ -104,7 +104,7 @@ func (v *Validator) MustBeMap(x interface{}) (Map, bool) {
 	if m, ok := x.(Map); ok {
 		return m, true
 	}
-	v.AddViolation("should be map, but is %s", Typeof(x))
+	v.AddViolation("should be map, but is %s", TypeNameOf(x))
 	return nil, false
 }
 
@@ -112,14 +112,14 @@ func (v *Validator) MustBeSeq(x interface{}) (Seq, bool) {
 	if s, ok := x.(Seq); ok {
 		return s, true
 	}
-	v.AddViolation("should be seq, but is %s", Typeof(x))
+	v.AddViolation("should be seq, but is %s", TypeNameOf(x))
 	return nil, false
 }
 
 func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	s, ok := x.(string)
 	if !ok {
-		v.AddViolation("should be string, but is %s", Typeof(x))
+		v.AddViolation("should be string, but is %s", TypeNameOf(x))
 	}
 
 	return s, ok
@@ -132,11 +132,11 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 	case json.Number:
 		i, err := n.Int64()
 		if err != nil {
-			v.AddViolation("should be int, but is %s", Typeof(x))
+			v.AddViolation("should be int, but is %s", TypeNameOf(x))
 		}
 		return int(i), err == nil
 	default:
-		v.AddViolation("should be int, but is %s", Typeof(x))
+		v.AddViolation("should be int, but is %s", TypeNameOf(x))
 		return 0, false
 	}
 }
@@ -144,7 +144,7 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
 	b, ok := x.(bool)
 	if !ok {
-		v.AddViolation("should be bool, but is %s", Typeof(x))
+		v.AddViolation("should be bool, but is %s", TypeNameOf(x))
 	}
 
 	return b, ok
@@ -158,7 +158,7 @@ func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
 
 	s, ok := x.(string)
 	if !ok {
-		v.AddViolation("should be positive integer or duration string, but is %s", Typeof(x))
+		v.AddViolation("should be positive integer or duration string, but is %s", TypeNameOf(x))
 		return 0, false
 	}
 	d, err := time.ParseDuration(s)
@@ -387,35 +387,52 @@ func (v *Validator) Error() error {
 	return errors.New(errors.ErrInvalidSpec, strings.Join(messages, "\n"))
 }
 
-func Typeof(x interface{}) string {
+func TypeOf(x interface{}) Type {
 	if x == nil {
-		return "nil"
+		return TypeNil
 	}
 
 	if _, ok := x.(int); ok {
-		return "int"
+		return TypeInt
 	}
 
 	if i, ok := x.(json.Number); ok {
 		if _, err := i.Int64(); err == nil {
-			return "int"
+			return TypeInt
 		}
 	}
 
 	if _, ok := x.(bool); ok {
-		return "bool"
+		return TypeBool
 	}
 
 	if _, ok := x.(string); ok {
-		return "string"
+		return TypeString
 	}
 
 	if _, ok := x.(Seq); ok {
-		return "seq"
+		return TypeSeq
 	}
 
 	if _, ok := x.(Map); ok {
-		return "map"
+		return TypeMap
+	}
+
+	return TypeUnkown
+}
+
+var typeNames = map[Type]string{
+	TypeNil:    "nil",
+	TypeInt:    "int",
+	TypeBool:   "bool",
+	TypeString: "string",
+	TypeSeq:    "seq",
+	TypeMap:    "map",
+}
+
+func TypeNameOf(x interface{}) string {
+	if name, ok := typeNames[TypeOf(x)]; ok {
+		return name
 	}
 
 	return fmt.Sprintf("%T", x)
