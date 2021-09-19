@@ -126,6 +126,26 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeString()", func() {
+		Context("with a string", func() {
+			It("returns the given string and true", func() {
+				given := "hello"
+				m, b := v.MayBeString(given)
+
+				Expect(m).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a not string", func() {
+			It("returns something and false", func() {
+				_, b := v.MayBeString(42)
+
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeString()", func() {
 		Context("with a string", func() {
 			It("returns the given string and true", func() {

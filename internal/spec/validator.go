@@ -116,8 +116,13 @@ func (v *Validator) MustBeSeq(x interface{}) (Seq, bool) {
 	return nil, false
 }
 
-func (v *Validator) MustBeString(x interface{}) (string, bool) {
+func (v *Validator) MayBeString(x interface{}) (string, bool) {
 	s, ok := x.(string)
+	return s, ok
+}
+
+func (v *Validator) MustBeString(x interface{}) (string, bool) {
+	s, ok := v.MayBeString(x)
 	if !ok {
 		v.AddViolation("should be string, but is %s", TypeNameOf(x))
 	}
