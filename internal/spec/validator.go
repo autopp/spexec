@@ -100,8 +100,13 @@ func (v *Validator) AddViolation(format string, args ...interface{}) {
 	v.violations = append(v.violations, violation{path: strings.Join(v.paths, ""), message: message})
 }
 
+func (v *Validator) MayBeMap(x interface{}) (Map, bool) {
+	m, ok := x.(Map)
+	return m, ok
+}
+
 func (v *Validator) MustBeMap(x interface{}) (Map, bool) {
-	if m, ok := x.(Map); ok {
+	if m, ok := v.MayBeMap(x); ok {
 		return m, true
 	}
 	v.AddViolation("should be map, but is %s", TypeNameOf(x))

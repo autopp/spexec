@@ -84,6 +84,26 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeMap()", func() {
+		Context("with a Map", func() {
+			It("returns the given Map and true", func() {
+				given := make(Map)
+				m, b := v.MayBeMap(given)
+
+				Expect(m).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a not Map", func() {
+			It("returns something and false", func() {
+				_, b := v.MayBeMap(42)
+
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeMap()", func() {
 		Context("with a Map", func() {
 			It("returns the given Map and true", func() {
