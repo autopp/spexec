@@ -180,7 +180,7 @@ func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
 	return d, true
 }
 
-func (v *Validator) mustHave(m Map, key string) (interface{}, bool) {
+func (v *Validator) MustHave(m Map, key string) (interface{}, bool) {
 	x, ok := m[key]
 	if !ok {
 		v.AddViolation("should have .%s", key)

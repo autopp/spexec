@@ -1,0 +1,11 @@
+tests:
+  - name: test_answer
+    command:
+      - echo
+    stdin:
+      type: yaml
+      value:
+        array:
+          - 1
+          - true
+          - hello
