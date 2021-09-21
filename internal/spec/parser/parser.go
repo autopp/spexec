@@ -17,7 +17,6 @@ package parser
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -152,7 +151,6 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	t.Command, _ = v.MustHaveCommand(tc, "command")
 
 	v.MayHave(tc, "stdin", func(stdin interface{}) {
-		fmt.Printf("MayHave stdin: ")
 		if stdinString, ok := v.MayBeString(stdin); ok {
 			t.Stdin = []byte(stdinString)
 		} else if stdinMap, ok := v.MayBeMap(stdin); ok {
