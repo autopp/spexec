@@ -16,3 +16,15 @@ package spec
 
 type Map = map[string]interface{}
 type Seq = []interface{}
+
+type Type int
+
+const (
+	TypeNil Type = iota
+	TypeInt
+	TypeBool
+	TypeString
+	TypeSeq
+	TypeMap
+	TypeUnkown
+)

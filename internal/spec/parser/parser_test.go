@@ -67,6 +67,23 @@ var _ = Describe("Parser", func() {
 					"StderrMatcher": BeNil(),
 				})),
 			}),
+			Entry("testdata/yaml-stdin.yaml", "yaml-stdin.yaml", Elements{
+				"0": PointTo(MatchAllFields(Fields{
+					"Name":    Equal("test_answer"),
+					"Command": Equal([]string{"echo"}),
+					"Dir":     HaveSuffix("/testdata"),
+					"Stdin": Equal([]byte(`array:
+    - 1
+    - true
+    - hello
+`)),
+					"Env":           BeNil(),
+					"Timeout":       Equal(0 * time.Second),
+					"StatusMatcher": BeNil(),
+					"StdoutMatcher": BeNil(),
+					"StderrMatcher": BeNil(),
+				})),
+			}),
 		)
 	})
 })

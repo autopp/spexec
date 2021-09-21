@@ -86,7 +86,7 @@ func (r *matcherParserRegistry) get(v *spec.Validator, x interface{}) (string, i
 		}
 		withParam = true
 	default:
-		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", spec.Typeof(x))
+		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", spec.TypeNameOf(x))
 		return "", nil, nil
 	}
 

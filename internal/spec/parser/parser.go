@@ -17,6 +17,7 @@ package parser
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -150,9 +151,36 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 
 	t.Command, _ = v.MustHaveCommand(tc, "command")
 
-	if stdin, exists, _ := v.MayHaveString(tc, "stdin"); exists {
-		t.Stdin = []byte(stdin)
-	}
+	v.MayHave(tc, "stdin", func(stdin interface{}) {
+		fmt.Printf("MayHave stdin: ")
+		if stdinString, ok := v.MayBeString(stdin); ok {
+			t.Stdin = []byte(stdinString)
+		} else if stdinMap, ok := v.MayBeMap(stdin); ok {
+			stdinType, typeOk := v.MustHaveString(stdinMap, "type")
+			stdinValue, valueOk := v.MustHave(stdinMap, "value")
+			if !typeOk || !valueOk {
+				return
+			}
+
+			switch stdinType {
+			case "yaml":
+				value, err := yaml.Marshal(stdinValue)
+				if err != nil {
+					v.InField("value", func() {
+						v.AddViolation(`cannot encode to a YAML string: %s`, err)
+					})
+					return
+				}
+				t.Stdin = value
+			default:
+				v.InField("type", func() {
+					v.AddViolation(`should be a "yaml", but is %q`, stdinType)
+				})
+			}
+		} else {
+			v.AddViolation("should be a string or map, but is %s", spec.TypeNameOf(stdin))
+		}
+	})
 
 	t.Env, _, _ = v.MayHaveEnvSeq(tc, "env")
 

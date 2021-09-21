@@ -84,6 +84,26 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeMap()", func() {
+		Context("with a Map", func() {
+			It("returns the given Map and true", func() {
+				given := make(Map)
+				m, b := v.MayBeMap(given)
+
+				Expect(m).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a not Map", func() {
+			It("returns something and false", func() {
+				_, b := v.MayBeMap(42)
+
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeMap()", func() {
 		Context("with a Map", func() {
 			It("returns the given Map and true", func() {
@@ -121,6 +141,26 @@ var _ = Describe("Validator", func() {
 				_, b := v.MustBeSeq(42)
 
 				Expect(v.Error()).To(BeValidationError("$: should be seq, but is int"))
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MayBeString()", func() {
+		Context("with a string", func() {
+			It("returns the given string and true", func() {
+				given := "hello"
+				m, b := v.MayBeString(given)
+
+				Expect(m).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a not string", func() {
+			It("returns something and false", func() {
+				_, b := v.MayBeString(42)
+
 				Expect(b).To(BeFalse())
 			})
 		})
@@ -637,9 +677,22 @@ var _ = Describe("Validator", func() {
 	})
 })
 
-var _ = DescribeTable("Typeof()",
+var _ = DescribeTable("TypeOf()",
+	func(x interface{}, expected Type) {
+		Expect(TypeOf(x)).To(Equal(expected))
+	},
+	Entry(`when 42 given, returns TypeInt`, 42, TypeInt),
+	Entry(`when json.Number("42") given, returns TypeInt`, json.Number("42"), TypeInt),
+	Entry(`when true given, returns TypeBool`, true, TypeBool),
+	Entry(`when "hello" given, returns TypeString`, "hello", TypeString),
+	Entry(`when slice given, returns TypeSeq`, Seq{42, true, "hello"}, TypeSeq),
+	Entry(`when string key map given, returns TypeMap`, Map{"message": "hello"}, TypeMap),
+	Entry(`when nil given, returns TypeNil`, nil, TypeNil),
+)
+
+var _ = DescribeTable("TypeNameOf()",
 	func(x interface{}, expected string) {
-		Expect(Typeof(x)).To(Equal(expected))
+		Expect(TypeNameOf(x)).To(Equal(expected))
 	},
 	Entry(`when 42 given, returns "int"`, 42, "int"),
 	Entry(`when json.Number("42") given, returns "int"`, json.Number("42"), "int"),
