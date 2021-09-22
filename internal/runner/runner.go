@@ -40,7 +40,8 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 		reporter.OnTestComplete(t, tr)
 		results = append(results, tr)
 	}
-	reporter.OnRunComplete(results)
+	sr := &model.SpecResult{TestResults: results}
+	reporter.OnRunComplete(sr)
 
 	return results
 }

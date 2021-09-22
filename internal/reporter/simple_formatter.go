@@ -31,15 +31,15 @@ Example of output:
 type SimpleFormatter struct{}
 
 // OnRunStart is part of Reporter
-func (sr *SimpleFormatter) OnRunStart(w *Writer) {
+func (f *SimpleFormatter) OnRunStart(w *Writer) {
 }
 
 // OnTestStart is part of Reporter
-func (sr *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) {
+func (f *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) {
 }
 
 // OnTestComplete is part of Reporter
-func (sr *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
+func (f *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
 	if tr.IsSuccess {
 		w.UseColor(Green, func() {
 			fmt.Fprint(w, ".")
@@ -52,14 +52,14 @@ func (sr *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.Te
 }
 
 // OnRunComplete is part of Reporter
-func (sr *SimpleFormatter) OnRunComplete(w *Writer, trs []*model.TestResult) {
+func (f *SimpleFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
 	failures := make([]*model.TestResult, 0)
-	for _, tr := range trs {
+	for _, tr := range sr.TestResults {
 		if !tr.IsSuccess {
 			failures = append(failures, tr)
 		}
 	}
 
 	printFailures(w, failures)
-	fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), len(failures))
+	fmt.Fprintf(w, "\n%d examples, %d failures\n", len(sr.TestResults), len(failures))
 }

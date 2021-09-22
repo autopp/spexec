@@ -24,3 +24,8 @@ type TestResult struct {
 	Messages  []*AssertionMessage
 	IsSuccess bool
 }
+
+type SpecResult struct {
+	Name        string
+	TestResults []*TestResult
+}
