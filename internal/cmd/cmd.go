@@ -102,7 +102,7 @@ func (o *options) complete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := validateEnumFlag(o.format, "simple", "documentation"); err != nil {
+	if err := validateEnumFlag(o.format, "simple", "documentation", "json"); err != nil {
 		return err
 	}
 
@@ -167,6 +167,8 @@ func (o *options) run() error {
 		formatter = &reporter.SimpleFormatter{}
 	case "documentation":
 		formatter = &reporter.DocumentationFormatter{}
+	case "json":
+		formatter = &reporter.JSONFormatter{}
 	}
 	reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
 

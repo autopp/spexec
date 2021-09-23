@@ -15,14 +15,14 @@
 package model
 
 type AssertionMessage struct {
-	Name    string
-	Message string
+	Name    string `json:"name"`
+	Message string `json:"message"`
 }
 
 type TestResult struct {
-	Name      string
-	Messages  []*AssertionMessage
-	IsSuccess bool
+	Name      string              `json:"name"`
+	Messages  []*AssertionMessage `json:"messages"`
+	IsSuccess bool                `json:"isSuccess"`
 }
 
 type SpecResult struct {
