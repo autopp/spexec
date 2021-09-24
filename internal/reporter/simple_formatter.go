@@ -53,13 +53,6 @@ func (f *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.Tes
 
 // OnRunComplete is part of Reporter
 func (f *SimpleFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
-	failures := make([]*model.TestResult, 0)
-	for _, tr := range sr.TestResults {
-		if !tr.IsSuccess {
-			failures = append(failures, tr)
-		}
-	}
-
-	printFailures(w, failures)
-	fmt.Fprintf(w, "\n%d examples, %d failures\n", len(sr.TestResults), len(failures))
+	printFailures(w, sr.GetFailedTestResults())
+	fmt.Fprintf(w, "\n%d examples, %d failures\n", sr.Summary.NumberOfTests, sr.Summary.NumberOfFailed)
 }

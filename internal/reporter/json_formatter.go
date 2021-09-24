@@ -73,25 +73,7 @@ func (f *JSONFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestR
 
 // OnRunComplete is part of Reporter
 func (f *JSONFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
-	failures := make([]*model.TestResult, 0)
-
-	for _, tr := range sr.TestResults {
-		if !tr.IsSuccess {
-			failures = append(failures, tr)
-		}
-	}
-
-	numberOfTests := len(sr.TestResults)
-	numberOfFailure := len(failures)
-
-	output, err := json.Marshal(jsonOutput{
-		Results: sr.TestResults,
-		Summary: jsonSummary{
-			NumberOfTests:   numberOfTests,
-			NumberOfSuccess: numberOfTests - numberOfFailure,
-			NumberOfFailure: numberOfFailure,
-		},
-	})
+	output, err := json.Marshal(sr)
 
 	// TODO: error handling
 	if err != nil {
