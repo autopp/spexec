@@ -176,7 +176,7 @@ func (o *options) run() error {
 	if err != nil {
 		return err
 	}
-	results := runner.RunTests(tests, reporter)
+	results := runner.RunTests(o.filename, tests, reporter)
 
 	allGreen := true
 	for _, r := range results {

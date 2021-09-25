@@ -32,12 +32,14 @@ type SpecSummary struct {
 }
 
 type SpecResult struct {
+	Name        string        `json:"name"`
 	TestResults []*TestResult `json:"testResults"`
 	Summary     SpecSummary   `json:"summary"`
 }
 
-func NewSpecResult(testResults []*TestResult) *SpecResult {
+func NewSpecResult(name string, testResults []*TestResult) *SpecResult {
 	sr := &SpecResult{
+		Name:        name,
 		TestResults: testResults,
 	}
 

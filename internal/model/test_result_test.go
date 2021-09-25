@@ -22,7 +22,7 @@ var _ = Describe("SpecResult", func() {
 					IsSuccess: false,
 				},
 			}
-			sr := NewSpecResult(trs)
+			sr := NewSpecResult("test.yaml", trs)
 			Expect(sr.Summary).To(Equal(SpecSummary{
 				NumberOfTests:     3,
 				NumberOfSucceeded: 1,
@@ -47,7 +47,7 @@ var _ = Describe("SpecResult", func() {
 					IsSuccess: false,
 				},
 			}
-			sr := NewSpecResult(trs)
+			sr := NewSpecResult("test.yaml", trs)
 			Expect(sr.GetFailedTestResults()).To(Equal([]*TestResult{trs[1], trs[2]}))
 		})
 	})
