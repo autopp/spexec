@@ -38,7 +38,7 @@ type ReportFormatter interface {
 	OnRunStart(w *Writer)
 	OnTestStart(w *Writer, t *model.Test)
 	OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult)
-	OnRunComplete(w *Writer, trs []*model.TestResult)
+	OnRunComplete(w *Writer, sr *model.SpecResult)
 }
 
 // Option is functional option of New
@@ -102,6 +102,6 @@ func (r *Reporter) OnTestComplete(t *model.Test, tr *model.TestResult) {
 }
 
 // OnRunComplete should be called afterall test execution
-func (r *Reporter) OnRunComplete(trs []*model.TestResult) {
-	r.rf.OnRunComplete(r.w, trs)
+func (r *Reporter) OnRunComplete(sr *model.SpecResult) {
+	r.rf.OnRunComplete(r.w, sr)
 }

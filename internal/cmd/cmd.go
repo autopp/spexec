@@ -50,7 +50,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	cmd := &cobra.Command{
 		Use:           "spexec file",
 		SilenceUsage:  true,
-		SilenceErrors: false,
+		SilenceErrors: true,
 		Args:          cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if v, err := cmd.Flags().GetBool(versionFlag); err != nil {
@@ -102,7 +102,7 @@ func (o *options) complete(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	if err := validateEnumFlag(o.format, "simple", "documentation"); err != nil {
+	if err := validateEnumFlag(o.format, "simple", "documentation", "json"); err != nil {
 		return err
 	}
 
@@ -167,6 +167,8 @@ func (o *options) run() error {
 		formatter = &reporter.SimpleFormatter{}
 	case "documentation":
 		formatter = &reporter.DocumentationFormatter{}
+	case "json":
+		formatter = &reporter.JSONFormatter{}
 	}
 	reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
 
@@ -174,7 +176,7 @@ func (o *options) run() error {
 	if err != nil {
 		return err
 	}
-	results := runner.RunTests(tests, reporter)
+	results := runner.RunTests(o.filename, tests, reporter)
 
 	allGreen := true
 	for _, r := range results {

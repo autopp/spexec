@@ -31,15 +31,15 @@ Example of output:
 type SimpleFormatter struct{}
 
 // OnRunStart is part of Reporter
-func (sr *SimpleFormatter) OnRunStart(w *Writer) {
+func (f *SimpleFormatter) OnRunStart(w *Writer) {
 }
 
 // OnTestStart is part of Reporter
-func (sr *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) {
+func (f *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) {
 }
 
 // OnTestComplete is part of Reporter
-func (sr *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
+func (f *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
 	if tr.IsSuccess {
 		w.UseColor(Green, func() {
 			fmt.Fprint(w, ".")
@@ -52,14 +52,7 @@ func (sr *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.Te
 }
 
 // OnRunComplete is part of Reporter
-func (sr *SimpleFormatter) OnRunComplete(w *Writer, trs []*model.TestResult) {
-	failures := make([]*model.TestResult, 0)
-	for _, tr := range trs {
-		if !tr.IsSuccess {
-			failures = append(failures, tr)
-		}
-	}
-
-	printFailures(w, failures)
-	fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), len(failures))
+func (f *SimpleFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
+	printFailures(w, sr.GetFailedTestResults())
+	fmt.Fprintf(w, "\n%d examples, %d failures\n", sr.Summary.NumberOfTests, sr.Summary.NumberOfFailed)
 }

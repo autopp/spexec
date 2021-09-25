@@ -25,7 +25,7 @@ func NewRunner() *Runner {
 	return &Runner{}
 }
 
-func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*model.TestResult {
+func (r *Runner) RunTests(name string, tests []*model.Test, reporter *reporter.Reporter) []*model.TestResult {
 	results := make([]*model.TestResult, 0, len(tests))
 
 	reporter.OnRunStart()
@@ -40,7 +40,8 @@ func (r *Runner) RunTests(tests []*model.Test, reporter *reporter.Reporter) []*m
 		reporter.OnTestComplete(t, tr)
 		results = append(results, tr)
 	}
-	reporter.OnRunComplete(results)
+	sr := model.NewSpecResult(name, results)
+	reporter.OnRunComplete(sr)
 
 	return results
 }

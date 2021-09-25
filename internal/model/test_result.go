@@ -15,12 +15,47 @@
 package model
 
 type AssertionMessage struct {
-	Name    string
-	Message string
+	Name    string `json:"name"`
+	Message string `json:"message"`
 }
 
 type TestResult struct {
-	Name      string
-	Messages  []*AssertionMessage
-	IsSuccess bool
+	Name      string              `json:"name"`
+	Messages  []*AssertionMessage `json:"messages"`
+	IsSuccess bool                `json:"isSuccess"`
+}
+
+type SpecSummary struct {
+	NumberOfTests     int `json:"numberOfTests"`
+	NumberOfSucceeded int `json:"numberOfSucceeded"`
+	NumberOfFailed    int `json:"numberOfFailed"`
+}
+
+type SpecResult struct {
+	Name        string        `json:"name"`
+	TestResults []*TestResult `json:"testResults"`
+	Summary     SpecSummary   `json:"summary"`
+}
+
+func NewSpecResult(name string, testResults []*TestResult) *SpecResult {
+	sr := &SpecResult{
+		Name:        name,
+		TestResults: testResults,
+	}
+
+	sr.Summary.NumberOfTests = len(testResults)
+	sr.Summary.NumberOfFailed = len(sr.GetFailedTestResults())
+	sr.Summary.NumberOfSucceeded = sr.Summary.NumberOfTests - sr.Summary.NumberOfFailed
+	return sr
+}
+
+func (sr *SpecResult) GetFailedTestResults() []*TestResult {
+	failures := make([]*TestResult, 0)
+	for _, tr := range sr.TestResults {
+		if !tr.IsSuccess {
+			failures = append(failures, tr)
+		}
+	}
+
+	return failures
 }

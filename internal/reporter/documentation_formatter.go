@@ -31,15 +31,15 @@ Example of output:
 type DocumentationFormatter struct{}
 
 // OnRunStart is part of Reporter
-func (sr *DocumentationFormatter) OnRunStart(w *Writer) {
+func (f *DocumentationFormatter) OnRunStart(w *Writer) {
 }
 
 // OnTestStart is part of Reporter
-func (sr *DocumentationFormatter) OnTestStart(w *Writer, t *model.Test) {
+func (f *DocumentationFormatter) OnTestStart(w *Writer, t *model.Test) {
 }
 
 // OnTestComplete is part of Reporter
-func (sr *DocumentationFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
+func (f *DocumentationFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
 	var color Color
 	if tr.IsSuccess {
 		color = Green
@@ -53,20 +53,14 @@ func (sr *DocumentationFormatter) OnTestComplete(w *Writer, t *model.Test, tr *m
 }
 
 // OnRunComplete is part of Reporter
-func (sr *DocumentationFormatter) OnRunComplete(w *Writer, trs []*model.TestResult) {
-	failures := make([]*model.TestResult, 0)
-	for _, tr := range trs {
-		if !tr.IsSuccess {
-			failures = append(failures, tr)
-		}
-	}
+func (f *DocumentationFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
+	failed := sr.GetFailedTestResults()
 	var color Color = Green
-	if len(failures) > 0 {
+	if len(failed) > 0 {
 		color = Red
 	}
-
-	printFailures(w, failures)
+	printFailures(w, failed)
 	w.UseColor(color, func() {
-		fmt.Fprintf(w, "\n%d examples, %d failures\n", len(trs), len(failures))
+		fmt.Fprintf(w, "\n%d examples, %d failures\n", sr.Summary.NumberOfSucceeded, sr.Summary.NumberOfFailed)
 	})
 }
