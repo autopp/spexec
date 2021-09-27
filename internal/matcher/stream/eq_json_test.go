@@ -13,7 +13,10 @@ import (
 var _ = Describe("EqJSONMatcher", func() {
 	var m *EqJSONMatcher
 	JustBeforeEach(func() {
-		m = &EqJSONMatcher{expected: spec.Map{"code": json.Number("200"), "messages": spec.Seq{"hello"}}}
+		m = &EqJSONMatcher{
+			expected:       spec.Map{"code": json.Number("200"), "messages": spec.Seq{"hello"}},
+			expectedString: `{"code":200,"messages":["hello"]}`,
+		}
 	})
 
 	DescribeTable("MatchStatus",

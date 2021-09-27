@@ -35,12 +35,11 @@ func (m *EqJSONMatcher) MatchStream(actual []byte) (bool, string, error) {
 	var actualBody interface{}
 	d.Decode(&actualBody)
 
-	expectedString, _ := json.Marshal(m.expected)
 	if reflect.DeepEqual(actualBody, m.expected) {
-		return true, fmt.Sprintf("should not be %s, but got it", expectedString), nil
+		return true, fmt.Sprintf("should not be %s, but got it", m.expectedString), nil
 	}
 
-	return false, fmt.Sprintf("should be %s, but got %s", expectedString, string(actual)), nil
+	return false, fmt.Sprintf("should be %s, but got %s", m.expectedString, string(actual)), nil
 }
 
 func ParseEqJSONMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
