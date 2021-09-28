@@ -8,6 +8,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
+	"github.com/onsi/gomega/types"
 )
 
 var _ = Describe("EqJSONMatcher", func() {
@@ -20,14 +21,15 @@ var _ = Describe("EqJSONMatcher", func() {
 	})
 
 	DescribeTable("MatchStatus",
-		func(given string, expectedMatched bool, expectedMessage string) {
+		func(given string, expectedMatched bool, messageMatcher types.GomegaMatcher) {
 			matched, message, err := m.MatchStream([]byte(given))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
-			Expect(message).To(Equal(expectedMessage))
+			Expect(message).To(messageMatcher)
 		},
-		Entry("when actual equals to expected as JSON, returns true", `{"messages": ["hello"], "code": 200}`, true, `should not be {"code":200,"messages":["hello"]}, but got it`),
-		Entry("when actual dose not equal to expected as JSON, returns false", `{"messages": ["hi"], "code": 200}`, false, `should be {"code":200,"messages":["hello"]}, but got {"messages": ["hi"], "code": 200}`),
+		Entry("when actual equals to expected as JSON, returns true", `{"messages": ["hello"], "code": 200}`, true, Equal(`should not be {"code":200,"messages":["hello"]}, but got it`)),
+		Entry("when actual dose not equal to expected as JSON, returns false", `{"messages": ["hi"], "code": 200}`, false, Equal(`should be {"code":200,"messages":["hello"]}, but got {"messages": ["hi"], "code": 200}`)),
+		Entry("when actual is not valid json, returns false", `{"messages": ["hi"], "code": 200`, false, HavePrefix("cannot recognize as json: ")),
 	)
 })
 

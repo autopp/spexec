@@ -33,7 +33,9 @@ func (m *EqJSONMatcher) MatchStream(actual []byte) (bool, string, error) {
 	d := json.NewDecoder(bytes.NewBuffer(actual))
 	d.UseNumber()
 	var actualBody interface{}
-	d.Decode(&actualBody)
+	if err := d.Decode(&actualBody); err != nil {
+		return false, fmt.Sprintf("cannot recognize as json: %s", err), nil
+	}
 
 	if reflect.DeepEqual(actualBody, m.expected) {
 		return true, fmt.Sprintf("should not be %s, but got it", m.expectedString), nil
