@@ -15,13 +15,13 @@
 package stream
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/util"
 )
 
 type EqJSONMatcher struct {
@@ -30,10 +30,8 @@ type EqJSONMatcher struct {
 }
 
 func (m *EqJSONMatcher) MatchStream(actual []byte) (bool, string, error) {
-	d := json.NewDecoder(bytes.NewBuffer(actual))
-	d.UseNumber()
 	var actualBody interface{}
-	if err := d.Decode(&actualBody); err != nil {
+	if err := util.UnmarshalJSON(actual, &actualBody); err != nil {
 		return false, fmt.Sprintf("cannot recognize as json: %s", err), nil
 	}
 
@@ -51,10 +49,8 @@ func ParseEqJSONMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x i
 		return nil
 	}
 
-	d := json.NewDecoder(bytes.NewReader(expectedBytes))
-	d.UseNumber()
 	var expected interface{}
-	err = d.Decode(&expected)
+	err = util.UnmarshalJSON(expectedBytes, &expected)
 	if err != nil {
 		v.AddViolation("parameter is not json value: %s", err)
 	}
