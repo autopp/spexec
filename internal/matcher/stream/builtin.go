@@ -20,6 +20,7 @@ func NewStreamMatcherRegistryWithBuiltins() *matcher.StreamMatcherRegistry {
 	r := matcher.NewStreamMatcherRegistry()
 	r.Add("eq", ParseEqMatcher)
 	r.Add("beEmpty", ParseBeEmptyMatcher)
+	r.Add("eqJSON", ParseEqJSONMatcher)
 	r.Add("contain", ParseContainMatcher)
 	r.Add("not", ParseNotMatcher)
 	r.Add("any", ParseAnyMatcher)
