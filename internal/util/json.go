@@ -12,17 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stream
+package util
 
-import "github.com/autopp/spexec/internal/matcher"
+import (
+	"bytes"
+	"encoding/json"
+)
 
-func NewStreamMatcherRegistryWithBuiltins() *matcher.StreamMatcherRegistry {
-	r := matcher.NewStreamMatcherRegistry()
-	r.Add("eq", ParseEqMatcher)
-	r.Add("beEmpty", ParseBeEmptyMatcher)
-	r.Add("eqJSON", ParseEqJSONMatcher)
-	r.Add("contain", ParseContainMatcher)
-	r.Add("not", ParseNotMatcher)
-	r.Add("any", ParseAnyMatcher)
-	return r
+func UnmarshalJSON(in []byte, out interface{}) error {
+	d := json.NewDecoder(bytes.NewBuffer(in))
+	d.UseNumber()
+	err := d.Decode(out)
+	if err != nil {
+		return err
+	}
+
+	if d.More() {
+		// FIXME: recall json.Unmarshal to generate syntax error message
+		var tmp interface{}
+		return json.Unmarshal(in, &tmp)
+	}
+	return nil
 }
