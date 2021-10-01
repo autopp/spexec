@@ -17,6 +17,9 @@ package util
 import (
 	"bytes"
 	"encoding/json"
+	"io"
+
+	"github.com/autopp/spexec/internal/errors"
 )
 
 func UnmarshalJSON(in []byte, out interface{}) error {
@@ -27,10 +30,8 @@ func UnmarshalJSON(in []byte, out interface{}) error {
 		return err
 	}
 
-	if d.More() {
-		// FIXME: recall json.Unmarshal to generate syntax error message
-		var tmp interface{}
-		return json.Unmarshal(in, &tmp)
+	if t, err := d.Token(); t != nil || err != io.EOF {
+		return errors.Errorf(errors.ErrInternalError, "invalid json string")
 	}
 	return nil
 }
