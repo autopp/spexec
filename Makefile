@@ -23,3 +23,7 @@ run:
 .PHONY: build
 build:
 	goreleaser build --single-target --snapshot --rm-dist
+
+.PHONY: dedebugo
+dedebugo:
+	dedebugo --exclude build --exclude dist .

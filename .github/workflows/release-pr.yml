@@ -42,6 +42,8 @@ jobs:
         go install github.com/onsi/ginkgo/ginkgo@latest
     - name: "Run test"
       run: make test
+    - name: Run dedebugo
+      run: go install github.com/autopp/dedebugo/cmd/dedebugo@latest && make dedebugo
     - name: Create Tag
       run: |
         VERSION=${GITHUB_HEAD_REF#release/}
