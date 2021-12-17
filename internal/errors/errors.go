@@ -27,12 +27,6 @@ const (
 	ErrInternalError Code = "internal error"
 )
 
-var statuses = map[Code]int{
-	ErrTestFailed:    1,
-	ErrInvalidSpec:   2,
-	ErrInternalError: 3,
-}
-
 type Error struct {
 	Code Code
 	err  error
@@ -56,21 +50,4 @@ func New(code Code, text string) error {
 
 func Wrap(code Code, err error) error {
 	return &Error{Code: code, err: err}
-}
-
-func StatusOf(err error) int {
-	if err == nil {
-		return 0
-	}
-
-	var e *Error
-	if !errors.As(err, &e) {
-		return statuses[ErrInternalError]
-	}
-
-	if status, ok := statuses[e.Code]; ok {
-		return status
-	}
-
-	return statuses[ErrInternalError]
 }
