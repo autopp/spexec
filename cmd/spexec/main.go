@@ -46,9 +46,9 @@ func main() {
 			status = statuses[errors.ErrInternalError]
 		}
 	} else {
-		// Assume cobra's error
+		// Assume command line error by via cobra
 		fmt.Fprintln(os.Stderr, err.Error())
-		status = statuses[errors.ErrInvalidSpec]
+		status = 4
 	}
 
 	os.Exit(status)
