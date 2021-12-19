@@ -51,5 +51,9 @@ func main() {
 		status = 4
 	}
 
+	if status == statuses[errors.ErrInternalError] {
+		fmt.Fprintf(os.Stderr, "Internal Error: %s\n", err.Error())
+	}
+
 	os.Exit(status)
 }
