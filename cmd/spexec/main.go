@@ -15,6 +15,8 @@
 package main
 
 import (
+	stderrors "errors"
+	"fmt"
 	"os"
 
 	"github.com/autopp/spexec/internal/cmd"
@@ -23,7 +25,35 @@ import (
 
 var version = "HEAD"
 
+var statuses = map[errors.Code]int{
+	errors.ErrTestFailed:    1,
+	errors.ErrInvalidSpec:   2,
+	errors.ErrInternalError: 3,
+}
+
 func main() {
 	err := cmd.Main(version, os.Stdin, os.Stdout, os.Stderr, os.Args[1:])
-	os.Exit(errors.StatusOf(err))
+
+	if err == nil {
+		return
+	}
+
+	var e *errors.Error
+	var status int
+	if stderrors.As(err, &e) {
+		var ok bool
+		if status, ok = statuses[e.Code]; !ok {
+			status = statuses[errors.ErrInternalError]
+		}
+	} else {
+		// Assume command line error by via cobra
+		fmt.Fprintln(os.Stderr, err.Error())
+		status = 4
+	}
+
+	if status == statuses[errors.ErrInternalError] {
+		fmt.Fprintf(os.Stderr, "Internal Error: %s\n", err.Error())
+	}
+
+	os.Exit(status)
 }
