@@ -16,6 +16,10 @@
 test:
 	ginkgo ./...
 
+.PHONY: e2e
+e2e:
+	e2e/run.sh
+
 .PHONY: run
 run:
 	go run cmd/spexec/main.go $(ARGS)

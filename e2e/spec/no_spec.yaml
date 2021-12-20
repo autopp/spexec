@@ -1,0 +1,6 @@
+tests:
+  - command:
+      - SPEXEC
+    expect:
+      status:
+        eq: 2
