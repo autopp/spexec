@@ -27,11 +27,11 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         go mod download
-        go install github.com/onsi/ginkgo/ginkgo@latest
+        make deps
     - name: Run Test
       run: make test build e2e
     - name: Run dedebugo
-      run: go install github.com/autopp/dedebugo/cmd/dedebugo@latest && make dedebugo
+      run: make dedebugo
     - name: Build
       uses: goreleaser/goreleaser-action@v2
       with:
