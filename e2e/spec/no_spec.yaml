@@ -4,3 +4,7 @@ tests:
     expect:
       status:
         eq: 2
+      stdout:
+        beEmpty: true
+      stderr:
+        contain: "spec is not given"

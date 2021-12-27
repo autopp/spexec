@@ -47,13 +47,14 @@ func main() {
 		}
 	} else {
 		// Assume command line error by via cobra
-		fmt.Fprintln(os.Stderr, err.Error())
 		status = 4
 	}
 
 	if status == statuses[errors.ErrInternalError] {
-		fmt.Fprintf(os.Stderr, "Internal Error: %s\n", err.Error())
+		fmt.Fprint(os.Stderr, "Internal Error: ")
 	}
+
+	fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 
 	os.Exit(status)
 }
