@@ -1,4 +1,4 @@
-package spec
+package model
 
 import (
 	"encoding/json"
@@ -610,7 +610,7 @@ var _ = Describe("Validator", func() {
 				e, exists, ok := v.MayHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]string{"sh", "-c", "true"}))
+				Expect(e).To(Equal([]StringExpr{StringLiteralExpr("sh"), StringLiteralExpr("-c"), StringLiteralExpr("true")}))
 				Expect(exists).To(BeTrue())
 				Expect(ok).To(BeTrue())
 			})
@@ -647,7 +647,7 @@ var _ = Describe("Validator", func() {
 				e, ok := v.MustHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]string{"sh", "-c", "true"}))
+				Expect(e).To(Equal([]StringExpr{StringLiteralExpr("sh"), StringLiteralExpr("-c"), StringLiteralExpr("true")}))
 				Expect(ok).To(BeTrue())
 			})
 		})

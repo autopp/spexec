@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spec
+package model
 
 import (
 	"encoding/json"
@@ -349,15 +349,15 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MayHaveCommand(m Map, key string) ([]string, bool, bool) {
-	var ret []string
+func (v *Validator) MayHaveCommand(m Map, key string) ([]StringExpr, bool, bool) {
+	var ret []StringExpr
 	ok := true
 	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
-		ret = make([]string, len(command))
+		ret = make([]StringExpr, len(command))
 		v.ForInSeq(command, func(i int, x interface{}) bool {
 			var c string
 			c, ok = v.MustBeString(x)
-			ret[i] = c
+			ret[i] = StringLiteralExpr(c)
 			return ok
 		})
 
@@ -374,7 +374,7 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]string, bool, bool) {
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MustHaveCommand(m Map, key string) ([]string, bool) {
+func (v *Validator) MustHaveCommand(m Map, key string) ([]StringExpr, bool) {
 	c, exists, ok := v.MayHaveCommand(m, key)
 
 	if !exists && ok {

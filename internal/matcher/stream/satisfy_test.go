@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -15,7 +15,7 @@ var _ = Describe("SatisfyMatcher", func() {
 	var m *SatisfyMatcher
 	JustBeforeEach(func() {
 		m = &SatisfyMatcher{
-			Command: []string{"bash", "-c", `test "$(cat -)" = hello`},
+			Command: []model.StringExpr{model.StringLiteralExpr("bash"), model.StringLiteralExpr("-c"), model.StringLiteralExpr(`test "$(cat -)" = hello`)},
 		}
 	})
 
@@ -32,16 +32,16 @@ var _ = Describe("SatisfyMatcher", func() {
 })
 
 var _ = Describe("ParseSatisfyMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 	})
 
 	DescribeTable("success cases",
-		func(given interface{}, expectedCommand []string, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
+		func(given interface{}, expectedCommand []model.StringExpr, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
 			m := ParseSatisfyMatcher(v, r, given)
 
 			Expect(v.Error()).To(BeNil())
@@ -55,26 +55,26 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			Expect(satisfyMatcher.Timeout).To(Equal(expectedTimeout))
 		},
 		Entry("with full field",
-			spec.Map{
-				"command": spec.Seq{"test.sh"},
-				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
+			model.Map{
+				"command": model.Seq{"test.sh"},
+				"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
 				"timeout": 1,
 			},
-			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
+			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
 		),
 		Entry("without env",
-			spec.Map{
-				"command": spec.Seq{"test.sh"},
+			model.Map{
+				"command": model.Seq{"test.sh"},
 				"timeout": 1,
 			},
-			[]string{"test.sh"}, nil, 1*time.Second,
+			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, nil, 1*time.Second,
 		),
 		Entry("without timeout",
-			spec.Map{
-				"command": spec.Seq{"test.sh"},
-				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
+			model.Map{
+				"command": model.Seq{"test.sh"},
+				"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
 			},
-			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
+			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
 		),
 	)
 
@@ -88,22 +88,22 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not map", 42, "$: "),
-		Entry("without command", spec.Map{
-			"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
+		Entry("without command", model.Map{
+			"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
 			"timeout": 1,
 		}, "$: "),
-		Entry("with invalid command", spec.Map{
+		Entry("with invalid command", model.Map{
 			"command": "test.sh",
 		}, "$.command: "),
-		Entry("with empty command", spec.Map{
-			"command": spec.Seq{},
+		Entry("with empty command", model.Map{
+			"command": model.Seq{},
 		}, "$.command: "),
-		Entry("with invalid env", spec.Map{
-			"command": spec.Seq{"test.sh"},
+		Entry("with invalid env", model.Map{
+			"command": model.Seq{"test.sh"},
 			"env":     42,
 		}, "$.env: "),
-		Entry("with invalid timeout", spec.Map{
-			"command": spec.Seq{"test.sh"},
+		Entry("with invalid timeout", model.Map{
+			"command": model.Seq{"test.sh"},
 			"timeout": "foo",
 		}, "$.timeout: "),
 	)

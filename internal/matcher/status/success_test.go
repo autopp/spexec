@@ -2,7 +2,7 @@ package status
 
 import (
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -25,11 +25,11 @@ var _ = Describe("SuccessMatcher", func() {
 })
 
 var _ = Describe("ParseSuccessMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StatusMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("")
 		r = matcher.NewStatusMatcherRegistry()
 	})
 

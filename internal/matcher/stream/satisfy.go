@@ -19,19 +19,28 @@ import (
 
 	"github.com/autopp/spexec/internal/exec"
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 )
 
 type SatisfyMatcher struct {
-	Command []string
+	Command []model.StringExpr
 	Dir     string
 	Env     []util.StringVar
 	Timeout time.Duration
 }
 
 func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
-	e, err := exec.New(m.Command, m.Dir, actual, m.Env, exec.WithTimeout(m.Timeout))
+	command := make([]string, len(m.Command))
+	var err error
+	for i, x := range m.Command {
+		command[i], err = x.Eval()
+		if err != nil {
+			return false, "", err
+		}
+	}
+
+	e, err := exec.New(command, m.Dir, actual, m.Env, exec.WithTimeout(m.Timeout))
 	if err != nil {
 		return false, "", err
 	}
@@ -43,7 +52,7 @@ func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return true, "should make the given command fail", nil
 }
 
-func ParseSatisfyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+func ParseSatisfyMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	p, ok := v.MustBeMap(x)
 	if !ok {
 		return nil

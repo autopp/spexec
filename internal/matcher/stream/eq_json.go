@@ -20,7 +20,7 @@ import (
 	"reflect"
 
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 )
 
@@ -42,7 +42,7 @@ func (m *EqJSONMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should be %s, but got %s", m.expectedString, string(actual)), nil
 }
 
-func ParseEqJSONMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+func ParseEqJSONMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	expectedBytes, err := json.Marshal(x)
 	if err != nil {
 		v.AddViolation("parameter is not json value: %s", err)

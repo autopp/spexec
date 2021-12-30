@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 )
 
 type BeEmptyMatcher struct {
@@ -43,7 +43,7 @@ func (m *BeEmptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf(unexpectedEmptyFormat), nil
 }
 
-func ParseBeEmptyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+func ParseBeEmptyMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	expected, ok := v.MustBeBool(x)
 	if !ok {
 		return nil

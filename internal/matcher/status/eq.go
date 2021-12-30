@@ -18,7 +18,7 @@ import (
 	"fmt"
 
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 )
 
 type EqMatcher struct {
@@ -33,7 +33,7 @@ func (m *EqMatcher) MatchStatus(actual int) (bool, string, error) {
 	return false, fmt.Sprintf("should be %d, but got %d", m.expected, actual), nil
 }
 
-func ParseEqMatcher(v *spec.Validator, r *matcher.StatusMatcherRegistry, x interface{}) matcher.StatusMatcher {
+func ParseEqMatcher(v *model.Validator, r *matcher.StatusMatcherRegistry, x interface{}) model.StatusMatcher {
 	expected, ok := v.MustBeInt(x)
 	if !ok {
 		return nil

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -23,7 +23,7 @@ func (m *prefixMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should start with %q", m.prefix), nil
 }
 
-func parsePrefixMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+func parsePrefixMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	switch prefix := x.(type) {
 	case string:
 		return &prefixMatcher{prefix: prefix}
@@ -36,7 +36,7 @@ func parsePrefixMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x i
 var _ = Describe("AnyMatcher", func() {
 	var m *AnyMatcher
 	JustBeforeEach(func() {
-		m = &AnyMatcher{matchers: []matcher.StreamMatcher{&prefixMatcher{prefix: "ab"}, &prefixMatcher{prefix: "xy"}}}
+		m = &AnyMatcher{matchers: []model.StreamMatcher{&prefixMatcher{prefix: "ab"}, &prefixMatcher{prefix: "xy"}}}
 	})
 
 	DescribeTable("MatchStream",
@@ -52,18 +52,18 @@ var _ = Describe("AnyMatcher", func() {
 })
 
 var _ = Describe("ParseAnyMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 		r.Add("prefix", parsePrefixMatcher)
 	})
 
 	Describe("with defined matchers", func() {
 		It("returns matcher", func() {
-			m := ParseAnyMatcher(v, r, spec.Seq{spec.Map{"prefix": "hello"}, spec.Map{"prefix": "hello"}})
+			m := ParseAnyMatcher(v, r, model.Seq{model.Map{"prefix": "hello"}, model.Map{"prefix": "hello"}})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -86,7 +86,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not seq", 42, "$: "),
-		Entry("with undefined matcher", spec.Seq{spec.Map{"foo": 42}}, "$[0]: "),
-		Entry("with invalid inner matcher parameter", spec.Seq{spec.Map{"prefix": 42}}, "$[0].prefix: "),
+		Entry("with undefined matcher", model.Seq{model.Map{"foo": 42}}, "$[0]: "),
+		Entry("with invalid inner matcher parameter", model.Seq{model.Map{"prefix": 42}}, "$[0].prefix: "),
 	)
 })

@@ -20,18 +20,17 @@ import (
 
 	"github.com/Wing924/shellwords"
 	"github.com/autopp/spexec/internal/exec"
-	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/util"
 )
 
 type Test struct {
 	Name          string
 	Dir           string
-	Command       []string
+	Command       []StringExpr
 	Stdin         []byte
-	StatusMatcher matcher.StatusMatcher
-	StdoutMatcher matcher.StreamMatcher
-	StderrMatcher matcher.StreamMatcher
+	StatusMatcher StatusMatcher
+	StdoutMatcher StreamMatcher
+	StderrMatcher StreamMatcher
 	Env           []util.StringVar
 	Timeout       time.Duration
 }
@@ -45,11 +44,26 @@ func (t *Test) GetName() string {
 	for _, v := range t.Env {
 		envStr += v.Name + "=" + v.Value + " "
 	}
-	return envStr + shellwords.Join(t.Command)
+
+	command := make([]string, len(t.Command))
+	for i, x := range t.Command {
+		command[i] = x.String()
+	}
+
+	return envStr + shellwords.Join(command)
 }
 
 func (t *Test) Run() (*TestResult, error) {
-	e, err := exec.New(t.Command, t.Dir, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
+	command := make([]string, len(t.Command))
+	var err error
+	for i, x := range t.Command {
+		command[i], err = x.Eval()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	e, err := exec.New(command, t.Dir, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
 	if err != nil {
 		return nil, err
 	}
