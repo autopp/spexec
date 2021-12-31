@@ -136,6 +136,37 @@ func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	return s, ok
 }
 
+func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
+	if s, ok := v.MayBeString(x); ok {
+		return model.NewLiteralStringExpr(s), true
+	}
+
+	m, ok := v.MayBeMap(x)
+	if !ok {
+		v.AddViolation("should be string or map, but is %s", TypeNameOf(x))
+		return nil, false
+	}
+
+	t, ok := v.MustHaveString(m, "type")
+	if !ok {
+		return nil, false
+	}
+
+	switch t {
+	case "env":
+		name, ok := v.MustHaveString(m, "name")
+		if !ok {
+			return nil, false
+		}
+		return model.NewEnvStringExpr(name), true
+	default:
+		v.InField("type", func() {
+			v.AddViolation("unknown type %q", t)
+		})
+		return nil, false
+	}
+}
+
 func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 	switch n := x.(type) {
 	case int:
