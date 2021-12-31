@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -23,7 +24,7 @@ func (m *prefixMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should start with %q", m.prefix), nil
 }
 
-func parsePrefixMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+func parsePrefixMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	switch prefix := x.(type) {
 	case string:
 		return &prefixMatcher{prefix: prefix}
@@ -36,7 +37,7 @@ func parsePrefixMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x i
 var _ = Describe("AnyMatcher", func() {
 	var m *AnyMatcher
 	JustBeforeEach(func() {
-		m = &AnyMatcher{matchers: []matcher.StreamMatcher{&prefixMatcher{prefix: "ab"}, &prefixMatcher{prefix: "xy"}}}
+		m = &AnyMatcher{matchers: []model.StreamMatcher{&prefixMatcher{prefix: "ab"}, &prefixMatcher{prefix: "xy"}}}
 	})
 
 	DescribeTable("MatchStream",

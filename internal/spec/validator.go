@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 )
 
@@ -133,6 +134,37 @@ func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	}
 
 	return s, ok
+}
+
+func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
+	if s, ok := v.MayBeString(x); ok {
+		return model.NewLiteralStringExpr(s), true
+	}
+
+	m, ok := v.MayBeMap(x)
+	if !ok {
+		v.AddViolation("should be string or map, but is %s", TypeNameOf(x))
+		return nil, false
+	}
+
+	t, ok := v.MustHaveString(m, "type")
+	if !ok {
+		return nil, false
+	}
+
+	switch t {
+	case "env":
+		name, ok := v.MustHaveString(m, "name")
+		if !ok {
+			return nil, false
+		}
+		return model.NewEnvStringExpr(name), true
+	default:
+		v.InField("type", func() {
+			v.AddViolation("unknown type %q", t)
+		})
+		return nil, false
+	}
 }
 
 func (v *Validator) MustBeInt(x interface{}) (int, bool) {
@@ -349,14 +381,14 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MayHaveCommand(m Map, key string) ([]string, bool, bool) {
-	var ret []string
+func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool, bool) {
+	var ret []model.StringExpr
 	ok := true
 	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
-		ret = make([]string, len(command))
+		ret = make([]model.StringExpr, len(command))
 		v.ForInSeq(command, func(i int, x interface{}) bool {
-			var c string
-			c, ok = v.MustBeString(x)
+			var c model.StringExpr
+			c, ok = v.MustBeStringExpr(x)
 			ret[i] = c
 			return ok
 		})
@@ -374,7 +406,7 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]string, bool, bool) {
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MustHaveCommand(m Map, key string) ([]string, bool) {
+func (v *Validator) MustHaveCommand(m Map, key string) ([]model.StringExpr, bool) {
 	c, exists, ok := v.MayHaveCommand(m, key)
 
 	if !exists && ok {
@@ -429,23 +461,6 @@ func TypeOf(x interface{}) Type {
 	}
 
 	return TypeUnkown
-}
-
-var typeNames = map[Type]string{
-	TypeNil:    "nil",
-	TypeInt:    "int",
-	TypeBool:   "bool",
-	TypeString: "string",
-	TypeSeq:    "seq",
-	TypeMap:    "map",
-}
-
-func TypeNameOf(x interface{}) string {
-	if name, ok := typeNames[TypeOf(x)]; ok {
-		return name
-	}
-
-	return fmt.Sprintf("%T", x)
 }
 
 func toInt(x interface{}) (int, bool) {

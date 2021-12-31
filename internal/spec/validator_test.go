@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -183,6 +184,67 @@ var _ = Describe("Validator", func() {
 
 				Expect(v.Error()).To(BeValidationError("$: should be string, but is int"))
 				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MustBeStringExpr", func() {
+		Context("with a string", func() {
+			It("returns literalString and true", func() {
+				given := "hello"
+				actual, b := v.MustBeStringExpr(given)
+
+				Expect(actual).To(Equal(model.NewLiteralStringExpr(given)))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a map which contains type='env' and name='MESSAGE'", func() {
+			It("returns literalString and true", func() {
+				given := Map{"type": "env", "name": "MESSAGE"}
+				actual, b := v.MustBeStringExpr(given)
+
+				Expect(actual).To(Equal(model.NewEnvStringExpr("MESSAGE")))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a map which contains type='env' and dose not contain name", func() {
+			It("adds violation and returns something and false", func() {
+				given := Map{"type": "env"}
+				_, b := v.MustBeStringExpr(given)
+
+				Expect(b).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(`$: should have .name as string`))
+			})
+		})
+
+		Context("with a map which contains unknown type", func() {
+			It("adds violation and returns something and false", func() {
+				given := Map{"type": "unknown"}
+				_, b := v.MustBeStringExpr(given)
+
+				Expect(b).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(`$.type: unknown type "unknown"`))
+			})
+		})
+
+		Context("with a map which dose not contain type", func() {
+			It("adds violation and returns something and false", func() {
+				given := Map{}
+				_, b := v.MustBeStringExpr(given)
+
+				Expect(b).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(`$: should have .type as string`))
+			})
+		})
+
+		Context("with not string nor map", func() {
+			It("adds violation and returns something and false", func() {
+				_, b := v.MustBeStringExpr(42)
+
+				Expect(b).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError("$: should be string or map, but is int"))
 			})
 		})
 	})
@@ -610,7 +672,7 @@ var _ = Describe("Validator", func() {
 				e, exists, ok := v.MayHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]string{"sh", "-c", "true"}))
+				Expect(e).To(Equal([]model.StringExpr{model.NewLiteralStringExpr("sh"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr("true")}))
 				Expect(exists).To(BeTrue())
 				Expect(ok).To(BeTrue())
 			})
@@ -647,7 +709,7 @@ var _ = Describe("Validator", func() {
 				e, ok := v.MustHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]string{"sh", "-c", "true"}))
+				Expect(e).To(Equal([]model.StringExpr{model.NewLiteralStringExpr("sh"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr("true")}))
 				Expect(ok).To(BeTrue())
 			})
 		})

@@ -16,6 +16,7 @@ package matcher
 
 import (
 	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 )
 
@@ -121,12 +122,12 @@ func (r *StatusMatcherRegistry) AddWithDefault(name string, p StatusMatcherParse
 	return r.registry.addWithDefault(name, p, defaultParam)
 }
 
-func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StatusMatcher {
+func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) model.StatusMatcher {
 	name, parser, param := r.registry.get(v, x)
 	if parser == nil {
 		return nil
 	}
-	var m StatusMatcher
+	var m model.StatusMatcher
 	v.InField(name, func() {
 		m = parser.(StatusMatcherParser)(v, r, param)
 	})
@@ -150,12 +151,12 @@ func (r *StreamMatcherRegistry) AddWithDefault(name string, p StreamMatcherParse
 	return r.registry.addWithDefault(name, p, defaultParam)
 }
 
-func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) StreamMatcher {
+func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) model.StreamMatcher {
 	name, parser, param := r.registry.get(v, x)
 	if parser == nil {
 		return nil
 	}
-	var m StreamMatcher
+	var m model.StreamMatcher
 	v.InField(name, func() {
 		m = parser.(StreamMatcherParser)(v, r, param)
 	})
@@ -163,13 +164,13 @@ func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) S
 	return m
 }
 
-func (r *StreamMatcherRegistry) ParseMatchers(v *spec.Validator, x interface{}) []StreamMatcher {
+func (r *StreamMatcherRegistry) ParseMatchers(v *spec.Validator, x interface{}) []model.StreamMatcher {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil
 	}
 
-	matchers := make([]StreamMatcher, len(params))
+	matchers := make([]model.StreamMatcher, len(params))
 	ok = v.ForInSeq(params, func(i int, param interface{}) bool {
 		m := r.ParseMatcher(v, param)
 		if m == nil {

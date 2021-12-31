@@ -12,29 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package stream
+package model
 
-import (
-	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
-)
-
-type NotMatcher struct {
-	matcher model.StreamMatcher
+type StatusMatcher interface {
+	MatchStatus(actual int) (bool, string, error)
 }
 
-func (m *NotMatcher) MatchStream(actual []byte) (bool, string, error) {
-	matched, message, err := m.matcher.MatchStream(actual)
-
-	return !matched, message, err
-}
-
-func ParseNotMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
-	m := r.ParseMatcher(v, x)
-	if m == nil {
-		return nil
-	}
-
-	return &NotMatcher{matcher: m}
+type StreamMatcher interface {
+	MatchStream(actual []byte) (bool, string, error)
 }

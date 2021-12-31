@@ -12,18 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package matcher
+package spec
 
-import "github.com/autopp/spexec/internal/spec"
+import "fmt"
 
-type StatusMatcher interface {
-	MatchStatus(actual int) (bool, string, error)
+type Map = map[string]interface{}
+type Seq = []interface{}
+
+type Type int
+
+const (
+	TypeNil Type = iota
+	TypeInt
+	TypeBool
+	TypeString
+	TypeSeq
+	TypeMap
+	TypeUnkown
+)
+
+var typeNames = map[Type]string{
+	TypeNil:    "nil",
+	TypeInt:    "int",
+	TypeBool:   "bool",
+	TypeString: "string",
+	TypeSeq:    "seq",
+	TypeMap:    "map",
 }
 
-type StatusMatcherParser func(v *spec.Validator, r *StatusMatcherRegistry, x interface{}) StatusMatcher
+func TypeNameOf(x interface{}) string {
+	if name, ok := typeNames[TypeOf(x)]; ok {
+		return name
+	}
 
-type StreamMatcher interface {
-	MatchStream(actual []byte) (bool, string, error)
+	return fmt.Sprintf("%T", x)
 }
-
-type StreamMatcherParser func(v *spec.Validator, r *StreamMatcherRegistry, x interface{}) StreamMatcher

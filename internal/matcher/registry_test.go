@@ -3,6 +3,7 @@ package matcher
 import (
 	"fmt"
 
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -27,13 +28,13 @@ func (m *zeroMatcher) MatchStatus(actual int) (bool, string, error) {
 	return true, "status shoud not be zero", nil
 }
 
-func parseZeroMatcher(_ *spec.Validator, r *StatusMatcherRegistry, x interface{}) StatusMatcher {
+func parseZeroMatcher(_ *spec.Validator, r *StatusMatcherRegistry, x interface{}) model.StatusMatcher {
 	return &zeroMatcher{expected: x.(bool)}
 }
 
 const violationMessage = "syntax error"
 
-func parseViolationStatusMatcher(v *spec.Validator, _ *StatusMatcherRegistry, _ interface{}) StatusMatcher {
+func parseViolationStatusMatcher(v *spec.Validator, _ *StatusMatcherRegistry, _ interface{}) model.StatusMatcher {
 	v.AddViolation(violationMessage)
 	return &zeroMatcher{}
 }
@@ -56,11 +57,11 @@ func (m *emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return true, "stream should not be empty", nil
 }
 
-func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, x interface{}) StreamMatcher {
+func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	return &emptyMatcher{expected: x.(bool)}
 }
 
-func parseViolationStreamMatcher(v *spec.Validator, _ *StreamMatcherRegistry, x interface{}) StreamMatcher {
+func parseViolationStreamMatcher(v *spec.Validator, _ *StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	v.AddViolation(violationMessage)
 	return &emptyMatcher{}
 }

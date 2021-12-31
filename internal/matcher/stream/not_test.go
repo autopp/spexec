@@ -2,6 +2,7 @@ package stream
 
 import (
 	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -18,7 +19,7 @@ func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, "should be empty", nil
 }
 
-func parseEmptyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) matcher.StreamMatcher {
+func parseEmptyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	switch x.(type) {
 	case bool:
 		return &emptyMatcher{}
