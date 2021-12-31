@@ -24,6 +24,7 @@ import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
 	test "github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
 )
@@ -100,7 +101,7 @@ func (p *Parser) load(filename string, b []byte, unmarchal func(in []byte, out i
 }
 
 func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) {
-	v, err := model.NewValidator(filename)
+	v, err := spec.NewValidator(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +111,7 @@ func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) 
 	}
 
 	ts := make([]*test.Test, 0)
-	v.MustHaveSeq(cmap, "tests", func(tcs model.Seq) {
+	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
 		v.ForInSeq(tcs, func(i int, tc interface{}) bool {
 			t := p.loadTest(v, tc)
 			ts = append(ts, t)
@@ -121,7 +122,7 @@ func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) 
 	return ts, v.Error()
 }
 
-func (p *Parser) loadTest(v *model.Validator, x interface{}) *test.Test {
+func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	tc, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
@@ -161,7 +162,7 @@ func (p *Parser) loadTest(v *model.Validator, x interface{}) *test.Test {
 				})
 			}
 		} else {
-			v.AddViolation("should be a string or map, but is %s", model.TypeNameOf(stdin))
+			v.AddViolation("should be a string or map, but is %s", spec.TypeNameOf(stdin))
 		}
 	})
 
@@ -171,7 +172,7 @@ func (p *Parser) loadTest(v *model.Validator, x interface{}) *test.Test {
 		t.Timeout = timeout
 	}
 
-	v.MayHaveMap(tc, "expect", func(expect model.Map) {
+	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
 		v.MayHave(expect, "status", func(status interface{}) {
 			t.StatusMatcher = p.statusMR.ParseMatcher(v, status)
 		})

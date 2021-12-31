@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package spec
 
 import (
 	"encoding/json"
@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 )
 
@@ -349,15 +350,15 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MayHaveCommand(m Map, key string) ([]StringExpr, bool, bool) {
-	var ret []StringExpr
+func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool, bool) {
+	var ret []model.StringExpr
 	ok := true
 	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
-		ret = make([]StringExpr, len(command))
+		ret = make([]model.StringExpr, len(command))
 		v.ForInSeq(command, func(i int, x interface{}) bool {
 			var c string
 			c, ok = v.MustBeString(x)
-			ret[i] = StringLiteralExpr(c)
+			ret[i] = model.StringLiteralExpr(c)
 			return ok
 		})
 
@@ -374,7 +375,7 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]StringExpr, bool, bool)
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MustHaveCommand(m Map, key string) ([]StringExpr, bool) {
+func (v *Validator) MustHaveCommand(m Map, key string) ([]model.StringExpr, bool) {
 	c, exists, ok := v.MayHaveCommand(m, key)
 
 	if !exists && ok {
@@ -429,23 +430,6 @@ func TypeOf(x interface{}) Type {
 	}
 
 	return TypeUnkown
-}
-
-var typeNames = map[Type]string{
-	TypeNil:    "nil",
-	TypeInt:    "int",
-	TypeBool:   "bool",
-	TypeString: "string",
-	TypeSeq:    "seq",
-	TypeMap:    "map",
-}
-
-func TypeNameOf(x interface{}) string {
-	if name, ok := typeNames[TypeOf(x)]; ok {
-		return name
-	}
-
-	return fmt.Sprintf("%T", x)
 }
 
 func toInt(x interface{}) (int, bool) {

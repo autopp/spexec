@@ -1,9 +1,10 @@
-package model
+package spec
 
 import (
 	"encoding/json"
 	"time"
 
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -610,7 +611,7 @@ var _ = Describe("Validator", func() {
 				e, exists, ok := v.MayHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]StringExpr{StringLiteralExpr("sh"), StringLiteralExpr("-c"), StringLiteralExpr("true")}))
+				Expect(e).To(Equal([]model.StringExpr{model.StringLiteralExpr("sh"), model.StringLiteralExpr("-c"), model.StringLiteralExpr("true")}))
 				Expect(exists).To(BeTrue())
 				Expect(ok).To(BeTrue())
 			})
@@ -647,7 +648,7 @@ var _ = Describe("Validator", func() {
 				e, ok := v.MustHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]StringExpr{StringLiteralExpr("sh"), StringLiteralExpr("-c"), StringLiteralExpr("true")}))
+				Expect(e).To(Equal([]model.StringExpr{model.StringLiteralExpr("sh"), model.StringLiteralExpr("-c"), model.StringLiteralExpr("true")}))
 				Expect(ok).To(BeTrue())
 			})
 		})

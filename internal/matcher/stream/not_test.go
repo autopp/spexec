@@ -3,6 +3,7 @@ package stream
 import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -18,7 +19,7 @@ func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, "should be empty", nil
 }
 
-func parseEmptyMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func parseEmptyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	switch x.(type) {
 	case bool:
 		return &emptyMatcher{}
@@ -47,18 +48,18 @@ var _ = Describe("NotMatcher", func() {
 })
 
 var _ = Describe("ParseNotMatcher", func() {
-	var v *model.Validator
+	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = model.NewValidator("")
+		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 		r.Add("empty", parseEmptyMatcher)
 	})
 
 	Describe("with defined matcher", func() {
 		It("returns matcher", func() {
-			m := ParseNotMatcher(v, r, model.Map{"empty": true})
+			m := ParseNotMatcher(v, r, spec.Map{"empty": true})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -79,7 +80,7 @@ var _ = Describe("ParseNotMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not map", 42, "$: "),
-		Entry("with undefined matcher", model.Map{"foo": 42}, "$: "),
-		Entry("with invalid inner matcher parameter", model.Map{"empty": 42}, "$.empty: "),
+		Entry("with undefined matcher", spec.Map{"foo": 42}, "$: "),
+		Entry("with invalid inner matcher parameter", spec.Map{"empty": 42}, "$.empty: "),
 	)
 })

@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package spec
+
+import "fmt"
 
 type Map = map[string]interface{}
 type Seq = []interface{}
@@ -28,3 +30,20 @@ const (
 	TypeMap
 	TypeUnkown
 )
+
+var typeNames = map[Type]string{
+	TypeNil:    "nil",
+	TypeInt:    "int",
+	TypeBool:   "bool",
+	TypeString: "string",
+	TypeSeq:    "seq",
+	TypeMap:    "map",
+}
+
+func TypeNameOf(x interface{}) string {
+	if name, ok := typeNames[TypeOf(x)]; ok {
+		return name
+	}
+
+	return fmt.Sprintf("%T", x)
+}

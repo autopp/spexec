@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -15,7 +15,7 @@ var _ = Describe("EqJSONMatcher", func() {
 	var m *EqJSONMatcher
 	JustBeforeEach(func() {
 		m = &EqJSONMatcher{
-			expected:       model.Map{"code": json.Number("200"), "messages": model.Seq{"hello"}},
+			expected:       spec.Map{"code": json.Number("200"), "messages": spec.Seq{"hello"}},
 			expectedString: `{"code":200,"messages":["hello"]}`,
 		}
 	})
@@ -34,23 +34,23 @@ var _ = Describe("EqJSONMatcher", func() {
 })
 
 var _ = Describe("ParseEqJSONMatcher", func() {
-	var v *model.Validator
+	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = model.NewValidator("")
+		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 	})
 
 	Describe("with object", func() {
 		It("returns matcher", func() {
-			m := ParseEqJSONMatcher(v, r, model.Map{"code": 200, "messages": model.Seq{"hello"}})
+			m := ParseEqJSONMatcher(v, r, spec.Map{"code": 200, "messages": spec.Seq{"hello"}})
 
 			Expect(m).NotTo(BeNil())
 			Expect(v.Error()).To(BeNil())
 
 			var eq *EqJSONMatcher = m.(*EqJSONMatcher)
-			Expect(eq.expected).To(Equal(model.Map{"code": json.Number("200"), "messages": model.Seq{"hello"}}))
+			Expect(eq.expected).To(Equal(spec.Map{"code": json.Number("200"), "messages": spec.Seq{"hello"}}))
 		})
 	})
 })

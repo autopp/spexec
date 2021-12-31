@@ -6,6 +6,7 @@ import (
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
 	. "github.com/onsi/gomega"
@@ -23,7 +24,7 @@ func (m *prefixMatcher) MatchStream(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should start with %q", m.prefix), nil
 }
 
-func parsePrefixMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func parsePrefixMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	switch prefix := x.(type) {
 	case string:
 		return &prefixMatcher{prefix: prefix}
@@ -52,18 +53,18 @@ var _ = Describe("AnyMatcher", func() {
 })
 
 var _ = Describe("ParseAnyMatcher", func() {
-	var v *model.Validator
+	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = model.NewValidator("")
+		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 		r.Add("prefix", parsePrefixMatcher)
 	})
 
 	Describe("with defined matchers", func() {
 		It("returns matcher", func() {
-			m := ParseAnyMatcher(v, r, model.Seq{model.Map{"prefix": "hello"}, model.Map{"prefix": "hello"}})
+			m := ParseAnyMatcher(v, r, spec.Seq{spec.Map{"prefix": "hello"}, spec.Map{"prefix": "hello"}})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -86,7 +87,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not seq", 42, "$: "),
-		Entry("with undefined matcher", model.Seq{model.Map{"foo": 42}}, "$[0]: "),
-		Entry("with invalid inner matcher parameter", model.Seq{model.Map{"prefix": 42}}, "$[0].prefix: "),
+		Entry("with undefined matcher", spec.Seq{spec.Map{"foo": 42}}, "$[0]: "),
+		Entry("with invalid inner matcher parameter", spec.Seq{spec.Map{"prefix": 42}}, "$[0].prefix: "),
 	)
 })

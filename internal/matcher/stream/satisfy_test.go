@@ -5,6 +5,7 @@ import (
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/ginkgo/extensions/table"
@@ -32,11 +33,11 @@ var _ = Describe("SatisfyMatcher", func() {
 })
 
 var _ = Describe("ParseSatisfyMatcher", func() {
-	var v *model.Validator
+	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = model.NewValidator("")
+		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 	})
 
@@ -55,24 +56,24 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			Expect(satisfyMatcher.Timeout).To(Equal(expectedTimeout))
 		},
 		Entry("with full field",
-			model.Map{
-				"command": model.Seq{"test.sh"},
-				"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
+			spec.Map{
+				"command": spec.Seq{"test.sh"},
+				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 				"timeout": 1,
 			},
 			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
 		),
 		Entry("without env",
-			model.Map{
-				"command": model.Seq{"test.sh"},
+			spec.Map{
+				"command": spec.Seq{"test.sh"},
 				"timeout": 1,
 			},
 			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, nil, 1*time.Second,
 		),
 		Entry("without timeout",
-			model.Map{
-				"command": model.Seq{"test.sh"},
-				"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
+			spec.Map{
+				"command": spec.Seq{"test.sh"},
+				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 			},
 			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
 		),
@@ -88,22 +89,22 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not map", 42, "$: "),
-		Entry("without command", model.Map{
-			"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
+		Entry("without command", spec.Map{
+			"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 			"timeout": 1,
 		}, "$: "),
-		Entry("with invalid command", model.Map{
+		Entry("with invalid command", spec.Map{
 			"command": "test.sh",
 		}, "$.command: "),
-		Entry("with empty command", model.Map{
-			"command": model.Seq{},
+		Entry("with empty command", spec.Map{
+			"command": spec.Seq{},
 		}, "$.command: "),
-		Entry("with invalid env", model.Map{
-			"command": model.Seq{"test.sh"},
+		Entry("with invalid env", spec.Map{
+			"command": spec.Seq{"test.sh"},
 			"env":     42,
 		}, "$.env: "),
-		Entry("with invalid timeout", model.Map{
-			"command": model.Seq{"test.sh"},
+		Entry("with invalid timeout", spec.Map{
+			"command": spec.Seq{"test.sh"},
 			"timeout": "foo",
 		}, "$.timeout: "),
 	)

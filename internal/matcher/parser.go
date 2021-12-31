@@ -14,8 +14,11 @@
 
 package matcher
 
-import "github.com/autopp/spexec/internal/model"
+import (
+	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
+)
 
-type StatusMatcherParser func(v *model.Validator, r *StatusMatcherRegistry, x interface{}) model.StatusMatcher
+type StatusMatcherParser func(v *spec.Validator, r *StatusMatcherRegistry, x interface{}) model.StatusMatcher
 
-type StreamMatcherParser func(v *model.Validator, r *StreamMatcherRegistry, x interface{}) model.StreamMatcher
+type StreamMatcherParser func(v *spec.Validator, r *StreamMatcherRegistry, x interface{}) model.StreamMatcher

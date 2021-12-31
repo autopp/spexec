@@ -17,6 +17,7 @@ package matcher
 import (
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
 )
 
 type statusMatcherParserEntry struct {
@@ -68,7 +69,7 @@ func (r *matcherParserRegistry) addWithDefault(name string, p interface{}, defau
 	return nil
 }
 
-func (r *matcherParserRegistry) get(v *model.Validator, x interface{}) (string, interface{}, interface{}) {
+func (r *matcherParserRegistry) get(v *spec.Validator, x interface{}) (string, interface{}, interface{}) {
 	var name string
 	var param interface{}
 	withParam := false
@@ -76,7 +77,7 @@ func (r *matcherParserRegistry) get(v *model.Validator, x interface{}) (string, 
 	switch specifier := x.(type) {
 	case string:
 		name = specifier
-	case model.Map:
+	case spec.Map:
 		if len(specifier) != 1 {
 			v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got map with %d key-value)", len(specifier))
 			return "", nil, nil
@@ -86,7 +87,7 @@ func (r *matcherParserRegistry) get(v *model.Validator, x interface{}) (string, 
 		}
 		withParam = true
 	default:
-		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", model.TypeNameOf(x))
+		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", spec.TypeNameOf(x))
 		return "", nil, nil
 	}
 
@@ -121,7 +122,7 @@ func (r *StatusMatcherRegistry) AddWithDefault(name string, p StatusMatcherParse
 	return r.registry.addWithDefault(name, p, defaultParam)
 }
 
-func (r *StatusMatcherRegistry) ParseMatcher(v *model.Validator, x interface{}) model.StatusMatcher {
+func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) model.StatusMatcher {
 	name, parser, param := r.registry.get(v, x)
 	if parser == nil {
 		return nil
@@ -150,7 +151,7 @@ func (r *StreamMatcherRegistry) AddWithDefault(name string, p StreamMatcherParse
 	return r.registry.addWithDefault(name, p, defaultParam)
 }
 
-func (r *StreamMatcherRegistry) ParseMatcher(v *model.Validator, x interface{}) model.StreamMatcher {
+func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) model.StreamMatcher {
 	name, parser, param := r.registry.get(v, x)
 	if parser == nil {
 		return nil
@@ -163,7 +164,7 @@ func (r *StreamMatcherRegistry) ParseMatcher(v *model.Validator, x interface{}) 
 	return m
 }
 
-func (r *StreamMatcherRegistry) ParseMatchers(v *model.Validator, x interface{}) []model.StreamMatcher {
+func (r *StreamMatcherRegistry) ParseMatchers(v *spec.Validator, x interface{}) []model.StreamMatcher {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil
