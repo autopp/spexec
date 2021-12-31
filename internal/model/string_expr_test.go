@@ -6,7 +6,7 @@ import (
 )
 
 var _ = Describe("StringLiteralExpr", func() {
-	literal := StringLiteralExpr("hello")
+	literal := NewLiteralStringExpr("hello")
 
 	Describe("String()", func() {
 		It("returns itself", func() {

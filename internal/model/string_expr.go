@@ -20,14 +20,18 @@ type StringExpr interface {
 	stringExpr()
 }
 
-type StringLiteralExpr string
+type literalStringExpr string
 
-func (e StringLiteralExpr) Eval() (string, error) {
+func NewLiteralStringExpr(v string) StringExpr {
+	return literalStringExpr(v)
+}
+
+func (e literalStringExpr) Eval() (string, error) {
 	return string(e), nil
 }
 
-func (e StringLiteralExpr) String() string {
+func (e literalStringExpr) String() string {
 	return string(e)
 }
 
-func (e StringLiteralExpr) stringExpr() {}
+func (e literalStringExpr) stringExpr() {}

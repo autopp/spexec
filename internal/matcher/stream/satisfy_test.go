@@ -16,7 +16,7 @@ var _ = Describe("SatisfyMatcher", func() {
 	var m *SatisfyMatcher
 	JustBeforeEach(func() {
 		m = &SatisfyMatcher{
-			Command: []model.StringExpr{model.StringLiteralExpr("bash"), model.StringLiteralExpr("-c"), model.StringLiteralExpr(`test "$(cat -)" = hello`)},
+			Command: []model.StringExpr{model.NewLiteralStringExpr("bash"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr(`test "$(cat -)" = hello`)},
 		}
 	})
 
@@ -61,21 +61,21 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 				"timeout": 1,
 			},
-			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
+			[]model.StringExpr{model.NewLiteralStringExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
 		),
 		Entry("without env",
 			spec.Map{
 				"command": spec.Seq{"test.sh"},
 				"timeout": 1,
 			},
-			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, nil, 1*time.Second,
+			[]model.StringExpr{model.NewLiteralStringExpr("test.sh")}, nil, 1*time.Second,
 		),
 		Entry("without timeout",
 			spec.Map{
 				"command": spec.Seq{"test.sh"},
 				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 			},
-			[]model.StringExpr{model.StringLiteralExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
+			[]model.StringExpr{model.NewLiteralStringExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
 		),
 	)
 

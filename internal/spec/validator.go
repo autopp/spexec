@@ -358,7 +358,7 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool,
 		v.ForInSeq(command, func(i int, x interface{}) bool {
 			var c string
 			c, ok = v.MustBeString(x)
-			ret[i] = model.StringLiteralExpr(c)
+			ret[i] = model.NewLiteralStringExpr(c)
 			return ok
 		})
 
