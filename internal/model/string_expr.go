@@ -14,6 +14,12 @@
 
 package model
 
+import (
+	"os"
+
+	"github.com/autopp/spexec/internal/errors"
+)
+
 type StringExpr interface {
 	Eval() (string, error)
 	String() string
@@ -35,3 +41,23 @@ func (e literalStringExpr) String() string {
 }
 
 func (e literalStringExpr) stringExpr() {}
+
+type envStringExpr string
+
+func NewEnvStringExpr(name string) StringExpr {
+	return envStringExpr(name)
+}
+
+func (e envStringExpr) Eval() (string, error) {
+	v, ok := os.LookupEnv(string(e))
+	if !ok {
+		return "", errors.Errorf(errors.ErrInvalidSpec, "envrironment variable $%s is not defined", string(e))
+	}
+	return v, nil
+}
+
+func (e envStringExpr) String() string {
+	return "$" + string(e)
+}
+
+func (e envStringExpr) stringExpr() {}
