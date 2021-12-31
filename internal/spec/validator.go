@@ -387,9 +387,9 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool,
 	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
 		ret = make([]model.StringExpr, len(command))
 		v.ForInSeq(command, func(i int, x interface{}) bool {
-			var c string
-			c, ok = v.MustBeString(x)
-			ret[i] = model.NewLiteralStringExpr(c)
+			var c model.StringExpr
+			c, ok = v.MustBeStringExpr(x)
+			ret[i] = c
 			return ok
 		})
 
