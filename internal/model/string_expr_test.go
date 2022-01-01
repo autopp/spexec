@@ -26,9 +26,21 @@ var _ = Describe("literalStringExpr", func() {
 var _ = Describe("envStringExpr", func() {
 	name := "MESSAGE"
 	value := "hello"
-	os.Setenv(name, value)
 
 	env := NewEnvStringExpr(name)
+
+	BeforeEach(func() {
+		oldValue, setAlready := os.LookupEnv(name)
+		os.Setenv(name, value)
+
+		DeferCleanup(func() {
+			if setAlready {
+				os.Setenv(name, oldValue)
+			} else {
+				os.Unsetenv(name)
+			}
+		})
+	})
 
 	Describe("String()", func() {
 		It("returns itself with '$' prefix", func() {
