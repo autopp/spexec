@@ -27,16 +27,21 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         go mod download
-        make deps
     - name: Run Test
-      run: make test build e2e
+      run: |
+        go install github.com/onsi/ginkgo/v2/ginkgo@latest
+        make test
     - name: Run dedebugo
-      run: make dedebugo
+      run: |
+        go install github.com/autopp/dedebugo/cmd/dedebugo@latest
+        make dedebugo
     - name: Build
       uses: goreleaser/goreleaser-action@v2
       with:
         version: latest
         args: build --snapshot --rm-dist
+    - name: Run E2E Test
+      run: make e2e
     - name: Save Artifact
       uses: actions/upload-artifact@v2
       with:
