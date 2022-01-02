@@ -3,50 +3,17 @@ name: pr
 on: ["pull_request"]
 
 jobs:
-  test:
+  test-and-build:
+    uses: autopp/spexec/.github/workflows/test.yml@main
+    if: "!startsWith(github.head_ref, 'release/') || github.event.pull_request.head.fork"
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  teardown:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
-    if: "!startsWith(github.head_ref, 'release/') || github.event.pull_request.head.fork"
+    needs: test-and-build
     steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.17
-      id: go
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-    - name: Use Cache
-      uses: actions/cache@v1
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Get dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        go mod download
-        go install github.com/onsi/ginkgo/v2/ginkgo@$(go list -f '{{.Version}}' -m github.com/onsi/ginkgo/v2 || echo 'LOOKUP-VERSION-FAILED')
-    - name: Run Test
-      run: |
-        make test
-    - name: Run dedebugo
-      run: |
-        go install github.com/autopp/dedebugo/cmd/dedebugo@latest
-        make dedebugo
-    - name: Build
-      uses: goreleaser/goreleaser-action@v2
-      with:
-        version: latest
-        args: build --snapshot --rm-dist
-    - name: Run E2E Test
-      run: make e2e
-    - name: Save Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: artifact
-        path: ${{ github.workspace }}/dist/*/spexec
     - name: Auto Merge
       if: contains(github.event.pull_request.body, '[auto merge]') && !contains(github.event.pull_request.title, '[WIP]') && !contains(github.event.pull_request.title, '[DNM]') && !github.event.pull_request.head.fork
       run: |
