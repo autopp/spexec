@@ -27,9 +27,9 @@ jobs:
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         go mod download
+        go install github.com/onsi/ginkgo/v2/ginkgo@$(go list -f '{{.Version}}' -m github.com/onsi/ginkgo/v2 || echo 'LOOKUP-VERSION-FAILED')
     - name: Run Test
       run: |
-        go install github.com/onsi/ginkgo/v2/ginkgo@latest
         make test
     - name: Run dedebugo
       run: |
