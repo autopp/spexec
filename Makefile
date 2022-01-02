@@ -31,9 +31,3 @@ build:
 .PHONY: dedebugo
 dedebugo:
 	dedebugo --exclude build --exclude dist .
-
-.PHONY: deps
-deps:
-	go install github.com/onsi/ginkgo/v2/ginkgo@latest
-	go install github.com/autopp/dedebugo/cmd/dedebugo@latest
-	go install github.com/goreleaser/goreleaser@latest

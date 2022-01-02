@@ -3,45 +3,17 @@ name: pr
 on: ["pull_request"]
 
 jobs:
-  test:
+  test-and-build:
+    uses: autopp/spexec/.github/workflows/test.yml@main
+    if: "!startsWith(github.head_ref, 'release/') || github.event.pull_request.head.fork"
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  teardown:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
-    if: "!startsWith(github.head_ref, 'release/') || github.event.pull_request.head.fork"
+    needs: test-and-build
     steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.17
-      id: go
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-    - name: Use Cache
-      uses: actions/cache@v1
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-
-    - name: Get dependencies
-      if: steps.cache.outputs.cache-hit != 'true'
-      run: |
-        go mod download
-        make deps
-    - name: Run Test
-      run: make test build e2e
-    - name: Run dedebugo
-      run: make dedebugo
-    - name: Build
-      uses: goreleaser/goreleaser-action@v2
-      with:
-        version: latest
-        args: build --snapshot --rm-dist
-    - name: Save Artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: artifact
-        path: ${{ github.workspace }}/dist/*/spexec
     - name: Auto Merge
       if: contains(github.event.pull_request.body, '[auto merge]') && !contains(github.event.pull_request.title, '[WIP]') && !contains(github.event.pull_request.title, '[DNM]') && !github.event.pull_request.head.fork
       run: |
