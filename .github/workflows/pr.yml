@@ -20,10 +20,7 @@ jobs:
         # Request to merge button API
         hub api -X PUT /repos/${GITHUB_REPOSITORY}/pulls/${{ github.event.number }}/merge
     - name: Notify to Slack
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        fields: repo,took,workflow,job,ref,message
+      uses: rtCamp/action-slack-notify@v2
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       if: always()
