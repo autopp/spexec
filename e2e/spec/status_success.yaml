@@ -1,0 +1,36 @@
+tests:
+  - name: 'status success matcher for success command'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - go
+              - help
+            expect:
+              status:
+                success: true
+    expect:
+      status:
+        eq: 0
+  - name: 'status success matcher for failure command'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - go
+            expect:
+              status:
+                success: false
+    expect:
+      status:
+        eq: 0
