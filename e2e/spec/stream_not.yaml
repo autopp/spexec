@@ -1,5 +1,5 @@
 tests:
-  - name: 'stream eq matcher for empty output'
+  - name: 'stream not eq matcher for empty output'
     command:
       - type: env
         name: SPEXEC
@@ -19,7 +19,7 @@ tests:
     expect:
       status:
         eq: 1
-  - name: 'stream eq matcher for some output'
+  - name: 'stream not eq matcher for some output'
     command:
       - type: env
         name: SPEXEC
