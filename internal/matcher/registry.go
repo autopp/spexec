@@ -27,6 +27,7 @@ type matcherParserEntry struct {
 }
 
 type matcherParserRegistry struct {
+	target   string
 	matchers map[string]*matcherParserEntry
 }
 
@@ -34,8 +35,8 @@ type StatusMatcherRegistry struct {
 	registry *matcherParserRegistry
 }
 
-func newMatcherParserRegistry() *matcherParserRegistry {
-	return &matcherParserRegistry{matchers: make(map[string]*matcherParserEntry)}
+func newMatcherParserRegistry(target string) *matcherParserRegistry {
+	return &matcherParserRegistry{target: target, matchers: make(map[string]*matcherParserEntry)}
 }
 
 func (r *matcherParserRegistry) add(name string, p interface{}) error {
@@ -87,7 +88,7 @@ func (r *matcherParserRegistry) get(v *spec.Validator, x interface{}) (string, i
 
 	p, ok := r.matchers[name]
 	if !ok {
-		v.AddViolation("matcher for status %s is not defined", name)
+		v.AddViolation("matcher for %s %s is not defined", r.target, name)
 		return "", nil, nil
 	}
 
@@ -105,7 +106,7 @@ func (r *matcherParserRegistry) get(v *spec.Validator, x interface{}) (string, i
 }
 
 func NewStatusMatcherRegistry() *StatusMatcherRegistry {
-	return &StatusMatcherRegistry{registry: newMatcherParserRegistry()}
+	return &StatusMatcherRegistry{registry: newMatcherParserRegistry("status")}
 }
 
 func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
@@ -134,7 +135,7 @@ type StreamMatcherRegistry struct {
 }
 
 func NewStreamMatcherRegistry() *StreamMatcherRegistry {
-	return &StreamMatcherRegistry{registry: newMatcherParserRegistry()}
+	return &StreamMatcherRegistry{registry: newMatcherParserRegistry("stream")}
 }
 
 func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
