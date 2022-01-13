@@ -1,0 +1,43 @@
+tests:
+  - name: 'stream satisfy matcher for matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              stdout:
+                satisfy:
+                  command:
+                    - grep
+                    - 'hello'
+    expect:
+      status:
+        eq: 0
+  - name: 'stream satisfy matcher for not matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - goodbye world
+            expect:
+              stdout:
+                satisfy:
+                  command:
+                    - grep
+                    - 'hello'
+    expect:
+      status:
+        eq: 1

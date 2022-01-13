@@ -1,0 +1,37 @@
+tests:
+  - name: 'stream beEmpty matcher for empty output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - 'echo'
+              - -n
+            expect:
+              stdout:
+                beEmpty: true
+    expect:
+      status:
+        eq: 0
+  - name: 'stream beEmpty matcher for some output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello
+            expect:
+              stdout:
+                beEmpty: true
+    expect:
+      status:
+        eq: 1

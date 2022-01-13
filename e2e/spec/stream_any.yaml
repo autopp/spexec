@@ -1,0 +1,61 @@
+tests:
+  - name: 'stream any matcher for all matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              stdout:
+                any:
+                  - contain: hello
+                  - contain: world
+    expect:
+      status:
+        eq: 0
+  - name: 'stream any matcher for some matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              stdout:
+                any:
+                  - contain: goodbye
+                  - contain: world
+    expect:
+      status:
+        eq: 0
+  - name: 'stream any matcher for no matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              stdout:
+                any:
+                  - contain: goodbye
+                  - contain: me
+    expect:
+      status:
+        eq: 1

@@ -1,0 +1,41 @@
+tests:
+  - name: 'stream not eq matcher for empty output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - -n
+              - hello
+            expect:
+              stdout:
+                not:
+                  eq: hello
+    expect:
+      status:
+        eq: 1
+  - name: 'stream not eq matcher for some output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - -n
+              - hello
+            expect:
+              stdout:
+                not:
+                  eq: goodbye
+    expect:
+      status:
+        eq: 0

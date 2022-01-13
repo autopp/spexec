@@ -1,0 +1,79 @@
+tests:
+  - name: 'stream eqJSON matcher for matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - 'echo'
+              - '{ "number": 3.14, "bool": true, "str": "hello", "array": [1, 2, 3], "null": null }'
+            expect:
+              stdout:
+                eqJSON:
+                  number: 3.14
+                  bool: true
+                  str: hello
+                  array:
+                    - 1
+                    - 2
+                    - 3
+                  "null": null
+    expect:
+      status:
+        eq: 0
+  - name: 'stream eqJSON matcher for not matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - '{ "number": 3.14, "bool": true, "str": "hello", "array": [1, 2, 3], "null": null }'
+            expect:
+              stdout:
+                eqJSON:
+                  number: 3.14
+                  bool: false
+                  str: hello
+                  array:
+                    - 1
+                    - 2
+                    - 3
+                  "null": null
+    expect:
+      status:
+        eq: 1
+  - name: 'stream eqJSON matcher for not json string'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - '{ "number": 3.14, "bool": true, "str": "hello", "array": [1, 2, 3], "null": null'
+            expect:
+              stdout:
+                eqJSON:
+                  number: 3.14
+                  bool: false
+                  str: hello
+                  array:
+                    - 1
+                    - 2
+                    - 3
+                  "null": null
+    expect:
+      status:
+        eq: 1

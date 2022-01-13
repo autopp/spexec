@@ -1,0 +1,35 @@
+tests:
+  - name: 'status eq matcher with matched status'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - go
+            expect:
+              status:
+                eq: 2
+    expect:
+      status:
+        eq: 0
+  - name: 'status eq matcher with wrong status'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - go
+            expect:
+              status:
+                eq: 0
+    expect:
+      status:
+        eq: 1
