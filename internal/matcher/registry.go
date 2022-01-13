@@ -20,12 +20,6 @@ import (
 	"github.com/autopp/spexec/internal/spec"
 )
 
-type statusMatcherParserEntry struct {
-	parser       StatusMatcherParser
-	hasDefault   bool
-	defaultParam interface{}
-}
-
 type matcherParserEntry struct {
 	parser       interface{}
 	hasDefault   bool
