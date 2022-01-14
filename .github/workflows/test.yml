@@ -2,10 +2,6 @@ name: test
 
 on:
   workflow_call:
-    inputs:
-      caller:
-        type: string
-        required: true
     secrets:
       SLACK_WEBHOOK_URL:
         required: true
@@ -60,7 +56,6 @@ jobs:
       with:
         status: ${{ job.status }}
         fields: repo,took,workflow,job,ref,message
-        job_name: ${{ inputs.caller }} / test-and-build
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
       if: failure() || cancelled()
