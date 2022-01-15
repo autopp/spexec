@@ -36,6 +36,7 @@ type options struct {
 	output   string
 	color    string
 	format   string
+	isStrict bool
 }
 
 // Main is the entrypoint of command line
@@ -46,6 +47,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	const outputFlag = "output"
 	const colorFlag = "color"
 	const formatFlag = "format"
+	const strictFlag = "strict"
 
 	cmd := &cobra.Command{
 		Use:           "spexec file",
@@ -78,6 +80,7 @@ func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []stri
 	cmd.RegisterFlagCompletionFunc(formatFlag, func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"simple", "documentation"}, cobra.ShellCompDirectiveDefault
 	})
+	cmd.Flags().BoolVar(&opts.isStrict, strictFlag, false, "parse spec with strict mode")
 
 	cmd.SetIn(stdin)
 	cmd.SetOut(stdout)
@@ -123,7 +126,7 @@ func (o *options) run() error {
 	statusMR := status.NewStatusMatcherRegistryWithBuiltins()
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 
-	p := parser.New(statusMR, streamMR)
+	p := parser.New(statusMR, streamMR, o.isStrict)
 	var tests []*model.Test
 	var err error
 	if o.isStdin {

@@ -50,10 +50,11 @@ var evnVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
 type Parser struct {
 	statusMR *matcher.StatusMatcherRegistry
 	streamMR *matcher.StreamMatcherRegistry
+	isStrict bool
 }
 
-func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) *Parser {
-	return &Parser{statusMR, streamMR}
+func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry, isStrict bool) *Parser {
+	return &Parser{statusMR, streamMR, isStrict}
 }
 
 func (p *Parser) ParseStdin() ([]*test.Test, error) {
