@@ -50,10 +50,11 @@ var evnVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
 type Parser struct {
 	statusMR *matcher.StatusMatcherRegistry
 	streamMR *matcher.StreamMatcherRegistry
+	isStrict bool
 }
 
-func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) *Parser {
-	return &Parser{statusMR, streamMR}
+func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry, isStrict bool) *Parser {
+	return &Parser{statusMR, streamMR, isStrict}
 }
 
 func (p *Parser) ParseStdin() ([]*test.Test, error) {
@@ -111,6 +112,10 @@ func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) 
 	}
 
 	ts := make([]*test.Test, 0)
+
+	if p.isStrict {
+		v.MustContainOnly(cmap, "tests")
+	}
 	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
 		v.ForInSeq(tcs, func(i int, tc interface{}) bool {
 			t := p.loadTest(v, tc)
@@ -128,6 +133,10 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 		return nil
 	}
 
+	if p.isStrict {
+		v.MustContainOnly(tc, "name", "command", "env", "expect", "timeout")
+	}
+
 	t := new(test.Test)
 	name, exists, ok := v.MayHaveString(tc, "name")
 	if exists {
@@ -140,6 +149,10 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 		if stdinString, ok := v.MayBeString(stdin); ok {
 			t.Stdin = []byte(stdinString)
 		} else if stdinMap, ok := v.MayBeMap(stdin); ok {
+			if p.isStrict {
+				v.MustContainOnly(stdinMap, "type", "value")
+			}
+
 			stdinType, typeOk := v.MustHaveString(stdinMap, "type")
 			stdinValue, valueOk := v.MustHave(stdinMap, "value")
 			if !typeOk || !valueOk {
@@ -173,6 +186,10 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	}
 
 	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
+		if p.isStrict {
+			v.MustContainOnly(expect, "status", "stdout", "stderr")
+		}
+
 		v.MayHave(expect, "status", func(status interface{}) {
 			t.StatusMatcher = p.statusMR.ParseMatcher(v, status)
 		})

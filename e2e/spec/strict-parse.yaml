@@ -1,0 +1,46 @@
+tests:
+  - name: 'unexpected field without --strict flag'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              foo: 1 # unexpected
+              stdout:
+                satisfy:
+                  command:
+                    - grep
+                    - 'hello'
+    expect:
+      status:
+        eq: 0
+  - name: 'unexpected field with --strict flag'
+    command:
+      - type: env
+        name: SPEXEC
+      - '--strict'
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              foo: 1 # unexpected
+              stdout:
+                satisfy:
+                  command:
+                    - grep
+                    - 'hello'
+    expect:
+      status:
+        eq: 2

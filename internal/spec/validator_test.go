@@ -737,6 +737,20 @@ var _ = Describe("Validator", func() {
 			Entry("when the field is empty seq", Seq{}, "$.command"),
 		)
 	})
+
+	Describe("MustContainOnly()", func() {
+		It("returns true and adds no error when the given map contains only specified", func() {
+			m := Map{"foo": 1, "baz": "spexec"}
+			Expect(v.MustContainOnly(m, "foo", "bar", "baz")).To(BeTrue())
+			Expect(v.Error()).To(BeNil())
+		})
+
+		It("returns false and adds error when the given map contains not specified field", func() {
+			m := Map{"foo": 1, "baz": "spexec"}
+			Expect(v.MustContainOnly(m, "foo", "bar")).To(BeFalse())
+			Expect(v.Error()).To(BeValidationError(Equal(`$: field .baz is not expected`)))
+		})
+	})
 })
 
 var _ = DescribeTable("TypeOf()",

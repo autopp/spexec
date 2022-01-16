@@ -26,7 +26,7 @@ var _ = Describe("Parser", func() {
 			statusMR.Add("eq", status.ParseEqMatcher)
 			streamMR := matcher.NewStreamMatcherRegistry()
 			streamMR.Add("eq", stream.ParseEqMatcher)
-			p = New(statusMR, streamMR)
+			p = New(statusMR, streamMR, false)
 		})
 
 		DescribeTable("with valid file",

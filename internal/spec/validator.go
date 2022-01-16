@@ -416,6 +416,23 @@ func (v *Validator) MustHaveCommand(m Map, key string) ([]model.StringExpr, bool
 	return c, exists && ok
 }
 
+func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
+	dict := map[string]struct{}{}
+	for _, key := range keys {
+		dict[key] = struct{}{}
+	}
+
+	ok := true
+	for field := range m {
+		if _, allowed := dict[field]; !allowed {
+			v.AddViolation("field .%s is not expected", field)
+			ok = false
+		}
+	}
+
+	return ok
+}
+
 func (v *Validator) Error() error {
 	if len(v.violations) == 0 {
 		return nil
