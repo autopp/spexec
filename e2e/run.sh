@@ -9,7 +9,7 @@ tester_spexec="${target_spexec}"
 have_error=no
 for spec in $my_dir/spec/*.yaml; do
   echo $(basename ${spec})
-  SPEXEC="${target_spexec}" "${target_spexec}" "${spec}" || have_error=yes
+  SPEXEC="${target_spexec}" "${target_spexec}" --strict "${spec}" || have_error=yes
   echo
 done
 

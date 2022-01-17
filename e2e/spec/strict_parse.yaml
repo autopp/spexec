@@ -44,3 +44,5 @@ tests:
     expect:
       status:
         eq: 2
+      stderr:
+        contain: '$.tests[0].expect: field .foo is not expected'

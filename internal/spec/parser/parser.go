@@ -134,7 +134,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 	}
 
 	if p.isStrict {
-		v.MustContainOnly(tc, "name", "command", "env", "expect", "timeout")
+		v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout")
 	}
 
 	t := new(test.Test)
