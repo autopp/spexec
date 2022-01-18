@@ -114,8 +114,18 @@ func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) 
 	ts := make([]*test.Test, 0)
 
 	if p.isStrict {
-		v.MustContainOnly(cmap, "tests")
+		v.MustContainOnly(cmap, "spexec", "tests")
 	}
+
+	version, exists, ok := v.MayHaveString(cmap, "spexec")
+	if ok && exists {
+		if version != "v0" {
+			v.InField("spexec", func() {
+				v.AddViolation(`should be "v0"`)
+			})
+		}
+	}
+
 	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
 		v.ForInSeq(tcs, func(i int, tc interface{}) bool {
 			t := p.loadTest(v, tc)

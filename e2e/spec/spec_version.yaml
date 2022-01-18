@@ -1,0 +1,27 @@
+tests:
+  - name: 'valid spexec version'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        spexec: v0
+        tests: []
+    expect:
+      status:
+        eq: 0
+  - name: 'invalid spexec version'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        spexec: foo
+        tests: []
+    expect:
+      status:
+        eq: 2
