@@ -23,7 +23,6 @@ import (
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	test "github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
@@ -31,18 +30,21 @@ import (
 
 // xxxSchema are structs for documentation, not used
 type specSchema struct {
-	tests []testSchema
+	spexec string
+	tests  []testSchema
 }
 
 type testSchema struct {
 	name    string
 	command []string
+	stdin   string
 	env     []util.StringVar
 	expect  *struct {
-		status *int
-		stdout *string
-		stderr *string
+		status model.StatusMatcher
+		stdout model.StreamMatcher
+		stderr model.StreamMatcher
 	}
+	timeout string
 }
 
 var evnVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
@@ -57,7 +59,7 @@ func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatche
 	return &Parser{statusMR, streamMR, isStrict}
 }
 
-func (p *Parser) ParseStdin() ([]*test.Test, error) {
+func (p *Parser) ParseStdin() ([]*model.Test, error) {
 	f, err := io.ReadAll(os.Stdin)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
@@ -67,7 +69,7 @@ func (p *Parser) ParseStdin() ([]*test.Test, error) {
 	return tests, err
 }
 
-func (p *Parser) ParseFile(filename string) ([]*test.Test, error) {
+func (p *Parser) ParseFile(filename string) ([]*model.Test, error) {
 	f, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
@@ -83,15 +85,15 @@ func (p *Parser) ParseFile(filename string) ([]*test.Test, error) {
 	return tests, err
 }
 
-func (p *Parser) parseYAML(filename string, b []byte) ([]*test.Test, error) {
+func (p *Parser) parseYAML(filename string, b []byte) ([]*model.Test, error) {
 	return p.load(filename, b, yaml.Unmarshal)
 }
 
-func (p *Parser) parseJSON(filename string, b []byte) ([]*test.Test, error) {
+func (p *Parser) parseJSON(filename string, b []byte) ([]*model.Test, error) {
 	return p.load(filename, b, util.UnmarshalJSON)
 }
 
-func (p *Parser) load(filename string, b []byte, unmarchal func(in []byte, out interface{}) error) ([]*test.Test, error) {
+func (p *Parser) load(filename string, b []byte, unmarchal func(in []byte, out interface{}) error) ([]*model.Test, error) {
 	var x interface{}
 	err := unmarchal(b, &x)
 	if err != nil {
@@ -101,7 +103,7 @@ func (p *Parser) load(filename string, b []byte, unmarchal func(in []byte, out i
 	return p.loadSpec(filename, x)
 }
 
-func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) {
+func (p *Parser) loadSpec(filename string, c interface{}) ([]*model.Test, error) {
 	v, err := spec.NewValidator(filename)
 	if err != nil {
 		return nil, err
@@ -111,7 +113,7 @@ func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) 
 		return nil, v.Error()
 	}
 
-	ts := make([]*test.Test, 0)
+	ts := make([]*model.Test, 0)
 
 	if p.isStrict {
 		v.MustContainOnly(cmap, "spexec", "tests")
@@ -137,7 +139,7 @@ func (p *Parser) loadSpec(filename string, c interface{}) ([]*test.Test, error) 
 	return ts, v.Error()
 }
 
-func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
+func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 	tc, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
@@ -147,7 +149,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *test.Test {
 		v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout")
 	}
 
-	t := new(test.Test)
+	t := new(model.Test)
 	name, exists, ok := v.MayHaveString(tc, "name")
 	if exists {
 		t.Name = name
