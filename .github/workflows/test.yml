@@ -11,7 +11,6 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     runs-on: ubuntu-latest
-    if: "!startsWith(github.head_ref, 'release/') || github.event.pull_request.head.fork"
     steps:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
