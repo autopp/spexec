@@ -45,7 +45,7 @@ jobs:
         args: build --snapshot --rm-dist
     - name: Run E2E Test
       run: |
-        gh release download --pattern 'spexec-linux-amd64.tar.gz -D /tmp
+        gh release download --pattern spexec-linux-amd64.tar.gz -D /tmp
         tar -x -C /tmp -f /tmp/spexec-linux-amd64.tar.gz
         E2E_SPEXEC=/tmp/spexec-linux-amd64/spexec make e2e
     - name: Save Artifact
