@@ -44,7 +44,10 @@ jobs:
         version: latest
         args: build --snapshot --rm-dist
     - name: Run E2E Test
-      run: make e2e
+      run: |
+        gh release download --pattern 'spexec-linux-amd64.tar.gz -D /tmp
+        tar -x -C /tmp -f /tmp/spexec-linux-amd64.tar.gz
+        E2E_SPEXEC=/tmp/spexec-linux-amd64/spexec make e2e
     - name: Save Artifact
       uses: actions/upload-artifact@v2
       with:
