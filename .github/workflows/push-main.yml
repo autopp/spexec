@@ -6,7 +6,7 @@ on:
 
 jobs:
   test-and-build:
-    uses: autopp/spexec/.github/workflows/test.yml@main
+    uses: ./.github/workflows/test.yml
     if: "!startsWith(github.head_ref, 'release/') || github.event.pull_request.head.fork"
     secrets:
       SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
