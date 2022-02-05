@@ -25,6 +25,7 @@ import (
 
 type Test struct {
 	Name          string
+	SpecFilename  string
 	Dir           string
 	Command       []StringExpr
 	Stdin         []byte

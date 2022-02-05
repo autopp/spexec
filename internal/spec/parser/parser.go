@@ -150,6 +150,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 	}
 
 	t := new(model.Test)
+	t.SpecFilename = v.Filename
 	name, exists, ok := v.MayHaveString(tc, "name")
 	if exists {
 		t.Name = name
