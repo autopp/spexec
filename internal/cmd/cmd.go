@@ -31,12 +31,12 @@ import (
 )
 
 type options struct {
-	filename string
-	isStdin  bool
-	output   string
-	color    string
-	format   string
-	isStrict bool
+	filenames []string
+	isStdin   bool
+	output    string
+	color     string
+	format    string
+	isStrict  bool
 }
 
 // Main is the entrypoint of command line
@@ -94,10 +94,10 @@ func (o *options) complete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.Errorf(errors.ErrInvalidSpec, "spec is not given")
 	} else if args[0] == "-" {
-		o.filename = "<stdin>"
+		o.filenames = []string{"<stdin>"}
 		o.isStdin = true
 	} else {
-		o.filename = args[0]
+		o.filenames = args
 		o.isStdin = false
 	}
 
@@ -132,7 +132,14 @@ func (o *options) run() error {
 	if o.isStdin {
 		tests, err = p.ParseStdin()
 	} else {
-		tests, err = p.ParseFile(o.filename)
+		for _, filename := range o.filenames {
+			var ts []*model.Test
+			ts, err = p.ParseFile(filename)
+			if err != nil {
+				break
+			}
+			tests = append(tests, ts...)
+		}
 	}
 	if err != nil {
 		return err
@@ -179,7 +186,9 @@ func (o *options) run() error {
 	if err != nil {
 		return err
 	}
-	results := runner.RunTests(o.filename, tests, reporter)
+
+	// TODO: pass corresponding name
+	results := runner.RunTests(o.filenames[0], tests, reporter)
 
 	allGreen := true
 	for _, r := range results {
