@@ -127,18 +127,28 @@ func (o *options) run() error {
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 
 	p := parser.New(statusMR, streamMR, o.isStrict)
+	specs := []struct {
+		filename string
+		tests    []*model.Test
+	}{}
 	var tests []*model.Test
 	var err error
 	if o.isStdin {
 		tests, err = p.ParseStdin()
+		specs = append(specs, struct {
+			filename string
+			tests    []*model.Test
+		}{"<stdin>", tests})
 	} else {
 		for _, filename := range o.filenames {
-			var ts []*model.Test
-			ts, err = p.ParseFile(filename)
+			tests, err = p.ParseFile(filename)
 			if err != nil {
 				break
 			}
-			tests = append(tests, ts...)
+			specs = append(specs, struct {
+				filename string
+				tests    []*model.Test
+			}{filename, tests})
 		}
 	}
 	if err != nil {
@@ -187,8 +197,10 @@ func (o *options) run() error {
 		return err
 	}
 
-	// TODO: pass corresponding name
-	results := runner.RunTests(o.filenames[0], tests, reporter)
+	var results []*model.TestResult
+	for _, spec := range specs {
+		results = append(results, runner.RunTests(spec.filename, spec.tests, reporter)...)
+	}
 
 	allGreen := true
 	for _, r := range results {
