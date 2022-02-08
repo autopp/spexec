@@ -18,7 +18,10 @@ var _ = Describe("literalStringExpr", func() {
 
 	Describe("Eval()", func() {
 		It("returns itself", func() {
-			Expect(literal.Eval()).To(Equal("hello"))
+			v, cleanup, err := literal.Eval()
+			Expect(v).To(Equal("hello"))
+			Expect(cleanup).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })
@@ -50,11 +53,14 @@ var _ = Describe("envStringExpr", func() {
 
 	Describe("Eval()", func() {
 		It("returns value of the environment variable", func() {
-			Expect(env.Eval()).To(Equal(value))
+			v, cleanup, err := env.Eval()
+			Expect(v).To(Equal(value))
+			Expect(cleanup).To(BeNil())
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("returns error when given name is not defined", func() {
-			_, err := NewEnvStringExpr("SPEXEC_UNDEFINED").Eval()
+			_, _, err := NewEnvStringExpr("SPEXEC_UNDEFINED").Eval()
 			Expect(err).To(HaveOccurred())
 		})
 	})

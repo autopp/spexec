@@ -21,7 +21,7 @@ import (
 )
 
 type StringExpr interface {
-	Eval() (string, error)
+	Eval() (string, func() error, error)
 	String() string
 	stringExpr()
 }
@@ -32,8 +32,8 @@ func NewLiteralStringExpr(v string) StringExpr {
 	return literalStringExpr(v)
 }
 
-func (e literalStringExpr) Eval() (string, error) {
-	return string(e), nil
+func (e literalStringExpr) Eval() (string, func() error, error) {
+	return string(e), nil, nil
 }
 
 func (e literalStringExpr) String() string {
@@ -48,12 +48,12 @@ func NewEnvStringExpr(name string) StringExpr {
 	return envStringExpr(name)
 }
 
-func (e envStringExpr) Eval() (string, error) {
+func (e envStringExpr) Eval() (string, func() error, error) {
 	v, ok := os.LookupEnv(string(e))
 	if !ok {
-		return "", errors.Errorf(errors.ErrInvalidSpec, "envrironment variable $%s is not defined", string(e))
+		return "", nil, errors.Errorf(errors.ErrInvalidSpec, "envrironment variable $%s is not defined", string(e))
 	}
-	return v, nil
+	return v, nil, nil
 }
 
 func (e envStringExpr) String() string {

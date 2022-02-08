@@ -33,9 +33,18 @@ type SatisfyMatcher struct {
 
 func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
 	command := make([]string, len(m.Command))
+	cleanups := make([]func() error, len(m.Command))
+	defer func() {
+		for _, cleanup := range cleanups {
+			if cleanup != nil {
+				cleanup()
+			}
+		}
+	}()
+
 	var err error
 	for i, x := range m.Command {
-		command[i], err = x.Eval()
+		command[i], cleanups[i], err = x.Eval()
 		if err != nil {
 			return false, "", err
 		}

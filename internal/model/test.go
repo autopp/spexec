@@ -55,9 +55,18 @@ func (t *Test) GetName() string {
 
 func (t *Test) Run() (*TestResult, error) {
 	command := make([]string, len(t.Command))
+	cleanups := make([]func() error, len(t.Command))
+	defer func() {
+		for _, cleanup := range cleanups {
+			if cleanup != nil {
+				cleanup()
+			}
+		}
+	}()
+
 	var err error
 	for i, x := range t.Command {
-		command[i], err = x.Eval()
+		command[i], cleanups[i], err = x.Eval()
 		if err != nil {
 			return nil, err
 		}
