@@ -61,3 +61,37 @@ func (e envStringExpr) String() string {
 }
 
 func (e envStringExpr) stringExpr() {}
+
+func EvalStringExprs(exprs []StringExpr) ([]string, func() []error, error) {
+	values := make([]string, len(exprs))
+	cleanups := make([]func() error, 0)
+	var firstErr error
+	for i, expr := range exprs {
+		value, cleanup, err := expr.Eval()
+		cleanups = append(cleanups, cleanup)
+		if err != nil {
+			firstErr = err
+			break
+		}
+		values[i] = value
+	}
+
+	cleanupAll := func() []error {
+		errs := make([]error, 0)
+		for _, cleanup := range cleanups {
+			if cleanup == nil {
+				continue
+			}
+
+			if err := cleanup(); err != nil {
+				errs = append(errs, err)
+			}
+		}
+		return errs
+	}
+
+	if firstErr != nil {
+		return nil, cleanupAll, firstErr
+	}
+	return values, cleanupAll, nil
+}
