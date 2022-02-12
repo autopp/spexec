@@ -32,22 +32,11 @@ type SatisfyMatcher struct {
 }
 
 func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
-	command := make([]string, len(m.Command))
-	cleanups := make([]func() error, len(m.Command))
-	defer func() {
-		for _, cleanup := range cleanups {
-			if cleanup != nil {
-				cleanup()
-			}
-		}
-	}()
-
-	var err error
-	for i, x := range m.Command {
-		command[i], cleanups[i], err = x.Eval()
-		if err != nil {
-			return false, "", err
-		}
+	command, cleanup, err := model.EvalStringExprs(m.Command)
+	// FIXME: error handling
+	defer cleanup()
+	if err != nil {
+		return false, "", err
 	}
 
 	e, err := exec.New(command, m.Dir, actual, m.Env, exec.WithTimeout(m.Timeout))
