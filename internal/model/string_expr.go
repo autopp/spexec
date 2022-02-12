@@ -62,6 +62,31 @@ func (e envStringExpr) String() string {
 
 func (e envStringExpr) stringExpr() {}
 
+type fileStringExpr string
+
+func NewFileStringExpr(contents string) StringExpr {
+	return fileStringExpr(contents)
+}
+
+func (f fileStringExpr) Eval() (string, func() error, error) {
+	file, err := os.CreateTemp("", "")
+	if err != nil {
+		return "", nil, err
+	}
+	defer file.Close()
+
+	name := file.Name()
+	file.WriteString(string(f))
+
+	return name, func() error { return os.Remove(name) }, nil
+}
+
+func (f fileStringExpr) String() string {
+	return os.TempDir() + "/somefile"
+}
+
+func (f fileStringExpr) stringExpr() {}
+
 func EvalStringExprs(exprs []StringExpr) ([]string, func() []error, error) {
 	values := make([]string, len(exprs))
 	cleanups := make([]func() error, 0)

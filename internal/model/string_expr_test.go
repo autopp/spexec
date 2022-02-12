@@ -68,6 +68,37 @@ var _ = Describe("envStringExpr", func() {
 	})
 })
 
+var _ = Describe("fileStringExpr", func() {
+	contents := "hello"
+
+	var file StringExpr
+
+	JustBeforeEach(func() {
+		file = NewFileStringExpr(contents)
+	})
+
+	Describe("String()", func() {
+		It("returns dummy file path", func() {
+			Expect(file.String()).To(Equal(os.TempDir() + "/somefile"))
+		})
+	})
+
+	Describe("Eval()", func() {
+		It("returns the file name contains the given contents and function for remove the file", func() {
+			v, cleanup, err := file.Eval()
+			Expect(v).NotTo(BeEmpty())
+			Expect(cleanup).NotTo(BeNil())
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(os.ReadFile(v)).To(Equal([]byte(contents)))
+
+			Expect(cleanup()).NotTo(HaveOccurred())
+			_, err = os.Stat(v)
+			Expect(os.IsNotExist(err)).To(BeTrue())
+		})
+	})
+})
+
 type testStringExpr struct {
 	v              string
 	isEvaled       bool
