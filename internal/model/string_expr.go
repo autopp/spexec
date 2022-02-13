@@ -21,7 +21,7 @@ import (
 )
 
 type StringExpr interface {
-	Eval() (string, error)
+	Eval() (string, func() error, error)
 	String() string
 	stringExpr()
 }
@@ -32,8 +32,8 @@ func NewLiteralStringExpr(v string) StringExpr {
 	return literalStringExpr(v)
 }
 
-func (e literalStringExpr) Eval() (string, error) {
-	return string(e), nil
+func (e literalStringExpr) Eval() (string, func() error, error) {
+	return string(e), nil, nil
 }
 
 func (e literalStringExpr) String() string {
@@ -48,12 +48,12 @@ func NewEnvStringExpr(name string) StringExpr {
 	return envStringExpr(name)
 }
 
-func (e envStringExpr) Eval() (string, error) {
+func (e envStringExpr) Eval() (string, func() error, error) {
 	v, ok := os.LookupEnv(string(e))
 	if !ok {
-		return "", errors.Errorf(errors.ErrInvalidSpec, "envrironment variable $%s is not defined", string(e))
+		return "", nil, errors.Errorf(errors.ErrInvalidSpec, "envrironment variable $%s is not defined", string(e))
 	}
-	return v, nil
+	return v, nil, nil
 }
 
 func (e envStringExpr) String() string {
@@ -61,3 +61,62 @@ func (e envStringExpr) String() string {
 }
 
 func (e envStringExpr) stringExpr() {}
+
+type fileStringExpr string
+
+func NewFileStringExpr(contents string) StringExpr {
+	return fileStringExpr(contents)
+}
+
+func (f fileStringExpr) Eval() (string, func() error, error) {
+	file, err := os.CreateTemp("", "")
+	if err != nil {
+		return "", nil, err
+	}
+	defer file.Close()
+
+	name := file.Name()
+	file.WriteString(string(f))
+
+	return name, func() error { return os.Remove(name) }, nil
+}
+
+func (f fileStringExpr) String() string {
+	return os.TempDir() + "/somefile"
+}
+
+func (f fileStringExpr) stringExpr() {}
+
+func EvalStringExprs(exprs []StringExpr) ([]string, func() []error, error) {
+	values := make([]string, len(exprs))
+	cleanups := make([]func() error, 0)
+	var firstErr error
+	for i, expr := range exprs {
+		value, cleanup, err := expr.Eval()
+		cleanups = append(cleanups, cleanup)
+		if err != nil {
+			firstErr = err
+			break
+		}
+		values[i] = value
+	}
+
+	cleanupAll := func() []error {
+		errs := make([]error, 0)
+		for _, cleanup := range cleanups {
+			if cleanup == nil {
+				continue
+			}
+
+			if err := cleanup(); err != nil {
+				errs = append(errs, err)
+			}
+		}
+		return errs
+	}
+
+	if firstErr != nil {
+		return nil, cleanupAll, firstErr
+	}
+	return values, cleanupAll, nil
+}

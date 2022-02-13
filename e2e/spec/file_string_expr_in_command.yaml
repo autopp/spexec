@@ -1,0 +1,24 @@
+tests:
+  - name: 'file string expr in command'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - 'cat'
+              - type: file
+                value: hello
+            expect:
+              status:
+                success: true
+              stdout:
+                eq: hello
+              stderr:
+                beEmpty: true
+    expect:
+      status:
+        eq: 0

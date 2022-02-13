@@ -54,13 +54,11 @@ func (t *Test) GetName() string {
 }
 
 func (t *Test) Run() (*TestResult, error) {
-	command := make([]string, len(t.Command))
-	var err error
-	for i, x := range t.Command {
-		command[i], err = x.Eval()
-		if err != nil {
-			return nil, err
-		}
+	command, cleanup, err := EvalStringExprs(t.Command)
+	// FIXME: error handling
+	defer cleanup()
+	if err != nil {
+		return nil, err
 	}
 
 	e, err := exec.New(command, t.Dir, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))

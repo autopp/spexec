@@ -190,7 +190,7 @@ var _ = Describe("Validator", func() {
 
 	Describe("MustBeStringExpr", func() {
 		Context("with a string", func() {
-			It("returns literalString and true", func() {
+			It("returns literalStringExpr and true", func() {
 				given := "hello"
 				actual, b := v.MustBeStringExpr(given)
 
@@ -200,7 +200,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		Context("with a map which contains type='env' and name='MESSAGE'", func() {
-			It("returns literalString and true", func() {
+			It("returns envStringExpr and true", func() {
 				given := Map{"type": "env", "name": "MESSAGE"}
 				actual, b := v.MustBeStringExpr(given)
 
@@ -216,6 +216,36 @@ var _ = Describe("Validator", func() {
 
 				Expect(b).To(BeFalse())
 				Expect(v.Error()).To(BeValidationError(`$: should have .name as string`))
+			})
+		})
+
+		Context("with a map which contains type='file' and value='hello world'", func() {
+			It("returns fileStringExpr and true", func() {
+				given := Map{"type": "file", "value": "hello"}
+				actual, b := v.MustBeStringExpr(given)
+
+				Expect(actual).To(Equal(model.NewFileStringExpr("hello")))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a map which contains type='file' and value is not string", func() {
+			It("adds violation and returns something and false", func() {
+				given := Map{"type": "file", "value": 42}
+				_, b := v.MustBeStringExpr(given)
+
+				Expect(b).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(`$.value: should be string, but is int`))
+			})
+		})
+
+		Context("with a map which contains type='file' and dose not contain value", func() {
+			It("adds violation and returns something and false", func() {
+				given := Map{"type": "file"}
+				_, b := v.MustBeStringExpr(given)
+
+				Expect(b).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(`$: should have .value as string`))
 			})
 		})
 
