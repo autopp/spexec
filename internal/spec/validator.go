@@ -159,6 +159,12 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 			return nil, false
 		}
 		return model.NewEnvStringExpr(name), true
+	case "file":
+		value, ok := v.MustHaveString(m, "value")
+		if !ok {
+			return nil, false
+		}
+		return model.NewFileStringExpr(value), true
 	default:
 		v.InField("type", func() {
 			v.AddViolation("unknown type %q", t)
