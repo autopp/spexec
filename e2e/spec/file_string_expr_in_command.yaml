@@ -22,3 +22,33 @@ tests:
     expect:
       status:
         eq: 0
+  - name: 'file string expr with YAML format in command'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      type: yaml
+      value:
+        tests:
+          - command:
+              - 'cat'
+              - type: file
+                format: yaml
+                value:
+                  foo:
+                    - hello
+                    - 42
+                    - true
+            expect:
+              status:
+                success: true
+              stdout:
+                eq: |
+                  foo:
+                      - hello
+                      - 42
+                      - true
+    expect:
+      status:
+        eq: 0
