@@ -26,6 +26,7 @@ import (
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
+	"gopkg.in/yaml.v3"
 )
 
 var envVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w*$`)
@@ -160,11 +161,42 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 		}
 		return model.NewEnvStringExpr(name), true
 	case "file":
-		value, ok := v.MustHaveString(m, "value")
+		format, exists, ok := v.MayHaveString(m, "format")
 		if !ok {
 			return nil, false
 		}
-		return model.NewFileStringExpr(value), true
+		if !exists {
+			format = "raw"
+		}
+
+		switch format {
+		case "raw":
+			value, ok := v.MustHaveString(m, "value")
+			if !ok {
+				return nil, false
+			}
+			return model.NewFileStringExpr(value), true
+		case "yaml":
+			value, ok := v.MustHave(m, "value")
+			if !ok {
+				return nil, false
+			}
+			marshaled, err := yaml.Marshal(value)
+			if err != nil {
+				v.InField("value", func() {
+					v.AddViolation("cannot encode to a YAML string: %s", err)
+				})
+				return nil, false
+			}
+
+			return model.NewFileStringExpr(string(marshaled)), true
+		default:
+			v.InField("format", func() {
+				v.AddViolation(`should be a "raw" or "yaml", but is %q`, format)
+			})
+
+			return nil, false
+		}
 	default:
 		v.InField("type", func() {
 			v.AddViolation("unknown type %q", t)
