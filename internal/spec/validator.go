@@ -37,7 +37,7 @@ type violation struct {
 }
 
 type Validator struct {
-	filename   string
+	Filename   string
 	dir        string
 	paths      []string
 	violations []violation
@@ -61,7 +61,7 @@ func NewValidator(filename string) (*Validator, error) {
 	}
 
 	return &Validator{
-		filename:   filename,
+		Filename:   filename,
 		dir:        dir,
 		paths:      []string{"$"},
 		violations: make([]violation, 0),

@@ -39,10 +39,11 @@ var _ = Describe("Parser", func() {
 
 			Entry("testdata/test.yaml", "test.yaml", Elements{
 				"0": PointTo(MatchAllFields(Fields{
-					"Name":    Equal("test_answer"),
-					"Command": Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
-					"Dir":     HaveSuffix("/testdata"),
-					"Stdin":   Equal([]byte("hello")),
+					"Name":         Equal("test_answer"),
+					"SpecFilename": HaveSuffix("testdata/test.yaml"),
+					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
+					"Dir":          HaveSuffix("/testdata"),
+					"Stdin":        Equal([]byte("hello")),
 					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},
 					}),
@@ -54,10 +55,11 @@ var _ = Describe("Parser", func() {
 			}),
 			Entry("testdata/test.json", "test.json", Elements{
 				"0": PointTo(MatchAllFields(Fields{
-					"Name":    Equal("test_answer"),
-					"Command": Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
-					"Dir":     HaveSuffix("/testdata"),
-					"Stdin":   Equal([]byte("hello")),
+					"Name":         Equal("test_answer"),
+					"SpecFilename": HaveSuffix("testdata/test.json"),
+					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
+					"Dir":          HaveSuffix("/testdata"),
+					"Stdin":        Equal([]byte("hello")),
 					"Env": Equal([]util.StringVar{
 						{Name: "ANSWER", Value: "42"},
 					}),
@@ -69,9 +71,10 @@ var _ = Describe("Parser", func() {
 			}),
 			Entry("testdata/yaml-stdin.yaml", "yaml-stdin.yaml", Elements{
 				"0": PointTo(MatchAllFields(Fields{
-					"Name":    Equal("test_answer"),
-					"Command": Equal([]model.StringExpr{model.NewLiteralStringExpr("echo")}),
-					"Dir":     HaveSuffix("/testdata"),
+					"Name":         Equal("test_answer"),
+					"SpecFilename": HaveSuffix("testdata/yaml-stdin.yaml"),
+					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo")}),
+					"Dir":          HaveSuffix("/testdata"),
 					"Stdin": Equal([]byte(`array:
     - 1
     - true

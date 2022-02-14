@@ -31,12 +31,12 @@ import (
 )
 
 type options struct {
-	filename string
-	isStdin  bool
-	output   string
-	color    string
-	format   string
-	isStrict bool
+	filenames []string
+	isStdin   bool
+	output    string
+	color     string
+	format    string
+	isStrict  bool
 }
 
 // Main is the entrypoint of command line
@@ -94,10 +94,10 @@ func (o *options) complete(cmd *cobra.Command, args []string) error {
 	if len(args) == 0 {
 		return errors.Errorf(errors.ErrInvalidSpec, "spec is not given")
 	} else if args[0] == "-" {
-		o.filename = "<stdin>"
+		o.filenames = []string{"<stdin>"}
 		o.isStdin = true
 	} else {
-		o.filename = args[0]
+		o.filenames = args
 		o.isStdin = false
 	}
 
@@ -127,12 +127,29 @@ func (o *options) run() error {
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 
 	p := parser.New(statusMR, streamMR, o.isStrict)
+	specs := []struct {
+		filename string
+		tests    []*model.Test
+	}{}
 	var tests []*model.Test
 	var err error
 	if o.isStdin {
 		tests, err = p.ParseStdin()
+		specs = append(specs, struct {
+			filename string
+			tests    []*model.Test
+		}{"<stdin>", tests})
 	} else {
-		tests, err = p.ParseFile(o.filename)
+		for _, filename := range o.filenames {
+			tests, err = p.ParseFile(filename)
+			if err != nil {
+				break
+			}
+			specs = append(specs, struct {
+				filename string
+				tests    []*model.Test
+			}{filename, tests})
+		}
 	}
 	if err != nil {
 		return err
@@ -179,7 +196,11 @@ func (o *options) run() error {
 	if err != nil {
 		return err
 	}
-	results := runner.RunTests(o.filename, tests, reporter)
+
+	var results []*model.TestResult
+	for _, spec := range specs {
+		results = append(results, runner.RunTests(spec.filename, spec.tests, reporter)...)
+	}
 
 	allGreen := true
 	for _, r := range results {
