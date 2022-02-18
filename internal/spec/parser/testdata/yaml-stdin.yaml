@@ -3,7 +3,7 @@ tests:
     command:
       - echo
     stdin:
-      type: yaml
+      format: yaml
       value:
         array:
           - 1
