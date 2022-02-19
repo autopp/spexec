@@ -163,16 +163,16 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 			t.Stdin = []byte(stdinString)
 		} else if stdinMap, ok := v.MayBeMap(stdin); ok {
 			if p.isStrict {
-				v.MustContainOnly(stdinMap, "type", "value")
+				v.MustContainOnly(stdinMap, "format", "value")
 			}
 
-			stdinType, typeOk := v.MustHaveString(stdinMap, "type")
+			stdinFormat, typeOk := v.MustHaveString(stdinMap, "format")
 			stdinValue, valueOk := v.MustHave(stdinMap, "value")
 			if !typeOk || !valueOk {
 				return
 			}
 
-			switch stdinType {
+			switch stdinFormat {
 			case "yaml":
 				value, err := yaml.Marshal(stdinValue)
 				if err != nil {
@@ -184,7 +184,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 				t.Stdin = value
 			default:
 				v.InField("type", func() {
-					v.AddViolation(`should be a "yaml", but is %q`, stdinType)
+					v.AddViolation(`should be a "yaml", but is %q`, stdinFormat)
 				})
 			}
 		} else {
