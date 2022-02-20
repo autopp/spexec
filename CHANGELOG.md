@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v0.3.0
+
+New features
+- Add file string expr for command (#36, #37)
+- Accept multiple specs from command line (#38, #39)
+
+Breaking chagnes
+- Rename `tests[].stdin.type` to `tests[].stdin.format`
+
 ## v0.2.0
 
 New features
