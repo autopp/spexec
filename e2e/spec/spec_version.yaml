@@ -5,7 +5,7 @@ tests:
         name: SPEXEC
       - '-'
     stdin:
-      type: yaml
+      format: yaml
       value:
         spexec: v0
         tests: []
@@ -18,7 +18,7 @@ tests:
         name: SPEXEC
       - '-'
     stdin:
-      type: yaml
+      format: yaml
       value:
         spexec: foo
         tests: []
