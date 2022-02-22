@@ -224,7 +224,7 @@ var _ = Describe("Validator", func() {
 				given := Map{"type": "file", "value": "hello"}
 				actual, b := v.MustBeStringExpr(given)
 
-				Expect(actual).To(Equal(model.NewFileStringExpr("hello")))
+				Expect(actual).To(Equal(model.NewFileStringExpr("", "hello")))
 				Expect(b).To(BeTrue())
 			})
 		})

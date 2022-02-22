@@ -69,17 +69,18 @@ var _ = Describe("envStringExpr", func() {
 })
 
 var _ = Describe("fileStringExpr", func() {
+	pattern := "*.yaml"
 	contents := "hello"
 
 	var file StringExpr
 
 	JustBeforeEach(func() {
-		file = NewFileStringExpr(contents)
+		file = NewFileStringExpr(pattern, contents)
 	})
 
 	Describe("String()", func() {
 		It("returns dummy file path", func() {
-			Expect(file.String()).To(Equal(os.TempDir() + "/somefile"))
+			Expect(file.String()).To(SatisfyAll(HavePrefix(os.TempDir()), HaveSuffix(".yaml")))
 		})
 	})
 
