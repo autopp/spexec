@@ -175,7 +175,7 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 			if !ok {
 				return nil, false
 			}
-			return model.NewFileStringExpr(value), true
+			return model.NewFileStringExpr("", value), true
 		case "yaml":
 			value, ok := v.MustHave(m, "value")
 			if !ok {
@@ -189,7 +189,7 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 				return nil, false
 			}
 
-			return model.NewFileStringExpr(string(marshaled)), true
+			return model.NewFileStringExpr("*.yaml", string(marshaled)), true
 		default:
 			v.InField("format", func() {
 				v.AddViolation(`should be a "raw" or "yaml", but is %q`, format)
