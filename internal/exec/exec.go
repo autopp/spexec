@@ -17,6 +17,7 @@ package exec
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"syscall"
@@ -38,11 +39,13 @@ type ExecResult struct {
 }
 
 type Exec struct {
-	Command []string
-	Dir     string
-	Stdin   []byte
-	Env     []util.StringVar
-	Timeout time.Duration
+	Command   []string
+	Dir       string
+	Stdin     []byte
+	Env       []util.StringVar
+	Timeout   time.Duration
+	TeeStdout bool
+	TeeStderr bool
 }
 
 const defaultTimeout = 10 * time.Second
@@ -62,6 +65,28 @@ func (t OptionTimeout) Apply(e *Exec) error {
 
 func WithTimeout(t time.Duration) Option {
 	return OptionTimeout(t)
+}
+
+type OptionTeeStdout bool
+
+func (t OptionTeeStdout) Apply(e *Exec) error {
+	e.TeeStdout = bool(t)
+	return nil
+}
+
+func WithTeeStdout(t bool) Option {
+	return OptionTeeStdout(t)
+}
+
+type OptionTeeStderr bool
+
+func (t OptionTeeStderr) Apply(e *Exec) error {
+	e.TeeStderr = bool(t)
+	return nil
+}
+
+func WithTeeStderr(t bool) Option {
+	return OptionTeeStderr(t)
 }
 
 func New(command []string, dir string, stdin []byte, env []util.StringVar, opts ...Option) (*Exec, error) {
@@ -86,9 +111,17 @@ func (e *Exec) Run() *ExecResult {
 	cmd.Dir = e.Dir
 	cmd.Stdin = bytes.NewReader(e.Stdin)
 	stdout := new(bytes.Buffer)
-	cmd.Stdout = stdout
+	if e.TeeStdout {
+		cmd.Stdout = io.MultiWriter(os.Stdout, stdout)
+	} else {
+		cmd.Stdout = stdout
+	}
 	stderr := new(bytes.Buffer)
-	cmd.Stderr = stderr
+	if e.TeeStdout {
+		cmd.Stderr = io.MultiWriter(os.Stderr, stderr)
+	} else {
+		cmd.Stderr = stderr
+	}
 	cmd.Env = os.Environ()
 	for _, v := range e.Env {
 		kv := fmt.Sprintf("%s=%s", v.Name, v.Value)
