@@ -368,6 +368,20 @@ func (v *Validator) MayHaveInt(m Map, key string) (int, bool, bool) {
 	return i, ok, ok
 }
 
+func (v *Validator) MayHaveBool(m Map, key string) (bool, bool, bool) {
+	x, ok := m[key]
+	if !ok {
+		return false, false, true
+	}
+
+	var b bool
+	v.InField(key, func() {
+		b, ok = v.MustBeBool(x)
+	})
+
+	return b, ok, ok
+}
+
 func (v *Validator) MayHaveDuration(m Map, key string) (time.Duration, bool, bool) {
 	x, ok := m[key]
 	if !ok {

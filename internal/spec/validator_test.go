@@ -606,6 +606,38 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayHaveBool()", func() {
+		Context("when the given map has specified field which is a bool", func() {
+			It("returns the it, true, true", func() {
+				b, exists, ok := v.MayHaveBool(Map{"field": true}, "field")
+
+				Expect(b).To(Equal(true))
+				Expect(exists).To(BeTrue())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("returns something, false, true", func() {
+				_, exists, ok := v.MayHaveBool(Map{}, "field")
+
+				Expect(v.Error()).To(BeNil())
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map has specified field which is not a bool", func() {
+			It("dose not call the callback, add violation and returns something, false, false", func() {
+				_, exists, ok := v.MayHaveBool(Map{"field": "hello"}, "field")
+
+				Expect(v.Error()).To(BeValidationError("$.field: should be bool, but is string"))
+				Expect(exists).To(BeFalse())
+				Expect(ok).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MayHaveDuration()", func() {
 		Context("when the given map has specified field which is a duration string", func() {
 			It("returns the duration, true, true", func() {
