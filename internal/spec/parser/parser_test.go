@@ -51,6 +51,8 @@ var _ = Describe("Parser", func() {
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
 					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
 					"StderrMatcher": BeNil(),
+					"TeeStdout":     BeFalse(),
+					"TeeStderr":     BeFalse(),
 				})),
 			}),
 			Entry("testdata/test.json", "test.json", Elements{
@@ -67,6 +69,8 @@ var _ = Describe("Parser", func() {
 					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
 					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
 					"StderrMatcher": BeNil(),
+					"TeeStdout":     BeFalse(),
+					"TeeStderr":     BeFalse(),
 				})),
 			}),
 			Entry("testdata/yaml-stdin.yaml", "yaml-stdin.yaml", Elements{
@@ -85,6 +89,8 @@ var _ = Describe("Parser", func() {
 					"StatusMatcher": BeNil(),
 					"StdoutMatcher": BeNil(),
 					"StderrMatcher": BeNil(),
+					"TeeStdout":     BeFalse(),
+					"TeeStderr":     BeFalse(),
 				})),
 			}),
 		)
