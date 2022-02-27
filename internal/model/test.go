@@ -34,6 +34,8 @@ type Test struct {
 	StderrMatcher StreamMatcher
 	Env           []util.StringVar
 	Timeout       time.Duration
+	TeeStdout     bool
+	TeeStderr     bool
 }
 
 func (t *Test) GetName() string {
@@ -62,7 +64,7 @@ func (t *Test) Run() (*TestResult, error) {
 		return nil, err
 	}
 
-	e, err := exec.New(command, t.Dir, t.Stdin, t.Env, exec.WithTimeout(t.Timeout))
+	e, err := exec.New(command, t.Dir, t.Stdin, t.Env, exec.WithTimeout(t.Timeout), exec.WithTeeStdout(t.TeeStdout), exec.WithTeeStderr(t.TeeStderr))
 	if err != nil {
 		return nil, err
 	}

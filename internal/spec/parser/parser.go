@@ -146,7 +146,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 	}
 
 	if p.isStrict {
-		v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout")
+		v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout", "teeStdout", "teeStderr")
 	}
 
 	t := new(model.Test)
@@ -215,6 +215,14 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 			t.StderrMatcher = p.streamMR.ParseMatcher(v, stderr)
 		})
 	})
+
+	if teeStdout, exists, _ := v.MayHaveBool(tc, "teeStdout"); exists {
+		t.TeeStdout = teeStdout
+	}
+
+	if teeStderr, exists, _ := v.MayHaveBool(tc, "teeStderr"); exists {
+		t.TeeStderr = teeStderr
+	}
 
 	t.Dir = v.GetDir()
 
