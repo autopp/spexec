@@ -18,9 +18,9 @@ var _ = Describe("BeEmptyMatcher", func() {
 			Expect(message).To(Equal(expectedMessage))
 		},
 		Entry(`when expectation is empty and actual is "", returns true`, true, "", true, `should not be empty, but is empty`),
-		Entry(`when expectation is empty and actual is "hello", returns false`, true, "hello", false, `should be empty, but is not (given: "hello")`),
+		Entry(`when expectation is empty and actual is "hello", returns false`, true, "hello", false, "should be empty, but is not:\n----------------------------------------\nhello\n----------------------------------------"),
 		Entry(`when expectation is not empty and actual is "", returns false`, false, "", false, "should not be empty, but is empty"),
-		Entry(`when expectation is not empty and actual is "hello", returns false`, false, "hello", true, `should be empty, but is not (given: "hello")`),
+		Entry(`when expectation is not empty and actual is "hello", returns false`, false, "hello", true, "should be empty, but is not:\n----------------------------------------\nhello\n----------------------------------------"),
 	)
 })
 
