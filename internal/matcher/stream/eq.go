@@ -21,6 +21,7 @@ import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
+	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 type EqMatcher struct {
@@ -32,7 +33,9 @@ func (m *EqMatcher) MatchStream(actual []byte) (bool, string, error) {
 		return true, fmt.Sprintf("should not be %q, but got it", m.expected), nil
 	}
 
-	return false, fmt.Sprintf("should be %q, but got %q", m.expected, string(actual)), nil
+	dmp := diffmatchpatch.New()
+	diffs := dmp.DiffMain(m.expected, string(actual), false)
+	return false, fmt.Sprintf("should be %q, but got:\n----------------------------------------\n%s\n----------------------------------------", m.expected, dmp.DiffPrettyText(diffs)), nil
 }
 
 func ParseEqMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
