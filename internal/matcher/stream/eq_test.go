@@ -22,7 +22,7 @@ var _ = Describe("EqMatcher", func() {
 			Expect(message).To(Equal(expectedMessage))
 		},
 		Entry("when actual equals to expected, returns true", "hello", true, `should not be "hello", but got it`),
-		Entry("when actual dose not equal to expected, returns false", "goodbye\x01", false, `should be "hello", but got "goodbye\x01"`),
+		Entry("when actual dose not equal to expected, returns false", "goodbye\x01", false, "should be \"hello\", but got:\n----------------------------------------\n\x1b[31mh\x1b[0m\x1b[32mgoodby\x1b[0me\x1b[31mllo\x1b[0m\x1b[32m\x01\x1b[0m\n----------------------------------------"),
 	)
 })
 
