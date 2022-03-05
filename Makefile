@@ -14,7 +14,7 @@
 
 .PHONY: test
 test:
-	ginkgo ./...
+	ginkgo --cover ./...
 
 .PHONY: e2e
 e2e:
