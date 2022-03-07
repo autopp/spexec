@@ -28,8 +28,12 @@ var _ = Describe("UnmarshalJSON", func() {
 		),
 	)
 
-	It("with invalid format, returns err", func() {
-		var actual interface{}
-		Expect(UnmarshalJSON([]byte(`{"message": "hello"}}`), &actual)).To(HaveOccurred())
-	})
+	DescribeTable("failure cases",
+		func(given string) {
+			var actual interface{}
+			Expect(UnmarshalJSON([]byte(given), &actual)).To(HaveOccurred())
+		},
+		Entry("with invalid format, returns err", `{message: "hello"}`),
+		Entry("with extra character, returns err", `{"message": "hello"}}`),
+	)
 })

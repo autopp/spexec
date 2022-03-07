@@ -143,7 +143,6 @@ func (e *Exec) Run() *ExecResult {
 		}
 	}
 	es := <-ch
-	es.GetExitCode()
 	ps := cmd.ProcessState
 
 	if ps.Exited() {

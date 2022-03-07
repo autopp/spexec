@@ -212,7 +212,7 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 	case json.Number:
 		i, err := n.Int64()
 		if err != nil {
-			v.AddViolation("should be int, but is %s", TypeNameOf(x))
+			v.AddViolation("should be int, but is invalid json.Number: %s", err)
 		}
 		return int(i), err == nil
 	default:

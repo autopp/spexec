@@ -2,6 +2,9 @@ package spec
 
 import (
 	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/autopp/spexec/internal/model"
@@ -11,6 +14,13 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/types"
 )
+
+type unmarshalableToYAML struct {
+}
+
+func (unmarshalableToYAML) MarshalYAML() (interface{}, error) {
+	return nil, errors.New("cannot marshal to YAML")
+}
 
 var _ = Describe("Validator", func() {
 	var v *Validator
@@ -26,6 +36,24 @@ var _ = Describe("Validator", func() {
 
 	JustBeforeEach(func() {
 		v, _ = NewValidator("")
+	})
+
+	Describe("Filename and GetDir()", func() {
+		It("with no filename, returns empty string and current directory", func() {
+			Expect(v.Filename).To(BeEmpty())
+			wd, err := os.Getwd()
+			if err != nil {
+				Fail("os.Getwd() fails: " + err.Error())
+			}
+			Expect(v.GetDir()).To(Equal(wd))
+		})
+
+		It("with filename, returns absolute path and directory of it", func() {
+			v, _ = NewValidator("validator_test.go")
+			filename, _ := filepath.Abs("validator_test.go")
+			Expect(v.Filename).To(Equal(filename))
+			Expect(v.GetDir()).To(Equal(filepath.Dir(filename)))
+		})
 	})
 
 	Describe("AddViolation() and Error()", func() {
@@ -199,53 +227,111 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("with a map which contains type='env' and name='MESSAGE'", func() {
-			It("returns envStringExpr and true", func() {
-				given := Map{"type": "env", "name": "MESSAGE"}
-				actual, b := v.MustBeStringExpr(given)
+		Context("with a map which contains type='env'", func() {
+			Context("and name='MESSAGE'", func() {
+				It("returns envStringExpr and true", func() {
+					given := Map{"type": "env", "name": "MESSAGE"}
+					actual, b := v.MustBeStringExpr(given)
 
-				Expect(actual).To(Equal(model.NewEnvStringExpr("MESSAGE")))
-				Expect(b).To(BeTrue())
+					Expect(actual).To(Equal(model.NewEnvStringExpr("MESSAGE")))
+					Expect(b).To(BeTrue())
+				})
+			})
+
+			Context("and dose not contain name", func() {
+				It("adds violation and returns something and false", func() {
+					given := Map{"type": "env"}
+					_, b := v.MustBeStringExpr(given)
+
+					Expect(b).To(BeFalse())
+					Expect(v.Error()).To(BeValidationError(`$: should have .name as string`))
+				})
 			})
 		})
 
-		Context("with a map which contains type='env' and dose not contain name", func() {
-			It("adds violation and returns something and false", func() {
-				given := Map{"type": "env"}
-				_, b := v.MustBeStringExpr(given)
+		Context("with a map which contains type='file'", func() {
+			Context("and value='hello world'", func() {
+				It("returns fileStringExpr and true", func() {
+					given := Map{"type": "file", "value": "hello"}
+					actual, b := v.MustBeStringExpr(given)
 
-				Expect(b).To(BeFalse())
-				Expect(v.Error()).To(BeValidationError(`$: should have .name as string`))
+					Expect(actual).To(Equal(model.NewFileStringExpr("", "hello")))
+					Expect(b).To(BeTrue())
+				})
 			})
-		})
 
-		Context("with a map which contains type='file' and value='hello world'", func() {
-			It("returns fileStringExpr and true", func() {
-				given := Map{"type": "file", "value": "hello"}
-				actual, b := v.MustBeStringExpr(given)
+			Context("and value is not string", func() {
+				It("adds violation and returns something and false", func() {
+					given := Map{"type": "file", "value": 42}
+					_, b := v.MustBeStringExpr(given)
 
-				Expect(actual).To(Equal(model.NewFileStringExpr("", "hello")))
-				Expect(b).To(BeTrue())
+					Expect(b).To(BeFalse())
+					Expect(v.Error()).To(BeValidationError(`$.value: should be string, but is int`))
+				})
 			})
-		})
 
-		Context("with a map which contains type='file' and value is not string", func() {
-			It("adds violation and returns something and false", func() {
-				given := Map{"type": "file", "value": 42}
-				_, b := v.MustBeStringExpr(given)
+			Context("and format='yaml'", func() {
+				Context("and value is yaml compatible", func() {
+					It("returns fileStringExpr and true", func() {
+						given := Map{"type": "file", "format": "yaml", "value": Map{"answer": 42}}
+						actual, b := v.MustBeStringExpr(given)
 
-				Expect(b).To(BeFalse())
-				Expect(v.Error()).To(BeValidationError(`$.value: should be string, but is int`))
+						Expect(actual).To(Equal(model.NewFileStringExpr("*.yaml", "answer: 42\n")))
+						Expect(b).To(BeTrue())
+						Expect(v.Error()).NotTo(HaveOccurred())
+					})
+				})
+
+				Context("and value is not yaml compatible", func() {
+
+					It("adds violation and returns something and false", func() {
+						given := Map{"type": "file", "format": "yaml", "value": Map{"answer": unmarshalableToYAML{}}}
+						_, b := v.MustBeStringExpr(given)
+
+						Expect(b).To(BeFalse())
+						Expect(v.Error()).To(BeValidationError(`$.value: cannot encode to a YAML string: cannot marshal to YAML`))
+					})
+				})
+
+				Context("and dose not contain value", func() {
+					It("adds violation and returns something and false", func() {
+						given := Map{"type": "file", "format": "yaml"}
+						_, b := v.MustBeStringExpr(given)
+
+						Expect(b).To(BeFalse())
+						Expect(v.Error()).To(BeValidationError(`$: should have .value`))
+					})
+				})
 			})
-		})
 
-		Context("with a map which contains type='file' and dose not contain value", func() {
-			It("adds violation and returns something and false", func() {
-				given := Map{"type": "file"}
-				_, b := v.MustBeStringExpr(given)
+			Context("and format='unknown'", func() {
+				It("adds violation and returns something and false", func() {
+					given := Map{"type": "file", "format": "unknown"}
+					_, b := v.MustBeStringExpr(given)
 
-				Expect(b).To(BeFalse())
-				Expect(v.Error()).To(BeValidationError(`$: should have .value as string`))
+					Expect(b).To(BeFalse())
+					Expect(v.Error()).To(BeValidationError(`$.format: should be a "raw" or "yaml", but is "unknown"`))
+				})
+			})
+
+			Context("and format is not string", func() {
+				It("adds violation and returns something and false", func() {
+					given := Map{"type": "file", "format": 42}
+					_, b := v.MustBeStringExpr(given)
+
+					Expect(b).To(BeFalse())
+					Expect(v.Error()).To(BeValidationError(`$.format: should be string, but is int`))
+				})
+			})
+
+			Context("and dose not contain value", func() {
+				It("adds violation and returns something and false", func() {
+					given := Map{"type": "file"}
+					_, b := v.MustBeStringExpr(given)
+
+					Expect(b).To(BeFalse())
+					Expect(v.Error()).To(BeValidationError(`$: should have .value as string`))
+				})
 			})
 		})
 
@@ -283,9 +369,19 @@ var _ = Describe("Validator", func() {
 		Context("with a int", func() {
 			It("returns the given int and true", func() {
 				given := 42
-				m, b := v.MustBeInt(given)
+				i, b := v.MustBeInt(given)
 
-				Expect(m).To(Equal(given))
+				Expect(i).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a valid json.Number", func() {
+			It("returns the int represented and true", func() {
+				given := json.Number("42")
+				i, b := v.MustBeInt(given)
+
+				Expect(i).To(Equal(42))
 				Expect(b).To(BeTrue())
 			})
 		})
@@ -295,6 +391,16 @@ var _ = Describe("Validator", func() {
 				_, b := v.MustBeInt("hello")
 
 				Expect(v.Error()).To(BeValidationError("$: should be int, but is string"))
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with a invalid json.Number", func() {
+			It("returns the int represented and true", func() {
+				given := json.Number("abc")
+				_, b := v.MustBeInt(given)
+
+				Expect(v.Error()).To(BeValidationError(HavePrefix("$: should be int, but is invalid json.Number: ")))
 				Expect(b).To(BeFalse())
 			})
 		})
@@ -334,7 +440,38 @@ var _ = Describe("Validator", func() {
 			Entry(`given: "1m"`, "1m", 1*time.Minute),
 			Entry(`given: "500ms"`, "500ms", 500*time.Millisecond),
 			Entry(`given: 10`, 10, 10*time.Second),
+			Entry(`given: 10 (json.Number)`, json.Number("10"), 10*time.Second),
 		)
+
+		Context("when the given value is not integer nor string", func() {
+			It("adds violation and returns something and false", func() {
+				_, b := v.MustBeDuration(true)
+
+				Expect(v.Error()).To(BeValidationError("$: should be positive integer or duration string, but is bool"))
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MustHave()", func() {
+		Context("when the given map has specified field", func() {
+			It("returns value of the field and true", func() {
+				contained := Seq{42, "hello"}
+				x, ok := v.MustHave(Map{"field": contained}, "field")
+
+				Expect(x).To(Equal(contained))
+				Expect(ok).To(BeTrue())
+			})
+		})
+
+		Context("when the given map dose not have specified field", func() {
+			It("adds violation and returns something and false", func() {
+				_, ok := v.MustHave(make(Map), "field")
+
+				Expect(ok).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError("$: should have .field"))
+			})
+		})
 	})
 
 	Describe("MayHave()", func() {
@@ -826,6 +963,7 @@ var _ = DescribeTable("TypeOf()",
 	Entry(`when slice given, returns TypeSeq`, Seq{42, true, "hello"}, TypeSeq),
 	Entry(`when string key map given, returns TypeMap`, Map{"message": "hello"}, TypeMap),
 	Entry(`when nil given, returns TypeNil`, nil, TypeNil),
+	Entry(`when other given, returns TypeUnknown`, make(chan int), TypeUnkown),
 )
 
 var _ = DescribeTable("TypeNameOf()",
@@ -839,4 +977,5 @@ var _ = DescribeTable("TypeNameOf()",
 	Entry(`when slice given, returns "seq"`, Seq{42, true, "hello"}, "seq"),
 	Entry(`when string key map given, returns "map"`, Map{"message": "hello"}, "map"),
 	Entry(`when nil given, returns "nil"`, nil, "nil"),
+	Entry(`when other given, returns type name`, make(chan int), "chan int"),
 )

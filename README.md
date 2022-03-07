@@ -1,5 +1,8 @@
 # spexec
 
+![Github Actions](https://github.com/autopp/spexec/actions/workflows/push-main.yml/badge.svg)
+[![codecov](https://codecov.io/gh/autopp/spexec/branch/main/graph/badge.svg)](https://codecov.io/gh/autopp/spexec)
+
 ## Install
 
 Download from [releases page](https://github.com/autopp/spexec/releases).
