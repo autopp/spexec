@@ -369,9 +369,19 @@ var _ = Describe("Validator", func() {
 		Context("with a int", func() {
 			It("returns the given int and true", func() {
 				given := 42
-				m, b := v.MustBeInt(given)
+				i, b := v.MustBeInt(given)
 
-				Expect(m).To(Equal(given))
+				Expect(i).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a valid json.Number", func() {
+			It("returns the int represented and true", func() {
+				given := json.Number("42")
+				i, b := v.MustBeInt(given)
+
+				Expect(i).To(Equal(42))
 				Expect(b).To(BeTrue())
 			})
 		})
@@ -381,6 +391,16 @@ var _ = Describe("Validator", func() {
 				_, b := v.MustBeInt("hello")
 
 				Expect(v.Error()).To(BeValidationError("$: should be int, but is string"))
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with a invalid json.Number", func() {
+			It("returns the int represented and true", func() {
+				given := json.Number("abc")
+				_, b := v.MustBeInt(given)
+
+				Expect(v.Error()).To(BeValidationError(HavePrefix("$: should be int, but is invalid json.Number: ")))
 				Expect(b).To(BeFalse())
 			})
 		})
