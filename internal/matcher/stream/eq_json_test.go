@@ -53,4 +53,13 @@ var _ = Describe("ParseEqJSONMatcher", func() {
 			Expect(eq.expected).To(Equal(spec.Map{"code": json.Number("200"), "messages": spec.Seq{"hello"}}))
 		})
 	})
+
+	Describe("with json incompatible", func() {
+		It("adds violation and returns nil", func() {
+			m := ParseEqJSONMatcher(v, r, map[interface{}]interface{}{1: 42})
+
+			Expect(m).To(BeNil())
+			Expect(v.Error()).To(MatchError(HavePrefix("$: parameter is not json value: ")))
+		})
+	})
 })
