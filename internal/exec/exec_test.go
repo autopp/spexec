@@ -3,6 +3,7 @@ package exec
 import (
 	"time"
 
+	"github.com/autopp/spexec/internal/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -46,6 +47,24 @@ var _ = Describe("WithTeeStderr", func() {
 
 		Expect(err).NotTo(HaveOccurred())
 		Expect(e.TeeStderr).To(BeTrue())
+	})
+})
+
+var _ = Describe("New()", func() {
+	Describe("without option", func() {
+		It("returns new Exec", func() {
+			env := []util.StringVar{{Name: "ANSWER", Value: "42"}}
+			e, err := New([]string{"echo", "hello"}, "/tmp", nil, env)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(e).To(Equal(&Exec{
+				Command: []string{"echo", "hello"},
+				Dir:     "/tmp",
+				Stdin:   nil,
+				Env:     env,
+				Timeout: defaultTimeout,
+			}))
+		})
 	})
 })
 
