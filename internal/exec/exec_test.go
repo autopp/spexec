@@ -7,9 +7,50 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var _ = Describe("WithTimeout", func() {
+	Context("when the given is positive", func() {
+		It("sets .Timeout", func() {
+			e := &Exec{}
+			err := WithTimeout(42 * time.Second).Apply(e)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(e.Timeout).To(Equal(42 * time.Second))
+		})
+	})
+
+	Context("when the given is not positive", func() {
+		It("dose not set .Timeout", func() {
+			e := &Exec{}
+			err := WithTimeout(-42 * time.Second).Apply(e)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(e.Timeout).To(Equal(time.Duration(0)))
+		})
+	})
+})
+
+var _ = Describe("WithTeeStdout", func() {
+	It("sets .TeeStdout", func() {
+		e := &Exec{}
+		err := WithTeeStdout(true).Apply(e)
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(e.TeeStdout).To(BeTrue())
+	})
+})
+
+var _ = Describe("WithTeeStderr", func() {
+	It("sets .TeeStderr", func() {
+		e := &Exec{}
+		err := WithTeeStderr(true).Apply(e)
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(e.TeeStderr).To(BeTrue())
+	})
+})
+
 var _ = Describe("Exec", func() {
 	DescribeTable("Run()",
-		// TODO: test about of signal
 		func(e *Exec, exited bool, status int, signal string, stdout, stderr string, isTimeout bool) {
 			if e.Timeout == 0 {
 				e.Timeout = defaultTimeout
