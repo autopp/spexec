@@ -1,6 +1,7 @@
 package exec
 
 import (
+	"errors"
 	"time"
 
 	"github.com/autopp/spexec/internal/util"
@@ -50,6 +51,16 @@ var _ = Describe("WithTeeStderr", func() {
 	})
 })
 
+type testOption struct {
+	ret    error
+	called bool
+}
+
+func (o *testOption) Apply(*Exec) error {
+	o.called = true
+	return o.ret
+}
+
 var _ = Describe("New()", func() {
 	Describe("without option", func() {
 		It("returns new Exec", func() {
@@ -64,6 +75,39 @@ var _ = Describe("New()", func() {
 				Env:     env,
 				Timeout: defaultTimeout,
 			}))
+		})
+	})
+
+	Describe("with options (all succeeded)", func() {
+		It("invokes given options and returns new Exec", func() {
+			o1 := &testOption{ret: nil}
+			o2 := &testOption{ret: nil}
+			env := []util.StringVar{{Name: "ANSWER", Value: "42"}}
+			e, err := New([]string{"echo", "hello"}, "/tmp", nil, env, o1, o2)
+
+			Expect(err).NotTo(HaveOccurred())
+			Expect(e).To(Equal(&Exec{
+				Command: []string{"echo", "hello"},
+				Dir:     "/tmp",
+				Stdin:   nil,
+				Env:     env,
+				Timeout: defaultTimeout,
+			}))
+			Expect(o1.called).To(BeTrue())
+			Expect(o2.called).To(BeTrue())
+		})
+	})
+
+	Describe("with options (failed at first)", func() {
+		It("invokes given options and returns new Exec", func() {
+			o1 := &testOption{ret: errors.New("option error")}
+			o2 := &testOption{ret: nil}
+			env := []util.StringVar{{Name: "ANSWER", Value: "42"}}
+			_, err := New([]string{"echo", "hello"}, "/tmp", nil, env, o1, o2)
+
+			Expect(err).To(MatchError("option error"))
+			Expect(o1.called).To(BeTrue())
+			Expect(o2.called).To(BeFalse())
 		})
 	})
 })
