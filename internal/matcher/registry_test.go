@@ -63,7 +63,7 @@ func parseEmptyMatcher(_ *spec.Validator, r *StreamMatcherRegistry, x interface{
 
 func parseViolationStreamMatcher(v *spec.Validator, _ *StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	v.AddViolation(violationMessage)
-	return &emptyMatcher{}
+	return nil
 }
 
 var _ = Describe("StatusMatcherRegistry", func() {
@@ -335,7 +335,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 
 		Context("when the given name is not registered", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, spec.Seq{spec.Map{"unknown": false}})
+				m := r.ParseMatchers(v, spec.Seq{spec.Map{"unknown": false}})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -343,7 +343,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
-				m := r.ParseMatcher(v, spec.Seq{spec.Map{violationName: nil}})
+				m := r.ParseMatchers(v, spec.Seq{spec.Map{violationName: nil}})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -351,7 +351,7 @@ var _ = Describe("StreamMatcherRegistry", func() {
 
 		Context("when the given is not a seq", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, 42)
+				m := r.ParseMatchers(v, 42)
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
