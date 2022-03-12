@@ -18,7 +18,7 @@ jobs:
       if: contains(github.event.pull_request.body, '[auto merge]') && !contains(github.event.pull_request.title, '[WIP]') && !contains(github.event.pull_request.title, '[DNM]') && !github.event.pull_request.head.fork
       run: |
         # Request to merge button API
-        hub api -X PUT /repos/${GITHUB_REPOSITORY}/pulls/${{ github.event.number }}/merge
+        gh pr merge ${{ github.event.pull_request.html_url }} --merge --auto
     - name: Notify to Slack
       uses: 8398a7/action-slack@v3
       with:
