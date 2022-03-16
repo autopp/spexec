@@ -15,7 +15,7 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.17
+        go-version: ^1.18
       id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
@@ -42,10 +42,11 @@ jobs:
         fail_ci_if_error: true
         verbose: true
       if: ${{ steps.unittest.conclusion == 'success' || steps.unittest.conclusion == 'failure' }}
-    - name: Run dedebugo
-      run: |
-        go install github.com/autopp/dedebugo/cmd/dedebugo@latest
-        make dedebugo
+    # FIXME
+    # - name: Run dedebugo
+    #   run: |
+    #     go install github.com/autopp/dedebugo/cmd/dedebugo@latest
+    #     make dedebugo
     - name: Build
       uses: goreleaser/goreleaser-action@v2
       with:
