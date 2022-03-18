@@ -42,11 +42,10 @@ jobs:
         fail_ci_if_error: true
         verbose: true
       if: ${{ steps.unittest.conclusion == 'success' || steps.unittest.conclusion == 'failure' }}
-    # FIXME
-    # - name: Run dedebugo
-    #   run: |
-    #     go install github.com/autopp/dedebugo/cmd/dedebugo@latest
-    #     make dedebugo
+    - name: Run dedebugo
+      run: |
+        go install github.com/autopp/dedebugo/cmd/dedebugo@latest
+        make dedebugo
     - name: Build
       uses: goreleaser/goreleaser-action@v2
       with:
