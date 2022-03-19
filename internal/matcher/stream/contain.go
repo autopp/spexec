@@ -27,7 +27,7 @@ type ContainMatcher struct {
 	expected string
 }
 
-func (m *ContainMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *ContainMatcher) Match(actual []byte) (bool, string, error) {
 	if bytes.Contains(actual, []byte(m.expected)) {
 		return true, fmt.Sprintf("should not contain %q, but contain", m.expected), nil
 	}

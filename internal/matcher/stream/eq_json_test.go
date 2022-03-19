@@ -20,9 +20,9 @@ var _ = Describe("EqJSONMatcher", func() {
 		}
 	})
 
-	DescribeTable("MatchStatus",
+	DescribeTable("Match",
 		func(given string, expectedMatched bool, messageMatcher types.GomegaMatcher) {
-			matched, message, err := m.MatchStream([]byte(given))
+			matched, message, err := m.Match([]byte(given))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(messageMatcher)

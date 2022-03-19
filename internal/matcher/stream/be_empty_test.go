@@ -9,10 +9,10 @@ import (
 )
 
 var _ = Describe("BeEmptyMatcher", func() {
-	DescribeTable("MatchStatus",
+	DescribeTable("Match",
 		func(expected bool, given string, expectedMatched bool, expectedMessage string) {
 			m := &BeEmptyMatcher{expected: expected}
-			matched, message, err := m.MatchStream([]byte(given))
+			matched, message, err := m.Match([]byte(given))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))

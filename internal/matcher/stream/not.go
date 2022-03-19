@@ -24,8 +24,8 @@ type NotMatcher struct {
 	matcher model.StreamMatcher
 }
 
-func (m *NotMatcher) MatchStream(actual []byte) (bool, string, error) {
-	matched, message, err := m.matcher.MatchStream(actual)
+func (m *NotMatcher) Match(actual []byte) (bool, string, error) {
+	matched, message, err := m.matcher.Match(actual)
 
 	return !matched, message, err
 }

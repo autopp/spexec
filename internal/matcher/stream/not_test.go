@@ -11,7 +11,7 @@ import (
 
 type emptyMatcher struct{}
 
-func (*emptyMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (*emptyMatcher) Match(actual []byte) (bool, string, error) {
 	if len(actual) == 0 {
 		return true, "should not be empty", nil
 	}
@@ -35,9 +35,9 @@ var _ = Describe("NotMatcher", func() {
 		m = &NotMatcher{matcher: &emptyMatcher{}}
 	})
 
-	DescribeTable("MatchStatus",
+	DescribeTable("Match",
 		func(given string, expectedMatched bool, expectedMessage string) {
-			matched, message, err := m.MatchStream([]byte(given))
+			matched, message, err := m.Match([]byte(given))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))

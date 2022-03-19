@@ -20,43 +20,39 @@ import (
 	"github.com/autopp/spexec/internal/spec"
 )
 
-type matcherParserEntry struct {
-	parser       interface{}
+type matcherParserEntry[T any] struct {
+	parser       MatcherParser[T]
 	hasDefault   bool
 	defaultParam interface{}
 }
 
-type matcherParserRegistry struct {
+type matcherParserRegistry[T any] struct {
 	target   string
-	matchers map[string]*matcherParserEntry
+	matchers map[string]*matcherParserEntry[T]
 }
 
-type StatusMatcherRegistry struct {
-	registry *matcherParserRegistry
+func newMatcherParserRegistry[T any](target string) *matcherParserRegistry[T] {
+	return &matcherParserRegistry[T]{target: target, matchers: make(map[string]*matcherParserEntry[T])}
 }
 
-func newMatcherParserRegistry(target string) *matcherParserRegistry {
-	return &matcherParserRegistry{target: target, matchers: make(map[string]*matcherParserEntry)}
-}
-
-func (r *matcherParserRegistry) add(name string, p interface{}) error {
+func (r *matcherParserRegistry[T]) Add(name string, p MatcherParser[T]) error {
 	_, ok := r.matchers[name]
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
 	}
-	r.matchers[name] = &matcherParserEntry{
+	r.matchers[name] = &matcherParserEntry[T]{
 		parser:     p,
 		hasDefault: false,
 	}
 	return nil
 }
 
-func (r *matcherParserRegistry) addWithDefault(name string, p interface{}, defaultParam interface{}) error {
+func (r *matcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T], defaultParam interface{}) error {
 	_, ok := r.matchers[name]
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
 	}
-	r.matchers[name] = &matcherParserEntry{
+	r.matchers[name] = &matcherParserEntry[T]{
 		parser:       p,
 		hasDefault:   true,
 		defaultParam: defaultParam,
@@ -64,7 +60,7 @@ func (r *matcherParserRegistry) addWithDefault(name string, p interface{}, defau
 	return nil
 }
 
-func (r *matcherParserRegistry) get(v *spec.Validator, x interface{}) (string, interface{}, interface{}) {
+func (r *matcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string, MatcherParser[T], interface{}) {
 	var name string
 	var param interface{}
 	withParam := false
@@ -105,67 +101,26 @@ func (r *matcherParserRegistry) get(v *spec.Validator, x interface{}) (string, i
 	return name, p.parser, param
 }
 
-func NewStatusMatcherRegistry() *StatusMatcherRegistry {
-	return &StatusMatcherRegistry{registry: newMatcherParserRegistry("status")}
-}
-
-func (r *StatusMatcherRegistry) Add(name string, p StatusMatcherParser) error {
-	return r.registry.add(name, p)
-}
-
-func (r *StatusMatcherRegistry) AddWithDefault(name string, p StatusMatcherParser, defaultParam interface{}) error {
-	return r.registry.addWithDefault(name, p, defaultParam)
-}
-
-func (r *StatusMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) model.StatusMatcher {
-	name, parser, param := r.registry.get(v, x)
+func (r *matcherParserRegistry[T]) ParseMatcher(v *spec.Validator, x interface{}) model.Matcher[T] {
+	name, parser, param := r.get(v, x)
 	if parser == nil {
 		return nil
 	}
-	var m model.StatusMatcher
+	var m model.Matcher[T]
 	v.InField(name, func() {
-		m = parser.(StatusMatcherParser)(v, r, param)
+		m = parser(v, r, param)
 	})
 
 	return m
 }
 
-type StreamMatcherRegistry struct {
-	registry *matcherParserRegistry
-}
-
-func NewStreamMatcherRegistry() *StreamMatcherRegistry {
-	return &StreamMatcherRegistry{registry: newMatcherParserRegistry("stream")}
-}
-
-func (r *StreamMatcherRegistry) Add(name string, p StreamMatcherParser) error {
-	return r.registry.add(name, p)
-}
-
-func (r *StreamMatcherRegistry) AddWithDefault(name string, p StreamMatcherParser, defaultParam interface{}) error {
-	return r.registry.addWithDefault(name, p, defaultParam)
-}
-
-func (r *StreamMatcherRegistry) ParseMatcher(v *spec.Validator, x interface{}) model.StreamMatcher {
-	name, parser, param := r.registry.get(v, x)
-	if parser == nil {
-		return nil
-	}
-	var m model.StreamMatcher
-	v.InField(name, func() {
-		m = parser.(StreamMatcherParser)(v, r, param)
-	})
-
-	return m
-}
-
-func (r *StreamMatcherRegistry) ParseMatchers(v *spec.Validator, x interface{}) []model.StreamMatcher {
+func (r *matcherParserRegistry[T]) ParseMatchers(v *spec.Validator, x interface{}) []model.Matcher[T] {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil
 	}
 
-	matchers := make([]model.StreamMatcher, len(params))
+	matchers := make([]model.Matcher[T], len(params))
 	ok = v.ForInSeq(params, func(i int, param interface{}) bool {
 		m := r.ParseMatcher(v, param)
 		if m == nil {
@@ -179,4 +134,16 @@ func (r *StreamMatcherRegistry) ParseMatchers(v *spec.Validator, x interface{}) 
 		return nil
 	}
 	return matchers
+}
+
+type StatusMatcherRegistry = matcherParserRegistry[int]
+
+func NewStatusMatcherRegistry() *StatusMatcherRegistry {
+	return newMatcherParserRegistry[int]("status")
+}
+
+type StreamMatcherRegistry = matcherParserRegistry[[]byte]
+
+func NewStreamMatcherRegistry() *StreamMatcherRegistry {
+	return newMatcherParserRegistry[[]byte]("stream")
 }

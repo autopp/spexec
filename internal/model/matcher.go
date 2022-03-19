@@ -14,10 +14,10 @@
 
 package model
 
-type StatusMatcher interface {
-	MatchStatus(actual int) (bool, string, error)
+type Matcher[T any] interface {
+	Match(actual T) (bool, string, error)
 }
 
-type StreamMatcher interface {
-	MatchStream(actual []byte) (bool, string, error)
-}
+type StatusMatcher = Matcher[int]
+
+type StreamMatcher = Matcher[[]byte]

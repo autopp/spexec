@@ -20,9 +20,9 @@ var _ = Describe("SatisfyMatcher", func() {
 		}
 	})
 
-	DescribeTable("MatchStream",
+	DescribeTable("Match",
 		func(given string, expectedMatched bool, expectedMessage string) {
-			matched, message, err := m.MatchStream([]byte(given))
+			matched, message, err := m.Match([]byte(given))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))
