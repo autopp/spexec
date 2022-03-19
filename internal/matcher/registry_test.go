@@ -212,3 +212,15 @@ var _ = Describe("MatcherRegistry", func() {
 		})
 	})
 })
+
+var _ = Describe("NewStatusMatcherRegistry()", func() {
+	It("returns new registry", func() {
+		Expect(NewStatusMatcherRegistry()).NotTo(BeNil())
+	})
+})
+
+var _ = Describe("NewStreamMatcherRegistry()", func() {
+	It("returns new registry", func() {
+		Expect(NewStreamMatcherRegistry()).NotTo(BeNil())
+	})
+})
