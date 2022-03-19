@@ -26,7 +26,7 @@ type EqMatcher struct {
 	expected int
 }
 
-func (m *EqMatcher) MatchStatus(actual int) (bool, string, error) {
+func (m *EqMatcher) Match(actual int) (bool, string, error) {
 	if actual == m.expected {
 		return true, fmt.Sprintf("should not be %d, but got it", m.expected), nil
 	}

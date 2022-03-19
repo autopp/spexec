@@ -27,10 +27,10 @@ type AnyMatcher struct {
 	matchers []model.StreamMatcher
 }
 
-func (m *AnyMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *AnyMatcher) Match(actual []byte) (bool, string, error) {
 	messages := make([]string, 0)
 	for _, inner := range m.matchers {
-		matched, message, err := inner.MatchStream(actual)
+		matched, message, err := inner.Match(actual)
 		if err != nil {
 			return false, "", err
 		}

@@ -26,7 +26,7 @@ type SuccessMatcher struct {
 	expected bool
 }
 
-func (m *SuccessMatcher) MatchStatus(actual int) (bool, string, error) {
+func (m *SuccessMatcher) Match(actual int) (bool, string, error) {
 	succeeded := actual == 0
 	unexpectedSuccessFormat := "should not succeed, but succeeded (status is %d)"
 	unexpectedFailureFormat := "should succeed, but not succeeded (status is %d)"

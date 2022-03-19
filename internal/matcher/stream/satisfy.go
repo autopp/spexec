@@ -31,7 +31,7 @@ type SatisfyMatcher struct {
 	Timeout time.Duration
 }
 
-func (m *SatisfyMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *SatisfyMatcher) Match(actual []byte) (bool, string, error) {
 	command, cleanup, err := model.EvalStringExprs(m.Command)
 	// FIXME: error handling
 	defer cleanup()

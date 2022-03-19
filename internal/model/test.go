@@ -84,7 +84,7 @@ func (t *Test) Run() (*TestResult, error) {
 		statusOk = false
 		messages = append(messages, &AssertionMessage{Name: "status", Message: fmt.Sprintf("process signaled (%s)", r.Signal.String())})
 	} else if t.StatusMatcher != nil {
-		statusOk, message, _ = t.StatusMatcher.MatchStatus(r.Status)
+		statusOk, message, _ = t.StatusMatcher.Match(r.Status)
 		if !statusOk {
 			messages = append(messages, &AssertionMessage{Name: "status", Message: message})
 		}
@@ -92,7 +92,7 @@ func (t *Test) Run() (*TestResult, error) {
 
 	stdoutOk := true
 	if t.StdoutMatcher != nil {
-		stdoutOk, message, _ = t.StdoutMatcher.MatchStream(r.Stdout)
+		stdoutOk, message, _ = t.StdoutMatcher.Match(r.Stdout)
 		if !stdoutOk {
 			messages = append(messages, &AssertionMessage{Name: "stdout", Message: message})
 		}
@@ -100,7 +100,7 @@ func (t *Test) Run() (*TestResult, error) {
 
 	stderrOk := true
 	if t.StderrMatcher != nil {
-		stderrOk, message, _ = t.StderrMatcher.MatchStream(r.Stderr)
+		stderrOk, message, _ = t.StderrMatcher.Match(r.Stderr)
 		if !stderrOk {
 			messages = append(messages, &AssertionMessage{Name: "stderr", Message: message})
 		}

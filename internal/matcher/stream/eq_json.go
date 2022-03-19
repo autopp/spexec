@@ -30,7 +30,7 @@ type EqJSONMatcher struct {
 	expectedString string
 }
 
-func (m *EqJSONMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *EqJSONMatcher) Match(actual []byte) (bool, string, error) {
 	var actualBody interface{}
 	if err := util.UnmarshalJSON(actual, &actualBody); err != nil {
 		return false, fmt.Sprintf("cannot recognize as json: %s", err), nil

@@ -16,7 +16,7 @@ type prefixMatcher struct {
 	prefix string
 }
 
-func (m *prefixMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *prefixMatcher) Match(actual []byte) (bool, string, error) {
 	if strings.HasPrefix(string(actual), m.prefix) {
 		return true, fmt.Sprintf("should not start with %q", m.prefix), nil
 	}
@@ -40,9 +40,9 @@ var _ = Describe("AnyMatcher", func() {
 		m = &AnyMatcher{matchers: []model.StreamMatcher{&prefixMatcher{prefix: "ab"}, &prefixMatcher{prefix: "xy"}}}
 	})
 
-	DescribeTable("MatchStream",
+	DescribeTable("Match",
 		func(given string, expectedMatched bool, expectedMessage string) {
-			matched, message, err := m.MatchStream([]byte(given))
+			matched, message, err := m.Match([]byte(given))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))

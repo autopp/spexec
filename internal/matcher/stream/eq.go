@@ -28,7 +28,7 @@ type EqMatcher struct {
 	expected string
 }
 
-func (m *EqMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *EqMatcher) Match(actual []byte) (bool, string, error) {
 	if bytes.Equal(actual, []byte(m.expected)) {
 		return true, fmt.Sprintf("should not be %q, but got it", m.expected), nil
 	}

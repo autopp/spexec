@@ -26,7 +26,7 @@ type BeEmptyMatcher struct {
 	expected bool
 }
 
-func (m *BeEmptyMatcher) MatchStream(actual []byte) (bool, string, error) {
+func (m *BeEmptyMatcher) Match(actual []byte) (bool, string, error) {
 	empty := len(actual) == 0
 	unexpectedEmptyFormat := "should not be empty, but is empty"
 	unexpectedNotEmptyFormat := "should be empty, but is not:\n----------------------------------------\n%s\n----------------------------------------"

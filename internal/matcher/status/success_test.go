@@ -9,10 +9,10 @@ import (
 )
 
 var _ = Describe("SuccessMatcher", func() {
-	DescribeTable("MatchStatus",
+	DescribeTable("Match",
 		func(expected bool, given int, expectedMatched bool, expectedMessage string) {
 			m := &SuccessMatcher{expected: expected}
-			matched, message, err := m.MatchStatus(given)
+			matched, message, err := m.Match(given)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))
