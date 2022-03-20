@@ -7,6 +7,20 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+var matcherMessage = "failed"
+
+type testStatusMatcher bool
+
+func (m testStatusMatcher) Match(int) (bool, string, error) {
+	return bool(m), matcherMessage, nil
+}
+
+type testStreamMatcher bool
+
+func (m testStreamMatcher) Match([]byte) (bool, string, error) {
+	return bool(m), matcherMessage, nil
+}
+
 var _ = Describe("Test", func() {
 	DescribeTable("GetName()",
 		func(test *Test, expected string) {
@@ -24,4 +38,53 @@ var _ = Describe("Test", func() {
 			},
 		}, "GOOS=linux GOARCH=amd64 make build"),
 	)
+
+	Describe("Run()", func() {
+		DescribeTable("succeeded cases",
+			func(test *Test, expectedMessages []*AssertionMessage, expectedIsSuccess bool) {
+				tr, err := test.Run()
+				Expect(err).NotTo(HaveOccurred())
+				Expect(tr).To(Equal(&TestResult{Name: test.GetName(), Messages: expectedMessages, IsSuccess: expectedIsSuccess}))
+			},
+			Entry("no matchers", &Test{
+				Name:    "no matchers case",
+				Command: []StringExpr{NewLiteralStringExpr("echo")},
+			}, []*AssertionMessage{}, true),
+			Entry("matchers are passed", &Test{
+				Name:          "matchers are passed",
+				Command:       []StringExpr{NewLiteralStringExpr("echo")},
+				StatusMatcher: testStatusMatcher(true),
+				StdoutMatcher: testStreamMatcher(true),
+				StderrMatcher: testStreamMatcher(true),
+			}, []*AssertionMessage{}, true),
+			Entry("status matcher is failed", &Test{
+				Name:          "status matcher is failed",
+				Command:       []StringExpr{NewLiteralStringExpr("echo")},
+				StatusMatcher: testStatusMatcher(false),
+				StdoutMatcher: testStreamMatcher(true),
+				StderrMatcher: testStreamMatcher(true),
+			}, []*AssertionMessage{{Name: "status", Message: matcherMessage}}, false),
+			Entry("stdout matcher is failed", &Test{
+				Name:          "stdout matcher is failed",
+				Command:       []StringExpr{NewLiteralStringExpr("echo")},
+				StatusMatcher: testStatusMatcher(true),
+				StdoutMatcher: testStreamMatcher(false),
+				StderrMatcher: testStreamMatcher(true),
+			}, []*AssertionMessage{{Name: "stdout", Message: matcherMessage}}, false),
+			Entry("stderr matcher is failed", &Test{
+				Name:          "stderr matcher is failed",
+				Command:       []StringExpr{NewLiteralStringExpr("echo")},
+				StatusMatcher: testStatusMatcher(true),
+				StdoutMatcher: testStreamMatcher(true),
+				StderrMatcher: testStreamMatcher(false),
+			}, []*AssertionMessage{{Name: "stderr", Message: matcherMessage}}, false),
+			Entry("all matchers are failed", &Test{
+				Name:          "all matchers are failed",
+				Command:       []StringExpr{NewLiteralStringExpr("echo")},
+				StatusMatcher: testStatusMatcher(false),
+				StdoutMatcher: testStreamMatcher(false),
+				StderrMatcher: testStreamMatcher(false),
+			}, []*AssertionMessage{{Name: "status", Message: matcherMessage}, {Name: "stdout", Message: matcherMessage}, {Name: "stderr", Message: matcherMessage}}, false),
+		)
+	})
 })
