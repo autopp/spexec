@@ -87,4 +87,16 @@ var _ = Describe("Test", func() {
 			}, []*AssertionMessage{{Name: "status", Message: matcherMessage}, {Name: "stdout", Message: matcherMessage}, {Name: "stderr", Message: matcherMessage}}, false),
 		)
 	})
+
+	DescribeTable("failed cases",
+		func(test *Test, expectedErr string) {
+			tr, err := test.Run()
+			Expect(tr).To(BeNil())
+			Expect(err).To(MatchError(expectedErr))
+		},
+		Entry("command evaluating is failed", &Test{
+			Name:    "command evaluating is failed",
+			Command: []StringExpr{NewEnvStringExpr("undefined")},
+		}, "envrironment variable $undefined is not defined"),
+	)
 })
