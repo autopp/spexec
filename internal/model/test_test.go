@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -85,6 +87,15 @@ var _ = Describe("Test", func() {
 				StdoutMatcher: testStreamMatcher(false),
 				StderrMatcher: testStreamMatcher(false),
 			}, []*AssertionMessage{{Name: "status", Message: matcherMessage}, {Name: "stdout", Message: matcherMessage}, {Name: "stderr", Message: matcherMessage}}, false),
+			Entry("process is timeout", &Test{
+				Name:    "process is timeout",
+				Command: []StringExpr{NewLiteralStringExpr("sleep"), NewLiteralStringExpr("1")},
+				Timeout: 1 * time.Millisecond,
+			}, []*AssertionMessage{{Name: "status", Message: "process was timeout"}}, false),
+			Entry("process is signaled", &Test{
+				Name:    "process is signaled",
+				Command: []StringExpr{NewLiteralStringExpr("bash"), NewLiteralStringExpr("-c"), NewLiteralStringExpr("kill -TERM $$")},
+			}, []*AssertionMessage{{Name: "status", Message: "process was signaled (terminated)"}}, false),
 		)
 	})
 

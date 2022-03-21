@@ -82,7 +82,7 @@ func (t *Test) Run() (*TestResult, error) {
 		messages = append(messages, &AssertionMessage{Name: "status", Message: fmt.Sprintf("process was timeout")})
 	} else if r.Signal != nil {
 		statusOk = false
-		messages = append(messages, &AssertionMessage{Name: "status", Message: fmt.Sprintf("process signaled (%s)", r.Signal.String())})
+		messages = append(messages, &AssertionMessage{Name: "status", Message: fmt.Sprintf("process was signaled (%s)", r.Signal.String())})
 	} else if t.StatusMatcher != nil {
 		statusOk, message, _ = t.StatusMatcher.Match(r.Status)
 		if !statusOk {
