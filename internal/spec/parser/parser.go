@@ -91,9 +91,9 @@ func (p *Parser) parseJSON(filename string, in io.Reader) ([]*model.Test, error)
 	return p.load(filename, in, util.DecodeJSON)
 }
 
-func (p *Parser) load(filename string, b io.Reader, unmarchal func(in io.Reader, out interface{}) error) ([]*model.Test, error) {
+func (p *Parser) load(filename string, b io.Reader, unmarshal func(in io.Reader, out interface{}) error) ([]*model.Test, error) {
 	var x interface{}
-	err := unmarchal(b, &x)
+	err := unmarshal(b, &x)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
