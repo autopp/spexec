@@ -52,7 +52,7 @@ func NewEnvStringExpr(name string) StringExpr {
 func (e envStringExpr) Eval() (string, func() error, error) {
 	v, ok := os.LookupEnv(string(e))
 	if !ok {
-		return "", nil, errors.Errorf(errors.ErrInvalidSpec, "envrironment variable $%s is not defined", string(e))
+		return "", nil, errors.Errorf(errors.ErrInvalidSpec, "environment variable $%s is not defined", string(e))
 	}
 	return v, nil, nil
 }
