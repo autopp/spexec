@@ -108,6 +108,6 @@ var _ = Describe("Test", func() {
 		Entry("command evaluating is failed", &Test{
 			Name:    "command evaluating is failed",
 			Command: []StringExpr{NewEnvStringExpr("undefined")},
-		}, "envrironment variable $undefined is not defined"),
+		}, "environment variable $undefined is not defined"),
 	)
 })
