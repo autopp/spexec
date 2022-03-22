@@ -60,20 +60,16 @@ func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatche
 }
 
 func (p *Parser) ParseStdin() ([]*model.Test, error) {
-	f, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
-	}
-
-	tests, err := p.parseYAML("", f)
-	return tests, err
+	return p.parseYAML("", os.Stdin)
 }
 
 func (p *Parser) ParseFile(filename string) ([]*model.Test, error) {
-	f, err := os.ReadFile(filename)
+	f, err := os.Open(filename)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
+	defer f.Close()
+
 	var tests []*model.Test
 	ext := filepath.Ext(filename)
 	if ext == ".yml" || ext == ".yaml" {
@@ -85,15 +81,17 @@ func (p *Parser) ParseFile(filename string) ([]*model.Test, error) {
 	return tests, err
 }
 
-func (p *Parser) parseYAML(filename string, b []byte) ([]*model.Test, error) {
-	return p.load(filename, b, yaml.Unmarshal)
+func (p *Parser) parseYAML(filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(filename, in, func(in io.Reader, out interface{}) error {
+		return yaml.NewDecoder(in).Decode(out)
+	})
 }
 
-func (p *Parser) parseJSON(filename string, b []byte) ([]*model.Test, error) {
-	return p.load(filename, b, util.UnmarshalJSON)
+func (p *Parser) parseJSON(filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(filename, in, util.DecodeJSON)
 }
 
-func (p *Parser) load(filename string, b []byte, unmarchal func(in []byte, out interface{}) error) ([]*model.Test, error) {
+func (p *Parser) load(filename string, b io.Reader, unmarchal func(in io.Reader, out interface{}) error) ([]*model.Test, error) {
 	var x interface{}
 	err := unmarchal(b, &x)
 	if err != nil {
