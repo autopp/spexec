@@ -1,0 +1,15 @@
+- tests:
+    - name: test_answer
+      command:
+        - echo
+        - "42"
+      stdin: "hello"
+      expect:
+        status:
+          eq: 0
+        stdout:
+          eq: "42\n"
+      env:
+        - name: ANSWER
+          value: "42"
+      timeout: 3s

@@ -31,7 +31,6 @@ var _ = Describe("Parser", func() {
 
 		DescribeTable("with valid file",
 			func(filename string, expected Elements) {
-				// Expect(New().ParseFile(filepath.Join("testdata", filename))).To(Equal(expected))
 				actual, err := p.ParseFile(filepath.Join("testdata", filename))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actual).To(MatchAllElementsWithIndex(IndexIdentity, expected))
@@ -94,5 +93,22 @@ var _ = Describe("Parser", func() {
 				})),
 			}),
 		)
+
+		DescribeTable("with invalid file",
+			func(filename string, expectedErr string) {
+				_, err := p.ParseFile(filepath.Join("testdata", filename))
+				Expect(err).To(MatchError(expectedErr))
+			},
+			Entry("testdata/root-is-not-map.yaml", "root-is-not-map.yaml", "$: should be map, but is seq"),
+			Entry("testdata/spexec-version-is-invalid.yaml", "spexec-version-is-invalid.yaml", `$.spexec: should be "v0"`),
+			Entry("testdata/spexec-version-is-not-string.yaml", "spexec-version-is-not-string.yaml", `$.spexec: should be string, but is int`),
+		)
+
+		Describe("with no exist file", func() {
+			It("returns err", func() {
+				_, err := p.ParseFile(filepath.Join("testdata", "unknown.yaml"))
+				Expect(err).To(HaveOccurred())
+			})
+		})
 	})
 })
