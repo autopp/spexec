@@ -103,6 +103,9 @@ var _ = Describe("Parser", func() {
 			Entry("testdata/spexec-version-is-invalid.yaml", "spexec-version-is-invalid.yaml", `$.spexec: should be "v0"`),
 			Entry("testdata/spexec-version-is-not-string.yaml", "spexec-version-is-not-string.yaml", `$.spexec: should be string, but is int`),
 			Entry("testdata/test-is-not-map.yaml", "test-is-not-map.yaml", "$.tests[0]: should be map, but is seq"),
+			Entry("testdata/command-stdin-is-invalid.yaml", "command-stdin-is-invalid.yaml", "$.tests[0].stdin: should be a string or map, but is int"),
+			Entry("testdata/command-stdin-format-is-invalid.yaml", "command-stdin-format-is-invalid.yaml", "$.tests[0].stdin.format: should be string, but is int"),
+			Entry("testdata/command-stdin-value-is-invalid.yaml", "command-stdin-value-is-invalid.yaml", "$.tests[0].stdin: should have .value"),
 		)
 
 		Describe("with no exist file", func() {
