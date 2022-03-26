@@ -157,37 +157,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 	t.Command, _ = v.MustHaveCommand(tc, "command")
 
 	v.MayHave(tc, "stdin", func(stdin interface{}) {
-		if stdinString, ok := v.MayBeString(stdin); ok {
-			t.Stdin = []byte(stdinString)
-		} else if stdinMap, ok := v.MayBeMap(stdin); ok {
-			if p.isStrict {
-				v.MustContainOnly(stdinMap, "format", "value")
-			}
-
-			stdinFormat, typeOk := v.MustHaveString(stdinMap, "format")
-			stdinValue, valueOk := v.MustHave(stdinMap, "value")
-			if !typeOk || !valueOk {
-				return
-			}
-
-			switch stdinFormat {
-			case "yaml":
-				value, err := yaml.Marshal(stdinValue)
-				if err != nil {
-					v.InField("value", func() {
-						v.AddViolation(`cannot encode to a YAML string: %s`, err)
-					})
-					return
-				}
-				t.Stdin = value
-			default:
-				v.InField("type", func() {
-					v.AddViolation(`should be a "yaml", but is %q`, stdinFormat)
-				})
-			}
-		} else {
-			v.AddViolation("should be a string or map, but is %s", spec.TypeNameOf(stdin))
-		}
+		t.Stdin = p.loadCommandStdin(v, stdin)
 	})
 
 	t.Env, _, _ = v.MayHaveEnvSeq(tc, "env")
@@ -225,4 +195,40 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 	t.Dir = v.GetDir()
 
 	return t
+}
+
+func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
+	if stdinString, ok := v.MayBeString(stdin); ok {
+		return []byte(stdinString)
+	} else if stdinMap, ok := v.MayBeMap(stdin); ok {
+		if p.isStrict {
+			v.MustContainOnly(stdinMap, "format", "value")
+		}
+
+		stdinFormat, typeOk := v.MustHaveString(stdinMap, "format")
+		stdinValue, valueOk := v.MustHave(stdinMap, "value")
+		if !typeOk || !valueOk {
+			return nil
+		}
+
+		switch stdinFormat {
+		case "yaml":
+			value, err := yaml.Marshal(stdinValue)
+			if err != nil {
+				v.InField("value", func() {
+					v.AddViolation(`cannot encode to a YAML string: %s`, err)
+				})
+				return nil
+			}
+			return value
+		default:
+			v.InField("type", func() {
+				v.AddViolation(`should be a "yaml", but is %q`, stdinFormat)
+			})
+			return nil
+		}
+	} else {
+		v.AddViolation("should be a string or map, but is %s", spec.TypeNameOf(stdin))
+		return nil
+	}
 }
