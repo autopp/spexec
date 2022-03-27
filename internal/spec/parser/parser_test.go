@@ -138,6 +138,7 @@ var _ = Describe("Parser", func() {
 			Entry("with .value missing map", spec.Map{"format": "yaml"}, "$: should have .value"),
 			Entry("with invalid .format map", spec.Map{"format": 42, "value": 42}, `$.format: should be string, but is int`),
 			Entry("with unknown .format map", spec.Map{"format": "unknown", "value": 42}, `$.format: should be a "yaml", but is "unknown"`),
+			Entry("with unknown field", spec.Map{"format": "yaml", "value": 42, "unknown": 42}, `$: field .unknown is not expected`),
 		)
 	})
 })

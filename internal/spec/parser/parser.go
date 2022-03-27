@@ -201,8 +201,8 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
 	if stdinString, ok := v.MayBeString(stdin); ok {
 		return []byte(stdinString)
 	} else if stdinMap, ok := v.MayBeMap(stdin); ok {
-		if p.isStrict {
-			v.MustContainOnly(stdinMap, "format", "value")
+		if p.isStrict && !v.MustContainOnly(stdinMap, "format", "value") {
+			return nil
 		}
 
 		stdinFormat, formatOk := v.MustHaveString(stdinMap, "format")
