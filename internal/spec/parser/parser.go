@@ -205,9 +205,9 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
 			v.MustContainOnly(stdinMap, "format", "value")
 		}
 
-		stdinFormat, typeOk := v.MustHaveString(stdinMap, "format")
+		stdinFormat, formatOk := v.MustHaveString(stdinMap, "format")
 		stdinValue, valueOk := v.MustHave(stdinMap, "value")
-		if !typeOk || !valueOk {
+		if !formatOk || !valueOk {
 			return nil
 		}
 
@@ -222,7 +222,7 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
 			}
 			return value
 		default:
-			v.InField("type", func() {
+			v.InField("format", func() {
 				v.AddViolation(`should be a "yaml", but is %q`, stdinFormat)
 			})
 			return nil

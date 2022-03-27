@@ -8,6 +8,7 @@ import (
 	"github.com/autopp/spexec/internal/matcher/status"
 	"github.com/autopp/spexec/internal/matcher/stream"
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -16,18 +17,19 @@ import (
 )
 
 var _ = Describe("Parser", func() {
-	Describe("ParseFile()", func() {
-		var statusEqMatcher *status.EqMatcher
-		var streamEqMatcher *stream.EqMatcher
-		var p *Parser
+	var statusEqMatcher *status.EqMatcher
+	var streamEqMatcher *stream.EqMatcher
+	var p *Parser
 
-		JustBeforeEach(func() {
-			statusMR := matcher.NewStatusMatcherRegistry()
-			statusMR.Add("eq", status.ParseEqMatcher)
-			streamMR := matcher.NewStreamMatcherRegistry()
-			streamMR.Add("eq", stream.ParseEqMatcher)
-			p = New(statusMR, streamMR, false)
-		})
+	JustBeforeEach(func() {
+		statusMR := matcher.NewStatusMatcherRegistry()
+		statusMR.Add("eq", status.ParseEqMatcher)
+		streamMR := matcher.NewStreamMatcherRegistry()
+		streamMR.Add("eq", stream.ParseEqMatcher)
+		p = New(statusMR, streamMR, true)
+	})
+
+	Describe("ParseFile()", func() {
 
 		DescribeTable("with valid file",
 			func(filename string, expected Elements) {
@@ -103,9 +105,6 @@ var _ = Describe("Parser", func() {
 			Entry("testdata/spexec-version-is-invalid.yaml", "spexec-version-is-invalid.yaml", `$.spexec: should be "v0"`),
 			Entry("testdata/spexec-version-is-not-string.yaml", "spexec-version-is-not-string.yaml", `$.spexec: should be string, but is int`),
 			Entry("testdata/test-is-not-map.yaml", "test-is-not-map.yaml", "$.tests[0]: should be map, but is seq"),
-			Entry("testdata/command-stdin-is-invalid.yaml", "command-stdin-is-invalid.yaml", "$.tests[0].stdin: should be a string or map, but is int"),
-			Entry("testdata/command-stdin-format-is-invalid.yaml", "command-stdin-format-is-invalid.yaml", "$.tests[0].stdin.format: should be string, but is int"),
-			Entry("testdata/command-stdin-value-is-invalid.yaml", "command-stdin-value-is-invalid.yaml", "$.tests[0].stdin: should have .value"),
 		)
 
 		Describe("with no exist file", func() {
@@ -114,5 +113,31 @@ var _ = Describe("Parser", func() {
 				Expect(err).To(HaveOccurred())
 			})
 		})
+	})
+
+	Describe("loadCommandStdin", func() {
+		DescribeTable("success cases",
+			func(stdin any, expected string) {
+				v, _ := spec.NewValidator("")
+				actual := p.loadCommandStdin(v, stdin)
+				Expect(v.Error()).NotTo(HaveOccurred())
+				Expect(string(actual)).To(Equal(expected))
+			},
+			Entry("with simple string", "hello", "hello"),
+			Entry("with yaml format", spec.Map{"format": "yaml", "value": spec.Seq{"hello", "world"}}, "- hello\n- world\n"),
+		)
+
+		DescribeTable("failure cases",
+			func(stdin any, expectedErr string) {
+				v, _ := spec.NewValidator("")
+				Expect(p.loadCommandStdin(v, stdin)).To(BeNil())
+				Expect(v.Error()).To(MatchError(expectedErr))
+			},
+			Entry("with no string nor map", 42, "$: should be a string or map, but is int"),
+			Entry("with .format missing map", spec.Map{"value": spec.Seq{"hello", "world"}}, "$: should have .format as string"),
+			Entry("with .value missing map", spec.Map{"format": "yaml"}, "$: should have .value"),
+			Entry("with invalid .format map", spec.Map{"format": 42, "value": 42}, `$.format: should be string, but is int`),
+			Entry("with unknown .format map", spec.Map{"format": "unknown", "value": 42}, `$.format: should be a "yaml", but is "unknown"`),
+		)
 	})
 })
