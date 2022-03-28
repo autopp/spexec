@@ -141,4 +141,46 @@ var _ = Describe("Parser", func() {
 			Entry("with unknown field", spec.Map{"format": "yaml", "value": 42, "unknown": 42}, `$: field .unknown is not expected`),
 		)
 	})
+
+	Describe("loadCommandExpect", func() {
+		DescribeTable("success cases",
+			func(expect spec.Map, statusMatcherShouldBeSet bool, stdoutMatcherShouldBeSet, stderrMatcherShouldBeSet bool) {
+				v, _ := spec.NewValidator("")
+				actualStdin, actualStdout, actualStderr := p.loadCommandExpect(v, expect)
+				Expect(v.Error()).NotTo(HaveOccurred())
+				if statusMatcherShouldBeSet {
+					Expect(actualStdin).To(BeAssignableToTypeOf(statusEqMatcher))
+				} else {
+					Expect(actualStdin).To(BeNil())
+				}
+				if stdoutMatcherShouldBeSet {
+					Expect(actualStdout).To(BeAssignableToTypeOf(streamEqMatcher))
+				} else {
+					Expect(actualStdout).To(BeNil())
+				}
+				if stderrMatcherShouldBeSet {
+					Expect(actualStderr).To(BeAssignableToTypeOf(streamEqMatcher))
+				} else {
+					Expect(actualStderr).To(BeNil())
+				}
+			},
+			Entry("without any matchers", spec.Map{}, false, false, false),
+			Entry("with only status", spec.Map{"status": spec.Map{"eq": 0}}, true, false, false),
+			Entry("with only stdout", spec.Map{"stdout": spec.Map{"eq": ""}}, false, true, false),
+			Entry("with only stderr", spec.Map{"stderr": spec.Map{"eq": ""}}, false, false, true),
+			Entry("with all matchers", spec.Map{"status": spec.Map{"eq": 0}, "stdout": spec.Map{"eq": ""}, "stderr": spec.Map{"eq": ""}}, true, true, true),
+		)
+
+		DescribeTable("failure cases",
+			func(expect spec.Map, expectedErr string) {
+				v, _ := spec.NewValidator("")
+				p.loadCommandExpect(v, expect)
+				Expect(v.Error()).To(MatchError(expectedErr))
+			},
+			Entry("with unknown status", spec.Map{"status": spec.Map{"unknown": true}}, "$.status: matcher for status unknown is not defined"),
+			Entry("with unknown stdout", spec.Map{"stdout": spec.Map{"unknown": true}}, "$.stdout: matcher for stream unknown is not defined"),
+			Entry("with unknown stderr", spec.Map{"stderr": spec.Map{"unknown": true}}, "$.stderr: matcher for stream unknown is not defined"),
+			Entry("with unknown field", spec.Map{"unknown": 42}, "$: field .unknown is not expected"),
+		)
+	})
 })

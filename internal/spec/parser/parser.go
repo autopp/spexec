@@ -167,21 +167,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 	}
 
 	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
-		if p.isStrict {
-			v.MustContainOnly(expect, "status", "stdout", "stderr")
-		}
-
-		v.MayHave(expect, "status", func(status interface{}) {
-			t.StatusMatcher = p.statusMR.ParseMatcher(v, status)
-		})
-
-		v.MayHave(expect, "stdout", func(stdout interface{}) {
-			t.StdoutMatcher = p.streamMR.ParseMatcher(v, stdout)
-		})
-
-		v.MayHave(expect, "stderr", func(stderr interface{}) {
-			t.StderrMatcher = p.streamMR.ParseMatcher(v, stderr)
-		})
+		t.StatusMatcher, t.StdoutMatcher, t.StderrMatcher = p.loadCommandExpect(v, expect)
 	})
 
 	if teeStdout, exists, _ := v.MayHaveBool(tc, "teeStdout"); exists {
@@ -231,4 +217,26 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
 		v.AddViolation("should be a string or map, but is %s", spec.TypeNameOf(stdin))
 		return nil
 	}
+}
+
+func (p *Parser) loadCommandExpect(v *spec.Validator, expect spec.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
+	var statusMatcher model.StatusMatcher
+	var stdoutMatcher, stderrMatcher model.StreamMatcher
+	if p.isStrict {
+		v.MustContainOnly(expect, "status", "stdout", "stderr")
+	}
+
+	v.MayHave(expect, "status", func(status interface{}) {
+		statusMatcher = p.statusMR.ParseMatcher(v, status)
+	})
+
+	v.MayHave(expect, "stdout", func(stdout interface{}) {
+		stdoutMatcher = p.streamMR.ParseMatcher(v, stdout)
+	})
+
+	v.MayHave(expect, "stderr", func(stderr interface{}) {
+		stderrMatcher = p.streamMR.ParseMatcher(v, stderr)
+	})
+
+	return statusMatcher, stdoutMatcher, stderrMatcher
 }
