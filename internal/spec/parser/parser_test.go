@@ -115,6 +115,54 @@ var _ = Describe("Parser", func() {
 		})
 	})
 
+	Describe("loadTest", func() {
+		DescribeTable("success cases",
+			func(test any, expected Fields) {
+				v, _ := spec.NewValidator("testdata/spec.yaml")
+				actual := p.loadTest(v, test)
+				Expect(v.Error()).NotTo(HaveOccurred())
+				Expect(actual).To(PointTo(MatchAllFields(expected)))
+			},
+			Entry("without any matchers",
+				spec.Map{
+					"name":    "test_answer",
+					"command": spec.Seq{"echo", "42"},
+					"stdin":   "hello",
+					"env":     spec.Seq{spec.Map{"name": "ANSWER", "value": "42"}},
+					"timeout": 3,
+				},
+				Fields{
+					"Name":         Equal("test_answer"),
+					"SpecFilename": HaveSuffix("/testdata/spec.yaml"),
+					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
+					"Dir":          HaveSuffix("/testdata"),
+					"Stdin":        Equal([]byte("hello")),
+					"Env": Equal([]util.StringVar{
+						{Name: "ANSWER", Value: "42"},
+					}),
+					"Timeout":       Equal(3 * time.Second),
+					"StatusMatcher": BeNil(),
+					"StdoutMatcher": BeNil(),
+					"StderrMatcher": BeNil(),
+					"TeeStdout":     BeFalse(),
+					"TeeStderr":     BeFalse(),
+				},
+			),
+		)
+
+		DescribeTable("failure cases",
+			func(expect spec.Map, expectedErr string) {
+				v, _ := spec.NewValidator("")
+				p.loadCommandExpect(v, expect)
+				Expect(v.Error()).To(MatchError(expectedErr))
+			},
+			Entry("with unknown status", spec.Map{"status": spec.Map{"unknown": true}}, "$.status: matcher for status unknown is not defined"),
+			Entry("with unknown stdout", spec.Map{"stdout": spec.Map{"unknown": true}}, "$.stdout: matcher for stream unknown is not defined"),
+			Entry("with unknown stderr", spec.Map{"stderr": spec.Map{"unknown": true}}, "$.stderr: matcher for stream unknown is not defined"),
+			Entry("with unknown field", spec.Map{"unknown": 42}, "$: field .unknown is not expected"),
+		)
+	})
+
 	Describe("loadCommandStdin", func() {
 		DescribeTable("success cases",
 			func(stdin any, expected string) {
