@@ -215,6 +215,56 @@ var _ = Describe("Parser", func() {
 				},
 			),
 		)
+
+		DescribeTable("failure cases",
+			func(test any, expectedErr string) {
+				v, _ := spec.NewValidator("testdata/spec.yaml")
+				p.loadTest(v, test)
+				Expect(v.Error()).To(MatchError(expectedErr))
+			},
+			Entry("with not map", 42, "$: should be map, but is int"),
+			Entry("with unknown field",
+				spec.Map{
+					"name":    "test_answer",
+					"command": spec.Seq{"echo", "42"},
+					"stdin":   "hello",
+					"env":     spec.Seq{spec.Map{"name": "ANSWER", "value": "42"}},
+					"timeout": 3,
+					"unknown": 42,
+				},
+				"$: field .unknown is not expected",
+			),
+			Entry("with invalid timeout",
+				spec.Map{
+					"name":    "test_answer",
+					"command": spec.Seq{"echo", "42"},
+					"stdin":   "hello",
+					"env":     spec.Seq{spec.Map{"name": "ANSWER", "value": "42"}},
+					"timeout": false,
+				},
+				"$.timeout: should be positive integer or duration string, but is bool",
+			),
+			Entry("with invalid teeStdout",
+				spec.Map{
+					"name":      "test_answer",
+					"command":   spec.Seq{"echo", "42"},
+					"stdin":     "hello",
+					"env":       spec.Seq{spec.Map{"name": "ANSWER", "value": "42"}},
+					"teeStdout": 42,
+				},
+				"$.teeStdout: should be bool, but is int",
+			),
+			Entry("with invalid teeStderr",
+				spec.Map{
+					"name":      "test_answer",
+					"command":   spec.Seq{"echo", "42"},
+					"stdin":     "hello",
+					"env":       spec.Seq{spec.Map{"name": "ANSWER", "value": "42"}},
+					"teeStderr": 42,
+				},
+				"$.teeStderr: should be bool, but is int",
+			),
+		)
 	})
 
 	Describe("loadCommandStdin", func() {
