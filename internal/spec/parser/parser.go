@@ -98,14 +98,15 @@ func (p *Parser) load(filename string, b io.Reader, unmarshal func(in io.Reader,
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	return p.loadSpec(filename, x)
-}
-
-func (p *Parser) loadSpec(filename string, c interface{}) ([]*model.Test, error) {
 	v, err := spec.NewValidator(filename)
 	if err != nil {
 		return nil, err
 	}
+
+	return p.loadSpec(v, x)
+}
+
+func (p *Parser) loadSpec(v *spec.Validator, c interface{}) ([]*model.Test, error) {
 	cmap, ok := v.MustBeMap(c)
 	if !ok {
 		return nil, v.Error()
