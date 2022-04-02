@@ -74,37 +74,6 @@ var _ = Describe("Parser", func() {
 					"TeeStderr":     BeFalse(),
 				})),
 			}),
-			Entry("testdata/yaml-stdin.yaml", "yaml-stdin.yaml", Elements{
-				"0": PointTo(MatchAllFields(Fields{
-					"Name":         Equal("test_answer"),
-					"SpecFilename": HaveSuffix("testdata/yaml-stdin.yaml"),
-					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo")}),
-					"Dir":          HaveSuffix("/testdata"),
-					"Stdin": Equal([]byte(`array:
-    - 1
-    - true
-    - hello
-`)),
-					"Env":           BeNil(),
-					"Timeout":       Equal(0 * time.Second),
-					"StatusMatcher": BeNil(),
-					"StdoutMatcher": BeNil(),
-					"StderrMatcher": BeNil(),
-					"TeeStdout":     BeFalse(),
-					"TeeStderr":     BeFalse(),
-				})),
-			}),
-		)
-
-		DescribeTable("with invalid file",
-			func(filename string, expectedErr string) {
-				_, err := p.ParseFile(filepath.Join("testdata", filename))
-				Expect(err).To(MatchError(expectedErr))
-			},
-			Entry("testdata/root-is-not-map.yaml", "root-is-not-map.yaml", "$: should be map, but is seq"),
-			Entry("testdata/spexec-version-is-invalid.yaml", "spexec-version-is-invalid.yaml", `$.spexec: should be "v0"`),
-			Entry("testdata/spexec-version-is-not-string.yaml", "spexec-version-is-not-string.yaml", `$.spexec: should be string, but is int`),
-			Entry("testdata/test-is-not-map.yaml", "test-is-not-map.yaml", "$.tests[0]: should be map, but is seq"),
 		)
 
 		Describe("with no exist file", func() {
