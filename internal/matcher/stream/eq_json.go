@@ -15,6 +15,7 @@
 package stream
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"reflect"
@@ -32,7 +33,7 @@ type EqJSONMatcher struct {
 
 func (m *EqJSONMatcher) Match(actual []byte) (bool, string, error) {
 	var actualBody interface{}
-	if err := util.UnmarshalJSON(actual, &actualBody); err != nil {
+	if err := util.DecodeJSON(bytes.NewReader(actual), &actualBody); err != nil {
 		return false, fmt.Sprintf("cannot recognize as json: %s", err), nil
 	}
 
@@ -51,7 +52,7 @@ func ParseEqJSONMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x i
 	}
 
 	var expected interface{}
-	err = util.UnmarshalJSON(expectedBytes, &expected)
+	err = util.DecodeJSON(bytes.NewReader(expectedBytes), &expected)
 	if err != nil {
 		v.AddViolation("parameter is not json value: %s", err)
 	}

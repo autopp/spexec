@@ -15,15 +15,14 @@
 package util
 
 import (
-	"bytes"
 	"encoding/json"
 	"io"
 
 	"github.com/autopp/spexec/internal/errors"
 )
 
-func UnmarshalJSON(in []byte, out interface{}) error {
-	d := json.NewDecoder(bytes.NewBuffer(in))
+func DecodeJSON(in io.Reader, out interface{}) error {
+	d := json.NewDecoder(in)
 	d.UseNumber()
 	err := d.Decode(out)
 	if err != nil {
