@@ -2,6 +2,7 @@ package stream
 
 import (
 	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -29,15 +30,17 @@ var _ = Describe("ContainMatcher", func() {
 var _ = Describe("ParseContainMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
+	var env *model.Env
 
 	JustBeforeEach(func() {
 		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
+		env = model.NewEnv(nil)
 	})
 
 	Describe("with string", func() {
 		It("returns matcher", func() {
-			m := ParseContainMatcher(v, r, "hello")
+			m := ParseContainMatcher(env, v, r, "hello")
 
 			Expect(m).NotTo(BeNil())
 			Expect(v.Error()).To(BeNil())
@@ -49,7 +52,7 @@ var _ = Describe("ParseContainMatcher", func() {
 
 	DescribeTable("failure cases",
 		func(given interface{}) {
-			m := ParseContainMatcher(v, r, given)
+			m := ParseContainMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())
 			Expect(v.Error()).To(HaveOccurred())

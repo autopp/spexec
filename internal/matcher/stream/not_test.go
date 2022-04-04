@@ -19,7 +19,7 @@ func (*emptyMatcher) Match(actual []byte) (bool, string, error) {
 	return false, "should be empty", nil
 }
 
-func parseEmptyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func parseEmptyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	switch x.(type) {
 	case bool:
 		return &emptyMatcher{}
@@ -50,16 +50,18 @@ var _ = Describe("NotMatcher", func() {
 var _ = Describe("ParseNotMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
+	var env *model.Env
 
 	JustBeforeEach(func() {
 		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 		r.Add("empty", parseEmptyMatcher)
+		env = model.NewEnv(nil)
 	})
 
 	Describe("with defined matcher", func() {
 		It("returns matcher", func() {
-			m := ParseNotMatcher(v, r, spec.Map{"empty": true})
+			m := ParseNotMatcher(env, v, r, spec.Map{"empty": true})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -72,7 +74,7 @@ var _ = Describe("ParseNotMatcher", func() {
 
 	DescribeTable("failure cases",
 		func(given interface{}, prefix string) {
-			m := ParseNotMatcher(v, r, given)
+			m := ParseNotMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())
 			err := v.Error()

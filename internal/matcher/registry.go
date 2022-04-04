@@ -101,20 +101,20 @@ func (r *matcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string
 	return name, p.parser, param
 }
 
-func (r *matcherParserRegistry[T]) ParseMatcher(v *spec.Validator, x interface{}) model.Matcher[T] {
+func (r *matcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validator, x interface{}) model.Matcher[T] {
 	name, parser, param := r.get(v, x)
 	if parser == nil {
 		return nil
 	}
 	var m model.Matcher[T]
 	v.InField(name, func() {
-		m = parser(v, r, param)
+		m = parser(env, v, r, param)
 	})
 
 	return m
 }
 
-func (r *matcherParserRegistry[T]) ParseMatchers(v *spec.Validator, x interface{}) []model.Matcher[T] {
+func (r *matcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validator, x interface{}) []model.Matcher[T] {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil
@@ -122,7 +122,7 @@ func (r *matcherParserRegistry[T]) ParseMatchers(v *spec.Validator, x interface{
 
 	matchers := make([]model.Matcher[T], len(params))
 	ok = v.ForInSeq(params, func(i int, param interface{}) bool {
-		m := r.ParseMatcher(v, param)
+		m := r.ParseMatcher(env, v, param)
 		if m == nil {
 			return false
 		}

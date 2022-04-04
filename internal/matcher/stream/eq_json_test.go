@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -36,15 +37,17 @@ var _ = Describe("EqJSONMatcher", func() {
 var _ = Describe("ParseEqJSONMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
+	var env *model.Env
 
 	JustBeforeEach(func() {
 		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
+		env = model.NewEnv(nil)
 	})
 
 	Describe("with object", func() {
 		It("returns matcher", func() {
-			m := ParseEqJSONMatcher(v, r, spec.Map{"code": 200, "messages": spec.Seq{"hello"}})
+			m := ParseEqJSONMatcher(env, v, r, spec.Map{"code": 200, "messages": spec.Seq{"hello"}})
 
 			Expect(m).NotTo(BeNil())
 			Expect(v.Error()).To(BeNil())
@@ -56,7 +59,7 @@ var _ = Describe("ParseEqJSONMatcher", func() {
 
 	Describe("with json incompatible", func() {
 		It("adds violation and returns nil", func() {
-			m := ParseEqJSONMatcher(v, r, map[interface{}]interface{}{1: 42})
+			m := ParseEqJSONMatcher(env, v, r, map[interface{}]interface{}{1: 42})
 
 			Expect(m).To(BeNil())
 			Expect(v.Error()).To(MatchError(HavePrefix("$: parameter is not json value: ")))
