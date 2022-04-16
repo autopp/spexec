@@ -110,5 +110,8 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			"command": spec.Seq{"test.sh"},
 			"timeout": "foo",
 		}, "$.timeout: "),
+		Entry("with invalid string expr", spec.Map{
+			"command": spec.Seq{spec.Map{"type": "env", "name": "unknown"}},
+		}, "$.command: error occured at parsing command"),
 	)
 })
