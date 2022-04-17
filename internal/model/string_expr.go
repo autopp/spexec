@@ -95,15 +95,17 @@ func (f *fileStringExpr) String() string {
 
 func (f *fileStringExpr) stringExpr() {}
 
-func EvalStringExprs(exprs []StringExpr, env *Env) ([]string, func() []error, error) {
+func EvalStringExprs(exprs []StringExpr, env *Env) ([]string, func() []error, error, int) {
 	values := make([]string, len(exprs))
 	cleanups := make([]func() error, 0)
 	var firstErr error
+	firstErrIndex := -1
 	for i, expr := range exprs {
 		value, cleanup, err := expr.Eval(env)
 		cleanups = append(cleanups, cleanup)
 		if err != nil {
 			firstErr = err
+			firstErrIndex = i
 			break
 		}
 		values[i] = value
@@ -124,7 +126,7 @@ func EvalStringExprs(exprs []StringExpr, env *Env) ([]string, func() []error, er
 	}
 
 	if firstErr != nil {
-		return nil, cleanupAll, firstErr
+		return nil, cleanupAll, firstErr, firstErrIndex
 	}
-	return values, cleanupAll, nil
+	return values, cleanupAll, nil, -1
 }

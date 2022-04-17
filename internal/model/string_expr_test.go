@@ -163,14 +163,14 @@ var _ = Describe("EvalStringExprs()", func() {
 	})
 
 	DescribeTable("returns results, aggregated cleanup function, and errors",
-		func(successEvalAndCleanups [][2]bool, expectedValues []string, expectedEvaled []bool, expectedCleanuped []bool, expectedErr string, expectedCleanupErrs []string) {
+		func(successEvalAndCleanups [][2]bool, expectedValues []string, expectedEvaled []bool, expectedCleanuped []bool, expectedErr string, expectedErrIndex int, expectedCleanupErrs []string) {
 			exprs := make([]StringExpr, len(successEvalAndCleanups))
 			for i, fields := range successEvalAndCleanups {
 				expr := &testStringExpr{v: strconv.Itoa(i), successEval: fields[0], successCleanup: fields[1]}
 				exprs[i] = expr
 			}
 
-			values, cleanup, err := EvalStringExprs(exprs, env)
+			values, cleanup, err, i := EvalStringExprs(exprs, env)
 
 			if expectedErr == "" {
 				Expect(err).NotTo(HaveOccurred())
@@ -179,6 +179,7 @@ var _ = Describe("EvalStringExprs()", func() {
 				Expect(err).To(MatchError(expectedErr))
 				Expect(values).To(BeNil())
 			}
+			Expect(i).To(Equal(expectedErrIndex))
 
 			Expect(extractBools(exprs, func(e *testStringExpr) bool { return e.isEvaled })).To(Equal(expectedEvaled))
 			cleanupErrs := make([]string, 0)
@@ -188,8 +189,8 @@ var _ = Describe("EvalStringExprs()", func() {
 			Expect(cleanupErrs).To(Equal(expectedCleanupErrs))
 			Expect(extractBools(exprs, func(e *testStringExpr) bool { return e.isCleanuped })).To(Equal(expectedCleanuped))
 		},
-		Entry("with 3 exprs all success", [][2]bool{{true, true}, {true, true}, {true, true}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", []string{}),
-		Entry("with 3 exprs 2nd fails", [][2]bool{{true, true}, {false, true}, {true, true}}, nil, []bool{true, true, false}, []bool{true, true, false}, "1", []string{}),
-		Entry("with 3 exprs 1st and 3rd cleanup fails", [][2]bool{{true, false}, {true, true}, {true, false}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", []string{"0", "2"}),
+		Entry("with 3 exprs all success", [][2]bool{{true, true}, {true, true}, {true, true}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", -1, []string{}),
+		Entry("with 3 exprs 2nd fails", [][2]bool{{true, true}, {false, true}, {true, true}}, nil, []bool{true, true, false}, []bool{true, true, false}, "1", 1, []string{}),
+		Entry("with 3 exprs 1st and 3rd cleanup fails", [][2]bool{{true, false}, {true, true}, {true, false}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", -1, []string{"0", "2"}),
 	)
 })
