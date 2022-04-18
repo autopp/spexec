@@ -28,13 +28,13 @@ func (m *zeroMatcher) Match(actual int) (bool, string, error) {
 	return true, "status shoud not be zero", nil
 }
 
-func parseZeroMatcher(_ *spec.Validator, r *StatusMatcherRegistry, x interface{}) model.StatusMatcher {
+func parseZeroMatcher(_ *model.Env, _ *spec.Validator, r *StatusMatcherRegistry, x interface{}) model.StatusMatcher {
 	return &zeroMatcher{expected: x.(bool)}
 }
 
 const violationMessage = "syntax error"
 
-func parseViolationMatcher(v *spec.Validator, _ *StatusMatcherRegistry, _ interface{}) model.StatusMatcher {
+func parseViolationMatcher(_ *model.Env, v *spec.Validator, _ *StatusMatcherRegistry, _ interface{}) model.StatusMatcher {
 	v.AddViolation(violationMessage)
 	return nil
 }
@@ -82,22 +82,24 @@ var _ = Describe("MatcherRegistry", func() {
 		})
 	})
 
-	Describe("ParseMatcher()", func() {
+	Describe("ParseMatcher(env, )", func() {
 		var v *spec.Validator
 		zeroWithDefaultName := "zeroWithDefault"
 		violationName := "violation"
+		var env *model.Env
 
 		JustBeforeEach(func() {
 			r.Add(zeroName, parseZeroMatcher)
 			r.AddWithDefault(zeroWithDefaultName, parseZeroMatcher, true)
 			r.Add(violationName, parseViolationMatcher)
 			v, _ = spec.NewValidator("")
+			env = model.NewEnv(nil)
 		})
 
 		Context("for matcher without default parameter", func() {
 			Context("when param is passed and it returns matcher", func() {
 				It("returns the parsed matcher", func() {
-					m := r.ParseMatcher(v, spec.Map{zeroName: true})
+					m := r.ParseMatcher(env, v, spec.Map{zeroName: true})
 
 					Expect(m).To(BeAssignableToTypeOf(&zeroMatcher{}))
 					Expect(v.Error()).NotTo(HaveOccurred())
@@ -106,7 +108,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 			Context("when param is not passed", func() {
 				It("adds violation", func() {
-					r.ParseMatcher(v, zeroName)
+					r.ParseMatcher(env, v, zeroName)
 
 					Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: parameter is required", zeroName)))
 				})
@@ -116,7 +118,7 @@ var _ = Describe("MatcherRegistry", func() {
 		Context("for matcher with default parameter", func() {
 			Context("when param is passed and it returns matcher", func() {
 				It("returns the parsed matcher", func() {
-					m := r.ParseMatcher(v, spec.Map{zeroWithDefaultName: false})
+					m := r.ParseMatcher(env, v, spec.Map{zeroWithDefaultName: false})
 
 					Expect(m).To(BeAssignableToTypeOf(&zeroMatcher{}))
 					Expect(v.Error()).NotTo(HaveOccurred())
@@ -125,7 +127,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 			Context("when param is not passed", func() {
 				It("returns the parsed matcher", func() {
-					m := r.ParseMatcher(v, zeroWithDefaultName)
+					m := r.ParseMatcher(env, v, zeroWithDefaultName)
 
 					Expect(m).To(BeAssignableToTypeOf(&zeroMatcher{}))
 					Expect(m.(*zeroMatcher).expected).To(Equal(true))
@@ -136,14 +138,14 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
-				r.ParseMatcher(v, spec.Map{violationName: nil})
+				r.ParseMatcher(env, v, spec.Map{violationName: nil})
 				Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: %s", violationName, violationMessage)))
 			})
 		})
 
 		Context("when the given name is not registered", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, spec.Map{"unknown": nil})
+				m := r.ParseMatcher(env, v, spec.Map{"unknown": nil})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -151,7 +153,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when size of the given map is not one", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, spec.Map{zeroName: nil, violationName: nil})
+				m := r.ParseMatcher(env, v, spec.Map{zeroName: nil, violationName: nil})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -159,7 +161,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when the given is not a map and string", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(v, 42)
+				m := r.ParseMatcher(env, v, 42)
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -169,17 +171,19 @@ var _ = Describe("MatcherRegistry", func() {
 	Describe("ParseMatchers", func() {
 		var v *spec.Validator
 		violationName := "violation"
+		var env *model.Env
 
 		JustBeforeEach(func() {
 			r.Add(zeroName, parseZeroMatcher)
 			r.AddWithDefault(zeroWithDefaultName, parseZeroMatcher, true)
 			r.Add(violationName, parseViolationMatcher)
 			v, _ = spec.NewValidator("")
+			env = model.NewEnv(nil)
 		})
 
 		Context("when params are valid", func() {
 			It("returns the parsed matchers", func() {
-				m := r.ParseMatchers(v, spec.Seq{spec.Map{zeroName: true}, zeroWithDefaultName})
+				m := r.ParseMatchers(env, v, spec.Seq{spec.Map{zeroName: true}, zeroWithDefaultName})
 
 				Expect(m[0]).To(BeAssignableToTypeOf(&zeroMatcher{}))
 				Expect(m[1]).To(BeAssignableToTypeOf(&zeroMatcher{}))
@@ -189,7 +193,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when the given name is not registered", func() {
 			It("adds violations", func() {
-				m := r.ParseMatchers(v, spec.Seq{spec.Map{"unknown": false}})
+				m := r.ParseMatchers(env, v, spec.Seq{spec.Map{"unknown": false}})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -197,7 +201,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
-				m := r.ParseMatchers(v, spec.Seq{spec.Map{violationName: nil}})
+				m := r.ParseMatchers(env, v, spec.Seq{spec.Map{violationName: nil}})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -205,7 +209,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when the given is not a seq", func() {
 			It("adds violations", func() {
-				m := r.ParseMatchers(v, 42)
+				m := r.ParseMatchers(env, v, 42)
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})

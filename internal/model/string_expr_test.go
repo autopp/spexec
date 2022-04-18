@@ -10,7 +10,12 @@ import (
 )
 
 var _ = Describe("literalStringExpr", func() {
+	var env *Env
 	literal := NewLiteralStringExpr("hello")
+
+	BeforeEach(func() {
+		env = NewEnv(nil)
+	})
 
 	Describe("String()", func() {
 		It("returns itself", func() {
@@ -20,7 +25,7 @@ var _ = Describe("literalStringExpr", func() {
 
 	Describe("Eval()", func() {
 		It("returns itself", func() {
-			v, cleanup, err := literal.Eval()
+			v, cleanup, err := literal.Eval(env)
 			Expect(v).To(Equal("hello"))
 			Expect(cleanup).To(BeNil())
 			Expect(err).NotTo(HaveOccurred())
@@ -32,7 +37,12 @@ var _ = Describe("envStringExpr", func() {
 	name := "MESSAGE"
 	value := "hello"
 
-	env := NewEnvStringExpr(name)
+	e := NewEnvStringExpr(name)
+	var env *Env
+
+	BeforeEach(func() {
+		env = NewEnv(nil)
+	})
 
 	BeforeEach(func() {
 		oldValue, setAlready := os.LookupEnv(name)
@@ -49,20 +59,20 @@ var _ = Describe("envStringExpr", func() {
 
 	Describe("String()", func() {
 		It("returns itself with '$' prefix", func() {
-			Expect(env.String()).To(Equal("$" + name))
+			Expect(e.String()).To(Equal("$" + name))
 		})
 	})
 
 	Describe("Eval()", func() {
 		It("returns value of the environment variable", func() {
-			v, cleanup, err := env.Eval()
+			v, cleanup, err := e.Eval(env)
 			Expect(v).To(Equal(value))
 			Expect(cleanup).To(BeNil())
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("returns error when given name is not defined", func() {
-			_, _, err := NewEnvStringExpr("SPEXEC_UNDEFINED").Eval()
+			_, _, err := NewEnvStringExpr("SPEXEC_UNDEFINED").Eval(env)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -73,9 +83,11 @@ var _ = Describe("fileStringExpr", func() {
 	contents := "hello"
 
 	var file StringExpr
+	var env *Env
 
 	JustBeforeEach(func() {
 		file = NewFileStringExpr(pattern, contents)
+		env = NewEnv(nil)
 	})
 
 	Describe("String()", func() {
@@ -86,7 +98,7 @@ var _ = Describe("fileStringExpr", func() {
 
 	Describe("Eval()", func() {
 		It("returns the file name contains the given contents and function for remove the file", func() {
-			v, cleanup, err := file.Eval()
+			v, cleanup, err := file.Eval(env)
 			Expect(v).NotTo(BeEmpty())
 			Expect(cleanup).NotTo(BeNil())
 			Expect(err).NotTo(HaveOccurred())
@@ -108,7 +120,7 @@ type testStringExpr struct {
 	successCleanup bool
 }
 
-func (e *testStringExpr) Eval() (string, func() error, error) {
+func (e *testStringExpr) Eval(*Env) (string, func() error, error) {
 	e.isEvaled = true
 	if !e.successEval {
 		return "", e.getCleanup(), errors.New(e.v)
@@ -144,15 +156,21 @@ func extractBools(exprs []StringExpr, f func(e *testStringExpr) bool) []bool {
 func (e *testStringExpr) stringExpr() {}
 
 var _ = Describe("EvalStringExprs()", func() {
+	var env *Env
+
+	BeforeEach(func() {
+		env = NewEnv(nil)
+	})
+
 	DescribeTable("returns results, aggregated cleanup function, and errors",
-		func(successEvalAndCleanups [][2]bool, expectedValues []string, expectedEvaled []bool, expectedCleanuped []bool, expectedErr string, expectedCleanupErrs []string) {
+		func(successEvalAndCleanups [][2]bool, expectedValues []string, expectedEvaled []bool, expectedCleanuped []bool, expectedErr string, expectedErrIndex int, expectedCleanupErrs []string) {
 			exprs := make([]StringExpr, len(successEvalAndCleanups))
 			for i, fields := range successEvalAndCleanups {
 				expr := &testStringExpr{v: strconv.Itoa(i), successEval: fields[0], successCleanup: fields[1]}
 				exprs[i] = expr
 			}
 
-			values, cleanup, err := EvalStringExprs(exprs)
+			values, cleanup, err, i := EvalStringExprs(exprs, env)
 
 			if expectedErr == "" {
 				Expect(err).NotTo(HaveOccurred())
@@ -161,6 +179,7 @@ var _ = Describe("EvalStringExprs()", func() {
 				Expect(err).To(MatchError(expectedErr))
 				Expect(values).To(BeNil())
 			}
+			Expect(i).To(Equal(expectedErrIndex))
 
 			Expect(extractBools(exprs, func(e *testStringExpr) bool { return e.isEvaled })).To(Equal(expectedEvaled))
 			cleanupErrs := make([]string, 0)
@@ -170,8 +189,8 @@ var _ = Describe("EvalStringExprs()", func() {
 			Expect(cleanupErrs).To(Equal(expectedCleanupErrs))
 			Expect(extractBools(exprs, func(e *testStringExpr) bool { return e.isCleanuped })).To(Equal(expectedCleanuped))
 		},
-		Entry("with 3 exprs all success", [][2]bool{{true, true}, {true, true}, {true, true}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", []string{}),
-		Entry("with 3 exprs 2nd fails", [][2]bool{{true, true}, {false, true}, {true, true}}, nil, []bool{true, true, false}, []bool{true, true, false}, "1", []string{}),
-		Entry("with 3 exprs 1st and 3rd cleanup fails", [][2]bool{{true, false}, {true, true}, {true, false}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", []string{"0", "2"}),
+		Entry("with 3 exprs all success", [][2]bool{{true, true}, {true, true}, {true, true}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", -1, []string{}),
+		Entry("with 3 exprs 2nd fails", [][2]bool{{true, true}, {false, true}, {true, true}}, nil, []bool{true, true, false}, []bool{true, true, false}, "1", 1, []string{}),
+		Entry("with 3 exprs 1st and 3rd cleanup fails", [][2]bool{{true, false}, {true, true}, {true, false}}, []string{"0", "1", "2"}, []bool{true, true, true}, []bool{true, true, true}, "", -1, []string{"0", "2"}),
 	)
 })

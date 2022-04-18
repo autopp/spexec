@@ -42,9 +42,14 @@ var _ = Describe("Test", func() {
 	)
 
 	Describe("Run()", func() {
+		var env *Env
+		BeforeEach(func() {
+			env = NewEnv(nil)
+		})
+
 		DescribeTable("succeeded cases",
 			func(test *Test, expectedMessages []*AssertionMessage, expectedIsSuccess bool) {
-				tr, err := test.Run()
+				tr, err := test.Run(env)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tr).To(Equal(&TestResult{Name: test.GetName(), Messages: expectedMessages, IsSuccess: expectedIsSuccess}))
 			},
@@ -97,17 +102,18 @@ var _ = Describe("Test", func() {
 				Command: []StringExpr{NewLiteralStringExpr("bash"), NewLiteralStringExpr("-c"), NewLiteralStringExpr("kill -TERM $$")},
 			}, []*AssertionMessage{{Name: "status", Message: "process was signaled (terminated)"}}, false),
 		)
+
+		DescribeTable("failed cases",
+			func(test *Test, expectedErr string) {
+				tr, err := test.Run(env)
+				Expect(tr).To(BeNil())
+				Expect(err).To(MatchError(expectedErr))
+			},
+			Entry("command evaluating is failed", &Test{
+				Name:    "command evaluating is failed",
+				Command: []StringExpr{NewEnvStringExpr("undefined")},
+			}, "environment variable $undefined is not defined"),
+		)
 	})
 
-	DescribeTable("failed cases",
-		func(test *Test, expectedErr string) {
-			tr, err := test.Run()
-			Expect(tr).To(BeNil())
-			Expect(err).To(MatchError(expectedErr))
-		},
-		Entry("command evaluating is failed", &Test{
-			Name:    "command evaluating is failed",
-			Command: []StringExpr{NewEnvStringExpr("undefined")},
-		}, "environment variable $undefined is not defined"),
-	)
 })

@@ -20,6 +20,7 @@ var _ = Describe("Parser", func() {
 	var statusEqMatcher *status.EqMatcher
 	var streamEqMatcher *stream.EqMatcher
 	var p *Parser
+	var env *model.Env
 
 	JustBeforeEach(func() {
 		statusMR := matcher.NewStatusMatcherRegistry()
@@ -27,13 +28,14 @@ var _ = Describe("Parser", func() {
 		streamMR := matcher.NewStreamMatcherRegistry()
 		streamMR.Add("eq", stream.ParseEqMatcher)
 		p = New(statusMR, streamMR, true)
+		env = model.NewEnv(nil)
 	})
 
 	Describe("ParseFile()", func() {
 
 		DescribeTable("with valid file",
 			func(filename string, expected Elements) {
-				actual, err := p.ParseFile(filepath.Join("testdata", filename))
+				actual, err := p.ParseFile(env, filepath.Join("testdata", filename))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actual).To(MatchAllElementsWithIndex(IndexIdentity, expected))
 			},
@@ -78,7 +80,7 @@ var _ = Describe("Parser", func() {
 
 		Describe("with no exist file", func() {
 			It("returns err", func() {
-				_, err := p.ParseFile(filepath.Join("testdata", "unknown.yaml"))
+				_, err := p.ParseFile(env, filepath.Join("testdata", "unknown.yaml"))
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -88,7 +90,7 @@ var _ = Describe("Parser", func() {
 		DescribeTable("success cases",
 			func(s any, expected Fields) {
 				v, _ := spec.NewValidator("testdata/spec.yaml")
-				actual, err := p.loadSpec(v, s)
+				actual, err := p.loadSpec(env, v, s)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actual).To(MatchAllElementsWithIndex(IndexIdentity, Elements{
 					"0": PointTo(MatchAllFields(expected)),
@@ -158,7 +160,7 @@ var _ = Describe("Parser", func() {
 		DescribeTable("failure cases",
 			func(s any, expectedErr string) {
 				v, _ := spec.NewValidator("testdata/spec.yaml")
-				_, err := p.loadSpec(v, s)
+				_, err := p.loadSpec(env, v, s)
 				Expect(err).To(MatchError(expectedErr))
 			},
 			Entry("with unknown field",
@@ -227,7 +229,7 @@ var _ = Describe("Parser", func() {
 		DescribeTable("success cases",
 			func(test any, expected Fields) {
 				v, _ := spec.NewValidator("testdata/spec.yaml")
-				actual := p.loadTest(v, test)
+				actual := p.loadTest(env, v, test)
 				Expect(v.Error()).NotTo(HaveOccurred())
 				Expect(actual).To(PointTo(MatchAllFields(expected)))
 			},
@@ -327,7 +329,7 @@ var _ = Describe("Parser", func() {
 		DescribeTable("failure cases",
 			func(test any, expectedErr string) {
 				v, _ := spec.NewValidator("testdata/spec.yaml")
-				p.loadTest(v, test)
+				p.loadTest(env, v, test)
 				Expect(v.Error()).To(MatchError(expectedErr))
 			},
 			Entry("with not map", 42, "$: should be map, but is int"),
@@ -406,7 +408,7 @@ var _ = Describe("Parser", func() {
 		DescribeTable("success cases",
 			func(expect spec.Map, statusMatcherShouldBeSet bool, stdoutMatcherShouldBeSet, stderrMatcherShouldBeSet bool) {
 				v, _ := spec.NewValidator("")
-				actualStdin, actualStdout, actualStderr := p.loadCommandExpect(v, expect)
+				actualStdin, actualStdout, actualStderr := p.loadCommandExpect(env, v, expect)
 				Expect(v.Error()).NotTo(HaveOccurred())
 				if statusMatcherShouldBeSet {
 					Expect(actualStdin).To(BeAssignableToTypeOf(statusEqMatcher))
@@ -434,7 +436,7 @@ var _ = Describe("Parser", func() {
 		DescribeTable("failure cases",
 			func(expect spec.Map, expectedErr string) {
 				v, _ := spec.NewValidator("")
-				p.loadCommandExpect(v, expect)
+				p.loadCommandExpect(env, v, expect)
 				Expect(v.Error()).To(MatchError(expectedErr))
 			},
 			Entry("with unknown status", spec.Map{"status": spec.Map{"unknown": true}}, "$.status: matcher for status unknown is not defined"),

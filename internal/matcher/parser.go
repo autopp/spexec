@@ -19,7 +19,7 @@ import (
 	"github.com/autopp/spexec/internal/spec"
 )
 
-type MatcherParser[T any] func(v *spec.Validator, r *matcherParserRegistry[T], x interface{}) model.Matcher[T]
+type MatcherParser[T any] func(env *model.Env, v *spec.Validator, r *matcherParserRegistry[T], x interface{}) model.Matcher[T]
 
 type StatusMatcherParser = MatcherParser[model.StatusMatcher]
 type StreamMatcherParser = MatcherParser[model.StreamMatcher]

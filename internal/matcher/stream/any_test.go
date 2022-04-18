@@ -24,7 +24,7 @@ func (m *prefixMatcher) Match(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should start with %q", m.prefix), nil
 }
 
-func parsePrefixMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func parsePrefixMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	switch prefix := x.(type) {
 	case string:
 		return &prefixMatcher{prefix: prefix}
@@ -55,16 +55,18 @@ var _ = Describe("AnyMatcher", func() {
 var _ = Describe("ParseAnyMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
+	var env *model.Env
 
 	JustBeforeEach(func() {
 		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 		r.Add("prefix", parsePrefixMatcher)
+		env = model.NewEnv(nil)
 	})
 
 	Describe("with defined matchers", func() {
 		It("returns matcher", func() {
-			m := ParseAnyMatcher(v, r, spec.Seq{spec.Map{"prefix": "hello"}, spec.Map{"prefix": "hello"}})
+			m := ParseAnyMatcher(env, v, r, spec.Seq{spec.Map{"prefix": "hello"}, spec.Map{"prefix": "hello"}})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -79,7 +81,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 
 	DescribeTable("failure cases",
 		func(given interface{}, prefix string) {
-			m := ParseAnyMatcher(v, r, given)
+			m := ParseAnyMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())
 			err := v.Error()

@@ -25,21 +25,18 @@ import (
 )
 
 type SatisfyMatcher struct {
-	Command []model.StringExpr
+	Command []string
 	Dir     string
+	Cleanup func() []error
 	Env     []util.StringVar
 	Timeout time.Duration
 }
 
 func (m *SatisfyMatcher) Match(actual []byte) (bool, string, error) {
-	command, cleanup, err := model.EvalStringExprs(m.Command)
 	// FIXME: error handling
-	defer cleanup()
-	if err != nil {
-		return false, "", err
-	}
+	defer m.Cleanup()
 
-	e, err := exec.New(command, m.Dir, actual, m.Env, exec.WithTimeout(m.Timeout))
+	e, err := exec.New(m.Command, m.Dir, actual, m.Env, exec.WithTimeout(m.Timeout))
 	if err != nil {
 		return false, "", err
 	}
@@ -51,17 +48,28 @@ func (m *SatisfyMatcher) Match(actual []byte) (bool, string, error) {
 	return true, "should make the given command fail", nil
 }
 
-func ParseSatisfyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func ParseSatisfyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
 	p, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
 	}
 
 	m := &SatisfyMatcher{}
-	m.Command, ok = v.MustHaveCommand(p, "command")
+	command, ok := v.MustHaveCommand(p, "command")
 	if !ok {
 		return nil
 	}
+
+	evaled, cleanup, err, _ := model.EvalStringExprs(command, env)
+	if err != nil {
+		v.InField("command", func() {
+			v.AddViolation("error occured at parsing command: %s", err)
+		})
+		return nil
+	}
+
+	m.Command = evaled
+	m.Cleanup = cleanup
 
 	m.Dir = v.GetDir()
 

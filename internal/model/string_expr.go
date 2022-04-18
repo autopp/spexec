@@ -22,7 +22,7 @@ import (
 )
 
 type StringExpr interface {
-	Eval() (string, func() error, error)
+	Eval(env *Env) (string, func() error, error)
 	String() string
 	stringExpr()
 }
@@ -33,7 +33,7 @@ func NewLiteralStringExpr(v string) StringExpr {
 	return literalStringExpr(v)
 }
 
-func (e literalStringExpr) Eval() (string, func() error, error) {
+func (e literalStringExpr) Eval(*Env) (string, func() error, error) {
 	return string(e), nil, nil
 }
 
@@ -49,7 +49,7 @@ func NewEnvStringExpr(name string) StringExpr {
 	return envStringExpr(name)
 }
 
-func (e envStringExpr) Eval() (string, func() error, error) {
+func (e envStringExpr) Eval(*Env) (string, func() error, error) {
 	v, ok := os.LookupEnv(string(e))
 	if !ok {
 		return "", nil, errors.Errorf(errors.ErrInvalidSpec, "environment variable $%s is not defined", string(e))
@@ -72,7 +72,7 @@ func NewFileStringExpr(pattern string, contents string) StringExpr {
 	return &fileStringExpr{pattern: pattern, contents: contents}
 }
 
-func (f *fileStringExpr) Eval() (string, func() error, error) {
+func (f *fileStringExpr) Eval(*Env) (string, func() error, error) {
 	file, err := os.CreateTemp("", f.pattern)
 	if err != nil {
 		return "", nil, err
@@ -95,15 +95,17 @@ func (f *fileStringExpr) String() string {
 
 func (f *fileStringExpr) stringExpr() {}
 
-func EvalStringExprs(exprs []StringExpr) ([]string, func() []error, error) {
+func EvalStringExprs(exprs []StringExpr, env *Env) ([]string, func() []error, error, int) {
 	values := make([]string, len(exprs))
 	cleanups := make([]func() error, 0)
 	var firstErr error
+	firstErrIndex := -1
 	for i, expr := range exprs {
-		value, cleanup, err := expr.Eval()
+		value, cleanup, err := expr.Eval(env)
 		cleanups = append(cleanups, cleanup)
 		if err != nil {
 			firstErr = err
+			firstErrIndex = i
 			break
 		}
 		values[i] = value
@@ -124,7 +126,7 @@ func EvalStringExprs(exprs []StringExpr) ([]string, func() []error, error) {
 	}
 
 	if firstErr != nil {
-		return nil, cleanupAll, firstErr
+		return nil, cleanupAll, firstErr, firstErrIndex
 	}
-	return values, cleanupAll, nil
+	return values, cleanupAll, nil, -1
 }

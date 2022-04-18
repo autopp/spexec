@@ -59,11 +59,11 @@ func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatche
 	return &Parser{statusMR, streamMR, isStrict}
 }
 
-func (p *Parser) ParseStdin() ([]*model.Test, error) {
-	return p.parseYAML("", os.Stdin)
+func (p *Parser) ParseStdin(env *model.Env) ([]*model.Test, error) {
+	return p.parseYAML(env, "", os.Stdin)
 }
 
-func (p *Parser) ParseFile(filename string) ([]*model.Test, error) {
+func (p *Parser) ParseFile(env *model.Env, filename string) ([]*model.Test, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
@@ -73,25 +73,25 @@ func (p *Parser) ParseFile(filename string) ([]*model.Test, error) {
 	var tests []*model.Test
 	ext := filepath.Ext(filename)
 	if ext == ".yml" || ext == ".yaml" {
-		tests, err = p.parseYAML(filename, f)
+		tests, err = p.parseYAML(env, filename, f)
 	} else {
-		tests, err = p.parseJSON(filename, f)
+		tests, err = p.parseJSON(env, filename, f)
 	}
 
 	return tests, err
 }
 
-func (p *Parser) parseYAML(filename string, in io.Reader) ([]*model.Test, error) {
-	return p.load(filename, in, func(in io.Reader, out interface{}) error {
+func (p *Parser) parseYAML(env *model.Env, filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(env, filename, in, func(in io.Reader, out interface{}) error {
 		return yaml.NewDecoder(in).Decode(out)
 	})
 }
 
-func (p *Parser) parseJSON(filename string, in io.Reader) ([]*model.Test, error) {
-	return p.load(filename, in, util.DecodeJSON)
+func (p *Parser) parseJSON(env *model.Env, filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(env, filename, in, util.DecodeJSON)
 }
 
-func (p *Parser) load(filename string, b io.Reader, unmarshal func(in io.Reader, out interface{}) error) ([]*model.Test, error) {
+func (p *Parser) load(env *model.Env, filename string, b io.Reader, unmarshal func(in io.Reader, out interface{}) error) ([]*model.Test, error) {
 	var x interface{}
 	err := unmarshal(b, &x)
 	if err != nil {
@@ -103,10 +103,10 @@ func (p *Parser) load(filename string, b io.Reader, unmarshal func(in io.Reader,
 		return nil, err
 	}
 
-	return p.loadSpec(v, x)
+	return p.loadSpec(env, v, x)
 }
 
-func (p *Parser) loadSpec(v *spec.Validator, c interface{}) ([]*model.Test, error) {
+func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c interface{}) ([]*model.Test, error) {
 	cmap, ok := v.MustBeMap(c)
 	if !ok {
 		return nil, v.Error()
@@ -129,7 +129,7 @@ func (p *Parser) loadSpec(v *spec.Validator, c interface{}) ([]*model.Test, erro
 
 	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
 		v.ForInSeq(tcs, func(i int, tc interface{}) bool {
-			t := p.loadTest(v, tc)
+			t := p.loadTest(env, v, tc)
 			ts = append(ts, t)
 			return t != nil
 		})
@@ -138,7 +138,7 @@ func (p *Parser) loadSpec(v *spec.Validator, c interface{}) ([]*model.Test, erro
 	return ts, v.Error()
 }
 
-func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
+func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x interface{}) *model.Test {
 	tc, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
@@ -168,7 +168,7 @@ func (p *Parser) loadTest(v *spec.Validator, x interface{}) *model.Test {
 	}
 
 	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
-		t.StatusMatcher, t.StdoutMatcher, t.StderrMatcher = p.loadCommandExpect(v, expect)
+		t.StatusMatcher, t.StdoutMatcher, t.StderrMatcher = p.loadCommandExpect(env, v, expect)
 	})
 
 	if teeStdout, exists, _ := v.MayHaveBool(tc, "teeStdout"); exists {
@@ -220,7 +220,7 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
 	}
 }
 
-func (p *Parser) loadCommandExpect(v *spec.Validator, expect spec.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
+func (p *Parser) loadCommandExpect(env *model.Env, v *spec.Validator, expect spec.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
 	var statusMatcher model.StatusMatcher
 	var stdoutMatcher, stderrMatcher model.StreamMatcher
 	if p.isStrict {
@@ -228,15 +228,15 @@ func (p *Parser) loadCommandExpect(v *spec.Validator, expect spec.Map) (model.St
 	}
 
 	v.MayHave(expect, "status", func(status interface{}) {
-		statusMatcher = p.statusMR.ParseMatcher(v, status)
+		statusMatcher = p.statusMR.ParseMatcher(env, v, status)
 	})
 
 	v.MayHave(expect, "stdout", func(stdout interface{}) {
-		stdoutMatcher = p.streamMR.ParseMatcher(v, stdout)
+		stdoutMatcher = p.streamMR.ParseMatcher(env, v, stdout)
 	})
 
 	v.MayHave(expect, "stderr", func(stderr interface{}) {
-		stderrMatcher = p.streamMR.ParseMatcher(v, stderr)
+		stderrMatcher = p.streamMR.ParseMatcher(env, v, stderr)
 	})
 
 	return statusMatcher, stdoutMatcher, stderrMatcher

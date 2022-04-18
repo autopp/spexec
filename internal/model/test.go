@@ -56,8 +56,9 @@ func (t *Test) GetName() string {
 	return envStr + shellwords.Join(command)
 }
 
-func (t *Test) Run() (*TestResult, error) {
-	command, cleanup, err := EvalStringExprs(t.Command)
+// FIXME: dont need Env
+func (t *Test) Run(env *Env) (*TestResult, error) {
+	command, cleanup, err, _ := EvalStringExprs(t.Command, env)
 	// FIXME: error handling
 	defer cleanup()
 	if err != nil {

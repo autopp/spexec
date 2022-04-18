@@ -30,8 +30,8 @@ func (m *NotMatcher) Match(actual []byte) (bool, string, error) {
 	return !matched, message, err
 }
 
-func ParseNotMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
-	m := r.ParseMatcher(v, x)
+func ParseNotMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+	m := r.ParseMatcher(env, v, x)
 	if m == nil {
 		return nil
 	}

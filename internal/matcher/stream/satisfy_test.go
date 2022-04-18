@@ -16,7 +16,8 @@ var _ = Describe("SatisfyMatcher", func() {
 	var m *SatisfyMatcher
 	JustBeforeEach(func() {
 		m = &SatisfyMatcher{
-			Command: []model.StringExpr{model.NewLiteralStringExpr("bash"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr(`test "$(cat -)" = hello`)},
+			Command: []string{"bash", "-c", `test "$(cat -)" = hello`},
+			Cleanup: func() []error { return nil },
 		}
 	})
 
@@ -35,15 +36,17 @@ var _ = Describe("SatisfyMatcher", func() {
 var _ = Describe("ParseSatisfyMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
+	var env *model.Env
 
 	JustBeforeEach(func() {
 		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
+		env = model.NewEnv(nil)
 	})
 
 	DescribeTable("success cases",
-		func(given interface{}, expectedCommand []model.StringExpr, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
-			m := ParseSatisfyMatcher(v, r, given)
+		func(given interface{}, expectedCommand []string, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
+			m := ParseSatisfyMatcher(env, v, r, given)
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -61,27 +64,27 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 				"timeout": 1,
 			},
-			[]model.StringExpr{model.NewLiteralStringExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
+			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
 		),
 		Entry("without env",
 			spec.Map{
 				"command": spec.Seq{"test.sh"},
 				"timeout": 1,
 			},
-			[]model.StringExpr{model.NewLiteralStringExpr("test.sh")}, nil, 1*time.Second,
+			[]string{"test.sh"}, nil, 1*time.Second,
 		),
 		Entry("without timeout",
 			spec.Map{
 				"command": spec.Seq{"test.sh"},
 				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
 			},
-			[]model.StringExpr{model.NewLiteralStringExpr("test.sh")}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
+			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
 		),
 	)
 
 	DescribeTable("failure cases",
 		func(given interface{}, prefix string) {
-			m := ParseSatisfyMatcher(v, r, given)
+			m := ParseSatisfyMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())
 			err := v.Error()
@@ -107,5 +110,8 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			"command": spec.Seq{"test.sh"},
 			"timeout": "foo",
 		}, "$.timeout: "),
+		Entry("with invalid string expr", spec.Map{
+			"command": spec.Seq{spec.Map{"type": "env", "name": "unknown"}},
+		}, "$.command: error occured at parsing command"),
 	)
 })

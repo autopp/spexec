@@ -132,15 +132,16 @@ func (o *options) run() error {
 	}{}
 	var tests []*model.Test
 	var err error
+	env := model.NewEnv(nil)
 	if o.isStdin {
-		tests, err = p.ParseStdin()
+		tests, err = p.ParseStdin(env)
 		specs = append(specs, struct {
 			filename string
 			tests    []*model.Test
 		}{"<stdin>", tests})
 	} else {
 		for _, filename := range o.filenames {
-			tests, err = p.ParseFile(filename)
+			tests, err = p.ParseFile(env, filename)
 			if err != nil {
 				break
 			}
@@ -198,7 +199,7 @@ func (o *options) run() error {
 
 	var results []*model.TestResult
 	for _, spec := range specs {
-		results = append(results, runner.RunTests(spec.filename, spec.tests, reporter)...)
+		results = append(results, runner.RunTests(env, spec.filename, spec.tests, reporter)...)
 	}
 
 	allGreen := true
