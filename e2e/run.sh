@@ -3,7 +3,7 @@
 set -eu
 
 my_dir=$(cd $(dirname $0); pwd)
-target_spexec=${my_dir}/../dist/spexec_$(go env GOOS)_$(go env GOARCH)/spexec
+target_spexec=${my_dir}/../dist/spexec_$(go env GOOS)_$(go env GOARCH)_v1/spexec
 tester_spexec="${E2E_SPEXEC:-${target_spexec}}"
 
 echo "Using spexec as tester: ${tester_spexec}"
