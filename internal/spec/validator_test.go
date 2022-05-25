@@ -216,6 +216,18 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeQualified", func() {
+		Context("with 1 element map", func() {
+			It("returns the qualifier and the value", func() {
+				given := Map{"$": "answer"}
+				q, v, b := v.MayBeQualified(given)
+				Expect(q).To(Equal("$"))
+				Expect(v).To(Equal("answer"))
+				Expect(b).To(BeTrue())
+			})
+		})
+	})
+
 	Describe("MustBeStringExpr", func() {
 		Context("with a string", func() {
 			It("returns literalStringExpr and true", func() {

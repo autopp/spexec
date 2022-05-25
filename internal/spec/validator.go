@@ -137,6 +137,23 @@ func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	return s, ok
 }
 
+func (v *Validator) MayBeQualified(x interface{}) (string, interface{}, bool) {
+	qv, ok := v.MayBeMap(x)
+	if !ok {
+		return "", nil, false
+	}
+
+	if len(qv) != 1 {
+		return "", nil, false
+	}
+
+	for q, v := range qv {
+		return q, v, true
+	}
+
+	panic("UNREACHABLE CODE")
+}
+
 func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 	if s, ok := v.MayBeString(x); ok {
 		return model.NewLiteralStringExpr(s), true
