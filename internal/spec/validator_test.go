@@ -218,12 +218,28 @@ var _ = Describe("Validator", func() {
 
 	Describe("MayBeQualified", func() {
 		Context("with 1 element map", func() {
-			It("returns the qualifier and the value", func() {
+			It("returns the qualifier, the value and true", func() {
 				given := Map{"$": "answer"}
 				q, v, b := v.MayBeQualified(given)
 				Expect(q).To(Equal("$"))
 				Expect(v).To(Equal("answer"))
 				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with not map", func() {
+			It("returns empty values and false", func() {
+				given := "answer"
+				_, _, b := v.MayBeQualified(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with two or more elements map", func() {
+			It("returns empty values and false", func() {
+				given := Map{"$": "answer", "$$": 42}
+				_, _, b := v.MayBeQualified(given)
+				Expect(b).To(BeFalse())
 			})
 		})
 	})
