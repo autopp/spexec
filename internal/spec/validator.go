@@ -154,6 +154,19 @@ func (v *Validator) MayBeQualified(x interface{}) (string, interface{}, bool) {
 	panic("UNREACHABLE CODE")
 }
 
+func (v *Validator) MayBeVariable(x interface{}) (string, bool) {
+	q, value, ok := v.MayBeQualified(x)
+	if !ok {
+		return "", false
+	}
+
+	if name, ok := v.MayBeString(value); q == "$" && ok {
+		return name, true
+	}
+
+	return "", false
+}
+
 func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 	if s, ok := v.MayBeString(x); ok {
 		return model.NewLiteralStringExpr(s), true

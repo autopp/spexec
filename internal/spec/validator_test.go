@@ -244,6 +244,41 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeVariable", func() {
+		Context("with 1 element map which contain '$'", func() {
+			It("returns the name and true", func() {
+				given := Map{"$": "answer"}
+				name, b := v.MayBeVariable(given)
+				Expect(name).To(Equal("answer"))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with 1 element map without '$'", func() {
+			It("returns something and false", func() {
+				given := Map{"answer": 42}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with not map", func() {
+			It("returns something and false", func() {
+				given := "answer"
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with two or more elements map", func() {
+			It("returns something and false", func() {
+				given := Map{"$": "answer", "$$": 42}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeStringExpr", func() {
 		Context("with a string", func() {
 			It("returns literalStringExpr and true", func() {
