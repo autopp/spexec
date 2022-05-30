@@ -154,17 +154,20 @@ func (v *Validator) MayBeQualified(x interface{}) (string, interface{}, bool) {
 	panic("UNREACHABLE CODE")
 }
 
+var variablePattern = regexp.MustCompile(`^[_a-zA-Z]\w*$`)
+
 func (v *Validator) MayBeVariable(x interface{}) (string, bool) {
 	q, value, ok := v.MayBeQualified(x)
-	if !ok {
+	if !ok || q != "$" {
 		return "", false
 	}
 
-	if name, ok := v.MayBeString(value); q == "$" && ok {
-		return name, true
+	name, ok := v.MayBeString(value)
+	if !ok && !variablePattern.MatchString(name) {
+		return "", false
 	}
 
-	return "", false
+	return name, true
 }
 
 func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
