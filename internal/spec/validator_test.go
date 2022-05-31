@@ -245,7 +245,7 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MayBeVariable", func() {
-		Context("with 1 element map which contain '$'", func() {
+		Context("with 1 element map which contain '$' and the name", func() {
 			It("returns the name and true", func() {
 				given := Map{"$": "answer"}
 				name, b := v.MayBeVariable(given)
@@ -254,9 +254,25 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
+		Context("with 1 elements map contain '$' and not string", func() {
+			It("returns something and false", func() {
+				given := Map{"$": 42}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with 1 elements map contain '$' and not variable name", func() {
+			It("returns something and false", func() {
+				given := Map{"$": "foo bar"}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
 		Context("with 1 element map without '$'", func() {
 			It("returns something and false", func() {
-				given := Map{"answer": 42}
+				given := Map{"$$": "answer"}
 				_, b := v.MayBeVariable(given)
 				Expect(b).To(BeFalse())
 			})

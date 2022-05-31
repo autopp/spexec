@@ -163,7 +163,7 @@ func (v *Validator) MayBeVariable(x interface{}) (string, bool) {
 	}
 
 	name, ok := v.MayBeString(value)
-	if !ok && !variablePattern.MatchString(name) {
+	if !ok || !variablePattern.MatchString(name) {
 		return "", false
 	}
 
