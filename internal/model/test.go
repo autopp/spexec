@@ -58,7 +58,7 @@ func (t *Test) GetName() string {
 
 // FIXME: dont need Env
 func (t *Test) Run(env *Env) (*TestResult, error) {
-	command, cleanup, err, _ := EvalStringExprs(t.Command, env)
+	command, cleanup, err, _ := EvalStringExprs(t.Command)
 	// FIXME: error handling
 	defer cleanup()
 	if err != nil {

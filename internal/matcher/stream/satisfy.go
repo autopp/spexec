@@ -60,7 +60,7 @@ func ParseSatisfyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMat
 		return nil
 	}
 
-	evaled, cleanup, err, _ := model.EvalStringExprs(command, env)
+	evaled, cleanup, err, _ := model.EvalStringExprs(command)
 	if err != nil {
 		v.InField("command", func() {
 			v.AddViolation("error occured at parsing command: %s", err)
