@@ -25,14 +25,14 @@ func NewRunner() *Runner {
 	return &Runner{}
 }
 
-func (r *Runner) RunTests(env *model.Env, name string, tests []*model.Test, reporter *reporter.Reporter) []*model.TestResult {
+func (r *Runner) RunTests(name string, tests []*model.Test, reporter *reporter.Reporter) []*model.TestResult {
 	results := make([]*model.TestResult, 0, len(tests))
 
 	reporter.OnRunStart()
 	for _, t := range tests {
 		reporter.OnTestStart(t)
 
-		tr, err := t.Run(env)
+		tr, err := t.Run()
 		if err != nil {
 			panic(err)
 		}

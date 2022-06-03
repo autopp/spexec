@@ -199,7 +199,7 @@ func (o *options) run() error {
 
 	var results []*model.TestResult
 	for _, spec := range specs {
-		results = append(results, runner.RunTests(env, spec.filename, spec.tests, reporter)...)
+		results = append(results, runner.RunTests(spec.filename, spec.tests, reporter)...)
 	}
 
 	allGreen := true

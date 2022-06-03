@@ -42,14 +42,9 @@ var _ = Describe("Test", func() {
 	)
 
 	Describe("Run()", func() {
-		var env *Env
-		BeforeEach(func() {
-			env = NewEnv(nil)
-		})
-
 		DescribeTable("succeeded cases",
 			func(test *Test, expectedMessages []*AssertionMessage, expectedIsSuccess bool) {
-				tr, err := test.Run(env)
+				tr, err := test.Run()
 				Expect(err).NotTo(HaveOccurred())
 				Expect(tr).To(Equal(&TestResult{Name: test.GetName(), Messages: expectedMessages, IsSuccess: expectedIsSuccess}))
 			},
@@ -105,7 +100,7 @@ var _ = Describe("Test", func() {
 
 		DescribeTable("failed cases",
 			func(test *Test, expectedErr string) {
-				tr, err := test.Run(env)
+				tr, err := test.Run()
 				Expect(tr).To(BeNil())
 				Expect(err).To(MatchError(expectedErr))
 			},
