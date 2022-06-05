@@ -531,6 +531,7 @@ func (v *Validator) Error() error {
 	return errors.New(errors.ErrInvalidSpec, strings.Join(messages, "\n"))
 }
 
+// FIXME: unify to model
 func TypeOf(x interface{}) Type {
 	if x == nil {
 		return TypeNil

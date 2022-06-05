@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// FIXME: unify to model
+package model
 
-package spec
-
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
 type Map = map[string]interface{}
 type Seq = []interface{}
@@ -40,6 +41,40 @@ var typeNames = map[Type]string{
 	TypeString: "string",
 	TypeSeq:    "seq",
 	TypeMap:    "map",
+}
+
+func TypeOf(x interface{}) Type {
+	if x == nil {
+		return TypeNil
+	}
+
+	if _, ok := x.(int); ok {
+		return TypeInt
+	}
+
+	if i, ok := x.(json.Number); ok {
+		if _, err := i.Int64(); err == nil {
+			return TypeInt
+		}
+	}
+
+	if _, ok := x.(bool); ok {
+		return TypeBool
+	}
+
+	if _, ok := x.(string); ok {
+		return TypeString
+	}
+
+	if _, ok := x.(Seq); ok {
+		return TypeSeq
+	}
+
+	if _, ok := x.(Map); ok {
+		return TypeMap
+	}
+
+	return TypeUnkown
 }
 
 func TypeNameOf(x interface{}) string {
