@@ -29,7 +29,7 @@ type TemplateVar struct {
 func (tv *TemplateVar) Expand(value interface{}, env *Env) (interface{}, error) {
 	value, ok := env.Lookup(tv.name)
 	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "undefined var: %s")
+		return nil, errors.Errorf(errors.ErrInvalidSpec, "undefined var: %s", tv.name)
 	}
 
 	return value, nil
@@ -49,7 +49,7 @@ func (tf *TemplateFieldRef) Expand(value interface{}, env *Env) (interface{}, er
 
 	v, ok := m[tf.field]
 	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "expect to contains .%s")
+		return nil, errors.Errorf(errors.ErrInvalidSpec, "expect to contains .%s", tf.field)
 	}
 
 	expanded, err := tf.next.Expand(v, env)
