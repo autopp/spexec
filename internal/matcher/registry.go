@@ -68,7 +68,7 @@ func (r *matcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string
 	switch specifier := x.(type) {
 	case string:
 		name = specifier
-	case spec.Map:
+	case model.Map:
 		if len(specifier) != 1 {
 			v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got map with %d key-value)", len(specifier))
 			return "", nil, nil
@@ -78,7 +78,7 @@ func (r *matcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string
 		}
 		withParam = true
 	default:
-		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", spec.TypeNameOf(x))
+		v.AddViolation("matcher specifier should be a matcher name or a map with single key-value (got %s)", model.TypeNameOf(x))
 		return "", nil, nil
 	}
 

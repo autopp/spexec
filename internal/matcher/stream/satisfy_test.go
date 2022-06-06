@@ -59,24 +59,24 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			Expect(satisfyMatcher.Timeout).To(Equal(expectedTimeout))
 		},
 		Entry("with full field",
-			spec.Map{
-				"command": spec.Seq{"test.sh"},
-				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
+			model.Map{
+				"command": model.Seq{"test.sh"},
+				"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
 				"timeout": 1,
 			},
 			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 1*time.Second,
 		),
 		Entry("without env",
-			spec.Map{
-				"command": spec.Seq{"test.sh"},
+			model.Map{
+				"command": model.Seq{"test.sh"},
 				"timeout": 1,
 			},
 			[]string{"test.sh"}, nil, 1*time.Second,
 		),
 		Entry("without timeout",
-			spec.Map{
-				"command": spec.Seq{"test.sh"},
-				"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
+			model.Map{
+				"command": model.Seq{"test.sh"},
+				"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
 			},
 			[]string{"test.sh"}, []util.StringVar{{Name: "MSG", Value: "hello"}}, 5*time.Second,
 		),
@@ -92,26 +92,26 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not map", 42, "$: "),
-		Entry("without command", spec.Map{
-			"env":     spec.Seq{spec.Map{"name": "MSG", "value": "hello"}},
+		Entry("without command", model.Map{
+			"env":     model.Seq{model.Map{"name": "MSG", "value": "hello"}},
 			"timeout": 1,
 		}, "$: "),
-		Entry("with invalid command", spec.Map{
+		Entry("with invalid command", model.Map{
 			"command": "test.sh",
 		}, "$.command: "),
-		Entry("with empty command", spec.Map{
-			"command": spec.Seq{},
+		Entry("with empty command", model.Map{
+			"command": model.Seq{},
 		}, "$.command: "),
-		Entry("with invalid env", spec.Map{
-			"command": spec.Seq{"test.sh"},
+		Entry("with invalid env", model.Map{
+			"command": model.Seq{"test.sh"},
 			"env":     42,
 		}, "$.env: "),
-		Entry("with invalid timeout", spec.Map{
-			"command": spec.Seq{"test.sh"},
+		Entry("with invalid timeout", model.Map{
+			"command": model.Seq{"test.sh"},
 			"timeout": "foo",
 		}, "$.timeout: "),
-		Entry("with invalid string expr", spec.Map{
-			"command": spec.Seq{spec.Map{"type": "env", "name": "unknown"}},
+		Entry("with invalid string expr", model.Map{
+			"command": model.Seq{model.Map{"type": "env", "name": "unknown"}},
 		}, "$.command: error occured at parsing command"),
 	)
 })

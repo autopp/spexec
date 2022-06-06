@@ -61,7 +61,7 @@ var _ = Describe("ParseNotMatcher", func() {
 
 	Describe("with defined matcher", func() {
 		It("returns matcher", func() {
-			m := ParseNotMatcher(env, v, r, spec.Map{"empty": true})
+			m := ParseNotMatcher(env, v, r, model.Map{"empty": true})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -82,7 +82,7 @@ var _ = Describe("ParseNotMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not map", 42, "$: "),
-		Entry("with undefined matcher", spec.Map{"foo": 42}, "$: "),
-		Entry("with invalid inner matcher parameter", spec.Map{"empty": 42}, "$.empty: "),
+		Entry("with undefined matcher", model.Map{"foo": 42}, "$: "),
+		Entry("with invalid inner matcher parameter", model.Map{"empty": 42}, "$.empty: "),
 	)
 })

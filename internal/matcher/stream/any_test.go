@@ -66,7 +66,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 
 	Describe("with defined matchers", func() {
 		It("returns matcher", func() {
-			m := ParseAnyMatcher(env, v, r, spec.Seq{spec.Map{"prefix": "hello"}, spec.Map{"prefix": "hello"}})
+			m := ParseAnyMatcher(env, v, r, model.Seq{model.Map{"prefix": "hello"}, model.Map{"prefix": "hello"}})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -89,7 +89,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not seq", 42, "$: "),
-		Entry("with undefined matcher", spec.Seq{spec.Map{"foo": 42}}, "$[0]: "),
-		Entry("with invalid inner matcher parameter", spec.Seq{spec.Map{"prefix": 42}}, "$[0].prefix: "),
+		Entry("with undefined matcher", model.Seq{model.Map{"foo": 42}}, "$[0]: "),
+		Entry("with invalid inner matcher parameter", model.Seq{model.Map{"prefix": 42}}, "$[0].prefix: "),
 	)
 })

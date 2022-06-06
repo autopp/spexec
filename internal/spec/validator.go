@@ -102,24 +102,24 @@ func (v *Validator) AddViolation(format string, args ...interface{}) {
 	v.violations = append(v.violations, violation{path: strings.Join(v.paths, ""), message: message})
 }
 
-func (v *Validator) MayBeMap(x interface{}) (Map, bool) {
-	m, ok := x.(Map)
+func (v *Validator) MayBeMap(x interface{}) (model.Map, bool) {
+	m, ok := x.(model.Map)
 	return m, ok
 }
 
-func (v *Validator) MustBeMap(x interface{}) (Map, bool) {
+func (v *Validator) MustBeMap(x interface{}) (model.Map, bool) {
 	if m, ok := v.MayBeMap(x); ok {
 		return m, true
 	}
-	v.AddViolation("should be map, but is %s", TypeNameOf(x))
+	v.AddViolation("should be map, but is %s", model.TypeNameOf(x))
 	return nil, false
 }
 
-func (v *Validator) MustBeSeq(x interface{}) (Seq, bool) {
-	if s, ok := x.(Seq); ok {
+func (v *Validator) MustBeSeq(x interface{}) (model.Seq, bool) {
+	if s, ok := x.(model.Seq); ok {
 		return s, true
 	}
-	v.AddViolation("should be seq, but is %s", TypeNameOf(x))
+	v.AddViolation("should be seq, but is %s", model.TypeNameOf(x))
 	return nil, false
 }
 
@@ -131,7 +131,7 @@ func (v *Validator) MayBeString(x interface{}) (string, bool) {
 func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	s, ok := v.MayBeString(x)
 	if !ok {
-		v.AddViolation("should be string, but is %s", TypeNameOf(x))
+		v.AddViolation("should be string, but is %s", model.TypeNameOf(x))
 	}
 
 	return s, ok
@@ -177,7 +177,7 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 
 	m, ok := v.MayBeMap(x)
 	if !ok {
-		v.AddViolation("should be string or map, but is %s", TypeNameOf(x))
+		v.AddViolation("should be string or map, but is %s", model.TypeNameOf(x))
 		return nil, false
 	}
 
@@ -249,7 +249,7 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 		}
 		return int(i), err == nil
 	default:
-		v.AddViolation("should be int, but is %s", TypeNameOf(x))
+		v.AddViolation("should be int, but is %s", model.TypeNameOf(x))
 		return 0, false
 	}
 }
@@ -257,7 +257,7 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
 	b, ok := x.(bool)
 	if !ok {
-		v.AddViolation("should be bool, but is %s", TypeNameOf(x))
+		v.AddViolation("should be bool, but is %s", model.TypeNameOf(x))
 	}
 
 	return b, ok
@@ -271,7 +271,7 @@ func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
 
 	s, ok := x.(string)
 	if !ok {
-		v.AddViolation("should be positive integer or duration string, but is %s", TypeNameOf(x))
+		v.AddViolation("should be positive integer or duration string, but is %s", model.TypeNameOf(x))
 		return 0, false
 	}
 	d, err := time.ParseDuration(s)
@@ -283,7 +283,7 @@ func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
 	return d, true
 }
 
-func (v *Validator) MustHave(m Map, key string) (interface{}, bool) {
+func (v *Validator) MustHave(m model.Map, key string) (interface{}, bool) {
 	x, ok := m[key]
 	if !ok {
 		v.AddViolation("should have .%s", key)
@@ -291,7 +291,7 @@ func (v *Validator) MustHave(m Map, key string) (interface{}, bool) {
 	return x, ok
 }
 
-func (v *Validator) MayHave(m Map, key string, f func(interface{})) (interface{}, bool) {
+func (v *Validator) MayHave(m model.Map, key string, f func(interface{})) (interface{}, bool) {
 	x, ok := m[key]
 	if !ok {
 		return nil, false
@@ -304,13 +304,13 @@ func (v *Validator) MayHave(m Map, key string, f func(interface{})) (interface{}
 	return x, true
 }
 
-func (v *Validator) MayHaveMap(m Map, key string, f func(Map)) (Map, bool, bool) {
+func (v *Validator) MayHaveMap(m model.Map, key string, f func(model.Map)) (model.Map, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return nil, false, true
 	}
 
-	var inner Map
+	var inner model.Map
 	v.InField(key, func() {
 		inner, ok = v.MustBeMap(x)
 		if ok {
@@ -321,13 +321,13 @@ func (v *Validator) MayHaveMap(m Map, key string, f func(Map)) (Map, bool, bool)
 	return inner, ok, ok
 }
 
-func (v *Validator) MayHaveSeq(m Map, key string, f func(Seq)) (Seq, bool, bool) {
+func (v *Validator) MayHaveSeq(m model.Map, key string, f func(model.Seq)) (model.Seq, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return nil, false, true
 	}
 
-	var s Seq
+	var s model.Seq
 	v.InField(key, func() {
 		s, ok = v.MustBeSeq(x)
 		if ok {
@@ -338,7 +338,7 @@ func (v *Validator) MayHaveSeq(m Map, key string, f func(Seq)) (Seq, bool, bool)
 	return s, ok, ok
 }
 
-func (v *Validator) MustHaveSeq(m Map, key string, f func(Seq)) (Seq, bool) {
+func (v *Validator) MustHaveSeq(m model.Map, key string, f func(model.Seq)) (model.Seq, bool) {
 	s, exists, ok := v.MayHaveSeq(m, key, f)
 
 	if !exists && ok {
@@ -348,7 +348,7 @@ func (v *Validator) MustHaveSeq(m Map, key string, f func(Seq)) (Seq, bool) {
 	return s, exists && ok
 }
 
-func (v *Validator) ForInSeq(s Seq, f func(i int, x interface{}) bool) bool {
+func (v *Validator) ForInSeq(s model.Seq, f func(i int, x interface{}) bool) bool {
 	ok := true
 	for i, x := range s {
 		v.InIndex(i, func() {
@@ -363,7 +363,7 @@ func (v *Validator) ForInSeq(s Seq, f func(i int, x interface{}) bool) bool {
 	return ok
 }
 
-func (v *Validator) MayHaveString(m Map, key string) (string, bool, bool) {
+func (v *Validator) MayHaveString(m model.Map, key string) (string, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return "", false, true
@@ -377,7 +377,7 @@ func (v *Validator) MayHaveString(m Map, key string) (string, bool, bool) {
 	return s, ok, ok
 }
 
-func (v *Validator) MustHaveString(m Map, key string) (string, bool) {
+func (v *Validator) MustHaveString(m model.Map, key string) (string, bool) {
 	s, exists, ok := v.MayHaveString(m, key)
 
 	if !exists && ok {
@@ -387,7 +387,7 @@ func (v *Validator) MustHaveString(m Map, key string) (string, bool) {
 	return s, exists && ok
 }
 
-func (v *Validator) MayHaveInt(m Map, key string) (int, bool, bool) {
+func (v *Validator) MayHaveInt(m model.Map, key string) (int, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return 0, false, true
@@ -401,7 +401,7 @@ func (v *Validator) MayHaveInt(m Map, key string) (int, bool, bool) {
 	return i, ok, ok
 }
 
-func (v *Validator) MayHaveBool(m Map, key string) (bool, bool, bool) {
+func (v *Validator) MayHaveBool(m model.Map, key string) (bool, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return false, false, true
@@ -415,7 +415,7 @@ func (v *Validator) MayHaveBool(m Map, key string) (bool, bool, bool) {
 	return b, ok, ok
 }
 
-func (v *Validator) MayHaveDuration(m Map, key string) (time.Duration, bool, bool) {
+func (v *Validator) MayHaveDuration(m model.Map, key string) (time.Duration, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return 0, false, true
@@ -429,13 +429,13 @@ func (v *Validator) MayHaveDuration(m Map, key string) (time.Duration, bool, boo
 	return d, ok, ok
 }
 
-func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bool) {
+func (v *Validator) MayHaveEnvSeq(m model.Map, key string) ([]util.StringVar, bool, bool) {
 	var ret []util.StringVar
 	ok := true
-	_, _, isSeq := v.MayHaveSeq(m, "env", func(env Seq) {
+	_, _, isSeq := v.MayHaveSeq(m, "env", func(env model.Seq) {
 		ret = []util.StringVar{}
 		v.ForInSeq(env, func(i int, x interface{}) bool {
-			var envVar Map
+			var envVar model.Map
 			envVar, ok = v.MustBeMap(x)
 			if !ok {
 				return false
@@ -466,10 +466,10 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool, bool) {
+func (v *Validator) MayHaveCommand(m model.Map, key string) ([]model.StringExpr, bool, bool) {
 	var ret []model.StringExpr
 	ok := true
-	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
+	_, _, isSeq := v.MayHaveSeq(m, key, func(command model.Seq) {
 		ret = make([]model.StringExpr, len(command))
 		v.ForInSeq(command, func(i int, x interface{}) bool {
 			var c model.StringExpr
@@ -491,7 +491,7 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool,
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MustHaveCommand(m Map, key string) ([]model.StringExpr, bool) {
+func (v *Validator) MustHaveCommand(m model.Map, key string) ([]model.StringExpr, bool) {
 	c, exists, ok := v.MayHaveCommand(m, key)
 
 	if !exists && ok {
@@ -501,7 +501,7 @@ func (v *Validator) MustHaveCommand(m Map, key string) ([]model.StringExpr, bool
 	return c, exists && ok
 }
 
-func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
+func (v *Validator) MustContainOnly(m model.Map, keys ...string) bool {
 	dict := map[string]struct{}{}
 	for _, key := range keys {
 		dict[key] = struct{}{}
@@ -529,41 +529,6 @@ func (v *Validator) Error() error {
 	}
 
 	return errors.New(errors.ErrInvalidSpec, strings.Join(messages, "\n"))
-}
-
-// FIXME: unify to model
-func TypeOf(x interface{}) Type {
-	if x == nil {
-		return TypeNil
-	}
-
-	if _, ok := x.(int); ok {
-		return TypeInt
-	}
-
-	if i, ok := x.(json.Number); ok {
-		if _, err := i.Int64(); err == nil {
-			return TypeInt
-		}
-	}
-
-	if _, ok := x.(bool); ok {
-		return TypeBool
-	}
-
-	if _, ok := x.(string); ok {
-		return TypeString
-	}
-
-	if _, ok := x.(Seq); ok {
-		return TypeSeq
-	}
-
-	if _, ok := x.(Map); ok {
-		return TypeMap
-	}
-
-	return TypeUnkown
 }
 
 func toInt(x interface{}) (int, bool) {

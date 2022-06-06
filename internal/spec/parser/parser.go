@@ -127,7 +127,7 @@ func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c interface{}) ([]*
 		}
 	}
 
-	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
+	v.MustHaveSeq(cmap, "tests", func(tcs model.Seq) {
 		v.ForInSeq(tcs, func(i int, tc interface{}) bool {
 			t := p.loadTest(env, v, tc)
 			ts = append(ts, t)
@@ -167,7 +167,7 @@ func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x interface{}) *mod
 		t.Timeout = timeout
 	}
 
-	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
+	v.MayHaveMap(tc, "expect", func(expect model.Map) {
 		t.StatusMatcher, t.StdoutMatcher, t.StderrMatcher = p.loadCommandExpect(env, v, expect)
 	})
 
@@ -215,12 +215,12 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
 			return nil
 		}
 	} else {
-		v.AddViolation("should be a string or map, but is %s", spec.TypeNameOf(stdin))
+		v.AddViolation("should be a string or map, but is %s", model.TypeNameOf(stdin))
 		return nil
 	}
 }
 
-func (p *Parser) loadCommandExpect(env *model.Env, v *spec.Validator, expect spec.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
+func (p *Parser) loadCommandExpect(env *model.Env, v *spec.Validator, expect model.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
 	var statusMatcher model.StatusMatcher
 	var stdoutMatcher, stderrMatcher model.StreamMatcher
 	if p.isStrict {
