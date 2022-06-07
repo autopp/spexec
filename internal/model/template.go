@@ -15,6 +15,9 @@
 package model
 
 import (
+	"bytes"
+	"encoding/gob"
+
 	"github.com/autopp/spexec/internal/errors"
 )
 
@@ -89,6 +92,33 @@ func (ti *TemplateIndexRef) Expand(value interface{}, env *Env) (interface{}, er
 }
 
 type TemplateValue struct {
-	refs  []*TemplateRef
+	refs  []TemplateRef
 	value interface{}
+}
+
+func (tv *TemplateValue) Expand(env *Env) (interface{}, error) {
+	buf := new(bytes.Buffer)
+	if err := gob.NewEncoder(buf).Encode(tv.value); err != nil {
+		return nil, err
+	}
+
+	var copied interface{}
+	if err := gob.NewDecoder(buf).Decode(&copied); err != nil {
+		return nil, err
+	}
+
+	for _, ref := range tv.refs {
+		var err error
+		copied, err = ref.Expand(copied, env)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return copied, nil
+}
+
+func init() {
+	gob.Register(Seq{})
+	gob.Register(Map{})
 }
