@@ -98,7 +98,7 @@ type TemplateValue struct {
 
 func (tv *TemplateValue) Expand(env *Env) (interface{}, error) {
 	buf := new(bytes.Buffer)
-	if err := gob.NewEncoder(buf).Encode(tv.value); err != nil {
+	if err := gob.NewEncoder(buf).Encode(&tv.value); err != nil {
 		return nil, err
 	}
 
@@ -119,6 +119,6 @@ func (tv *TemplateValue) Expand(env *Env) (interface{}, error) {
 }
 
 func init() {
-	gob.Register(Seq{})
-	gob.Register(Map{})
+	gob.Register([]interface{}{})
+	gob.Register(map[string]interface{}{})
 }

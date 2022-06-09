@@ -97,3 +97,25 @@ var _ = Describe("TemplateIndexRef", func() {
 		})
 	})
 })
+
+var _ = Describe("TemplateValue", func() {
+	Describe("Expand()", func() {
+		It("returns expanded value", func() {
+			tv := &TemplateValue{
+				refs: []TemplateRef{
+					&TemplateFieldRef{field: "foo", next: &TemplateVar{name: "x"}},
+					&TemplateFieldRef{field: "bar", next: &TemplateIndexRef{index: 0, next: &TemplateVar{name: "y"}}},
+				},
+				value: Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
+			}
+			env := NewEnv(nil)
+			env.Define("x", "hello")
+			env.Define("y", "bye")
+
+			actual, err := tv.Expand(env)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actual).To(Equal(Map{"foo": "hello", "bar": Seq{"bye"}}))
+			Expect(actual).NotTo(Equal(tv.value))
+		})
+	})
+})
