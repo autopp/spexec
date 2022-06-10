@@ -1,6 +1,8 @@
 package model
 
 import (
+	"errors"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -11,6 +13,14 @@ type dummyTemplateRef struct{}
 
 func (dummyTemplateRef) Expand(value interface{}, env *Env) (interface{}, error) {
 	return dummyExpandedValue, nil
+}
+
+var dummyError = errors.New("dummyError")
+
+type errorTemplateRef struct{}
+
+func (errorTemplateRef) Expand(value interface{}, env *Env) (interface{}, error) {
+	return nil, dummyError
 }
 
 var _ = Describe("TemplateVar", func() {
@@ -116,6 +126,18 @@ var _ = Describe("TemplateValue", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(Map{"foo": "hello", "bar": Seq{"bye"}}))
 			Expect(actual).NotTo(Equal(tv.value))
+		})
+
+		It("propagate occured error in TemplateRef", func() {
+			tv := &TemplateValue{
+				refs: []TemplateRef{
+					&TemplateFieldRef{field: "foo", next: &errorTemplateRef{}},
+				},
+				value: Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
+			}
+
+			_, err := tv.Expand(NewEnv(nil))
+			Expect(err).To(MatchError(dummyError))
 		})
 	})
 })
