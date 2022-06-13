@@ -118,6 +118,28 @@ func (tv *TemplateValue) Expand(env *Env) (interface{}, error) {
 	return copied, nil
 }
 
+type Templatable[T any] struct {
+	tv    TemplateValue
+	value T
+}
+
+func (t *Templatable[T]) Expand(env *Env) (T, error) {
+	v, err := t.tv.Expand(env)
+
+	if err != nil {
+		var defaultV T
+		return defaultV, err
+	}
+
+	x, ok := v.(T)
+	if !ok {
+		var defaultV T
+		return defaultV, errors.Errorf(errors.ErrInvalidSpec, "expect %T, but got %T", defaultV, v)
+	}
+
+	return x, nil
+}
+
 func init() {
 	gob.Register([]interface{}{})
 	gob.Register(map[string]interface{}{})
