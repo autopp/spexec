@@ -141,3 +141,44 @@ var _ = Describe("TemplateValue", func() {
 		})
 	})
 })
+
+var _ = Describe("Templatable", func() {
+	Describe("Expand()", func() {
+		var env *Env
+		BeforeEach(func() {
+			env = NewEnv(nil)
+		})
+
+		It("returns wrapped value, when with simple value", func() {
+			t := NewTemplatableFromValue("hello")
+
+			Expect(t.Expand(env)).To(Equal("hello"))
+		})
+
+		It("returns expanded value, when with template value", func() {
+			t := NewTemplatableFromTemplateValue[string](
+				&TemplateValue{refs: []TemplateRef{dummyTemplateRef{}}, value: Map{"$": "x"}},
+			)
+
+			Expect(t.Expand(env)).To(Equal(dummyExpandedValue))
+		})
+
+		It("returns error, when with wrong type value", func() {
+			t := NewTemplatableFromTemplateValue[int](
+				&TemplateValue{refs: []TemplateRef{dummyTemplateRef{}}, value: Map{"$": "x"}},
+			)
+
+			_, err := t.Expand(env)
+			Expect(err).To(MatchError("expect int, but got string"))
+		})
+
+		It("returns error, when with wrong type value", func() {
+			t := NewTemplatableFromTemplateValue[string](
+				&TemplateValue{refs: []TemplateRef{errorTemplateRef{}}, value: Map{"$": "x"}},
+			)
+
+			_, err := t.Expand(env)
+			Expect(err).To(MatchError(dummyError))
+		})
+	})
+})

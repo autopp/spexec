@@ -119,11 +119,23 @@ func (tv *TemplateValue) Expand(env *Env) (interface{}, error) {
 }
 
 type Templatable[T any] struct {
-	tv    TemplateValue
+	tv    *TemplateValue
 	value T
 }
 
+func NewTemplatableFromValue[T any](value T) *Templatable[T] {
+	return &Templatable[T]{value: value}
+}
+
+func NewTemplatableFromTemplateValue[T any](tv *TemplateValue) *Templatable[T] {
+	return &Templatable[T]{tv: tv}
+}
+
 func (t *Templatable[T]) Expand(env *Env) (T, error) {
+	if t.tv == nil {
+		return t.value, nil
+	}
+
 	v, err := t.tv.Expand(env)
 
 	if err != nil {
