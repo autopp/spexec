@@ -15,16 +15,16 @@
 package model
 
 type Env struct {
-	vars map[string]string
+	vars map[string]any
 	prev *Env
 }
 
 func NewEnv(prev *Env) *Env {
-	env := &Env{vars: make(map[string]string), prev: prev}
+	env := &Env{vars: make(map[string]any), prev: prev}
 	return env
 }
 
-func (e *Env) Define(name string, value string) bool {
+func (e *Env) Define(name string, value any) bool {
 	_, defined := e.vars[name]
 	if defined {
 		return false
@@ -35,7 +35,7 @@ func (e *Env) Define(name string, value string) bool {
 	return true
 }
 
-func (e *Env) Lookup(name string) (string, bool) {
+func (e *Env) Lookup(name string) (any, bool) {
 	if e == nil {
 		return "", false
 	}
