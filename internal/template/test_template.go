@@ -12,28 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package model
+package template
 
 import (
 	"time"
+
+	"github.com/autopp/spexec/internal/model"
 )
 
 type TemplatableStringVar struct {
 	Name  string
-	Value Templatable[string]
+	Value model.Templatable[string]
 }
 
 type TestTemplate struct {
-	Name          Templatable[string]
+	Name          model.Templatable[string]
 	SpecFilename  string
-	Dir           Templatable[string]
-	Command       []Templatable[StringExpr]
-	Stdin         Templatable[string]
-	StatusMatcher Templatable[any]
-	StdoutMatcher Templatable[any]
-	StderrMatcher Templatable[any]
+	Dir           model.Templatable[string]
+	Command       []model.Templatable[model.StringExpr]
+	Stdin         model.Templatable[string]
+	StatusMatcher model.Templatable[any]
+	StdoutMatcher model.Templatable[any]
+	StderrMatcher model.Templatable[any]
 	Env           []TemplatableStringVar
 	Timeout       time.Duration
-	TeeStdout     Templatable[bool]
-	TeeStderr     Templatable[bool]
+	TeeStdout     model.Templatable[bool]
+	TeeStderr     model.Templatable[bool]
 }
