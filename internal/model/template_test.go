@@ -29,14 +29,14 @@ var _ = Describe("TemplateVar", func() {
 			env := NewEnv(nil)
 			env.Define("answer", "42")
 
-			tv := &TemplateVar{name: "answer"}
+			tv := NewTemplateVar("answer")
 			Expect(tv.Expand(Map{"$": "answer"}, env)).To(Equal("42"))
 		})
 
 		It("returns error when var is not defined", func() {
 			env := NewEnv(nil)
 
-			tv := &TemplateVar{name: "answer"}
+			tv := NewTemplateVar("answer")
 			_, err := tv.Expand(Map{"$": "answer"}, env)
 			Expect(err).To(HaveOccurred())
 		})
@@ -50,7 +50,7 @@ var _ = Describe("TemplateFieldRef", func() {
 		var env *Env
 
 		JustBeforeEach(func() {
-			tf = &TemplateFieldRef{field: field, next: dummyTemplateRef{}}
+			tf = NewTemplateFieldRef(field, dummyTemplateRef{})
 			env = NewEnv(nil)
 		})
 
@@ -82,7 +82,7 @@ var _ = Describe("TemplateIndexRef", func() {
 		var env *Env
 
 		JustBeforeEach(func() {
-			tf = &TemplateIndexRef{index: 1, next: dummyTemplateRef{}}
+			tf = NewTemplateIndexRef(1, dummyTemplateRef{})
 			env = NewEnv(nil)
 		})
 
@@ -113,8 +113,8 @@ var _ = Describe("TemplateValue", func() {
 		It("returns expanded value", func() {
 			tv := &TemplateValue{
 				refs: []TemplateRef{
-					&TemplateFieldRef{field: "foo", next: &TemplateVar{name: "x"}},
-					&TemplateFieldRef{field: "bar", next: &TemplateIndexRef{index: 0, next: &TemplateVar{name: "y"}}},
+					NewTemplateFieldRef("foo", NewTemplateVar("x")),
+					NewTemplateFieldRef("bar", NewTemplateIndexRef(0, NewTemplateVar("y"))),
 				},
 				value: Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
 			}
@@ -131,7 +131,7 @@ var _ = Describe("TemplateValue", func() {
 		It("propagate occured error in TemplateRef", func() {
 			tv := &TemplateValue{
 				refs: []TemplateRef{
-					&TemplateFieldRef{field: "foo", next: &errorTemplateRef{}},
+					NewTemplateFieldRef("foo", &errorTemplateRef{}),
 				},
 				value: Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
 			}

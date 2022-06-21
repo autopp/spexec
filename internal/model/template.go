@@ -29,6 +29,10 @@ type TemplateVar struct {
 	name string
 }
 
+func NewTemplateVar(name string) *TemplateVar {
+	return &TemplateVar{name}
+}
+
 func (tv *TemplateVar) Expand(value interface{}, env *Env) (interface{}, error) {
 	value, ok := env.Lookup(tv.name)
 	if !ok {
@@ -41,6 +45,13 @@ func (tv *TemplateVar) Expand(value interface{}, env *Env) (interface{}, error) 
 type TemplateFieldRef struct {
 	field string
 	next  TemplateRef
+}
+
+func NewTemplateFieldRef(field string, next TemplateRef) *TemplateFieldRef {
+	return &TemplateFieldRef{
+		field: field,
+		next:  next,
+	}
 }
 
 func (tf *TemplateFieldRef) Expand(value interface{}, env *Env) (interface{}, error) {
@@ -68,6 +79,13 @@ func (tf *TemplateFieldRef) Expand(value interface{}, env *Env) (interface{}, er
 type TemplateIndexRef struct {
 	index int
 	next  TemplateRef
+}
+
+func NewTemplateIndexRef(index int, next TemplateRef) *TemplateIndexRef {
+	return &TemplateIndexRef{
+		index: index,
+		next:  next,
+	}
 }
 
 func (ti *TemplateIndexRef) Expand(value interface{}, env *Env) (interface{}, error) {
