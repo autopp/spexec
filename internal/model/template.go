@@ -110,8 +110,15 @@ func (ti *TemplateIndexRef) Expand(value interface{}, env *Env) (interface{}, er
 }
 
 type TemplateValue struct {
+	value any
 	refs  []TemplateRef
-	value interface{}
+}
+
+func NewTemplateValue(value any, refs []TemplateRef) *TemplateValue {
+	return &TemplateValue{
+		value: value,
+		refs:  refs,
+	}
 }
 
 func (tv *TemplateValue) Expand(env *Env) (interface{}, error) {
