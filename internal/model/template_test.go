@@ -111,13 +111,13 @@ var _ = Describe("TemplateIndexRef", func() {
 var _ = Describe("TemplateValue", func() {
 	Describe("Expand()", func() {
 		It("returns expanded value", func() {
-			tv := &TemplateValue{
-				refs: []TemplateRef{
+			tv := NewTemplateValue(
+				Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
+				[]TemplateRef{
 					NewTemplateFieldRef("foo", NewTemplateVar("x")),
 					NewTemplateFieldRef("bar", NewTemplateIndexRef(0, NewTemplateVar("y"))),
 				},
-				value: Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
-			}
+			)
 			env := NewEnv(nil)
 			env.Define("x", "hello")
 			env.Define("y", "bye")
@@ -129,12 +129,12 @@ var _ = Describe("TemplateValue", func() {
 		})
 
 		It("propagate occured error in TemplateRef", func() {
-			tv := &TemplateValue{
-				refs: []TemplateRef{
+			tv := NewTemplateValue(
+				Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
+				[]TemplateRef{
 					NewTemplateFieldRef("foo", &errorTemplateRef{}),
 				},
-				value: Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
-			}
+			)
 
 			_, err := tv.Expand(NewEnv(nil))
 			Expect(err).To(MatchError(dummyError))
@@ -157,7 +157,7 @@ var _ = Describe("Templatable", func() {
 
 		It("returns expanded value, when with template value", func() {
 			t := NewTemplatableFromTemplateValue[string](
-				&TemplateValue{refs: []TemplateRef{dummyTemplateRef{}}, value: Map{"$": "x"}},
+				NewTemplateValue(Map{"$": "x"}, []TemplateRef{dummyTemplateRef{}}),
 			)
 
 			Expect(t.Expand(env)).To(Equal(dummyExpandedValue))
@@ -165,7 +165,7 @@ var _ = Describe("Templatable", func() {
 
 		It("returns error, when with wrong type value", func() {
 			t := NewTemplatableFromTemplateValue[int](
-				&TemplateValue{refs: []TemplateRef{dummyTemplateRef{}}, value: Map{"$": "x"}},
+				NewTemplateValue(Map{"$": "x"}, []TemplateRef{dummyTemplateRef{}}),
 			)
 
 			_, err := t.Expand(env)
@@ -174,7 +174,7 @@ var _ = Describe("Templatable", func() {
 
 		It("returns error, when with wrong type value", func() {
 			t := NewTemplatableFromTemplateValue[string](
-				&TemplateValue{refs: []TemplateRef{errorTemplateRef{}}, value: Map{"$": "x"}},
+				NewTemplateValue(Map{"$": "x"}, []TemplateRef{errorTemplateRef{}}),
 			)
 
 			_, err := t.Expand(env)
