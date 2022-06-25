@@ -26,16 +26,16 @@ type matcherParserEntry[T any] struct {
 	defaultParam interface{}
 }
 
-type matcherParserRegistry[T any] struct {
+type MatcherParserRegistry[T any] struct {
 	target   string
 	matchers map[string]*matcherParserEntry[T]
 }
 
-func newMatcherParserRegistry[T any](target string) *matcherParserRegistry[T] {
-	return &matcherParserRegistry[T]{target: target, matchers: make(map[string]*matcherParserEntry[T])}
+func newMatcherParserRegistry[T any](target string) *MatcherParserRegistry[T] {
+	return &MatcherParserRegistry[T]{target: target, matchers: make(map[string]*matcherParserEntry[T])}
 }
 
-func (r *matcherParserRegistry[T]) Add(name string, p MatcherParser[T]) error {
+func (r *MatcherParserRegistry[T]) Add(name string, p MatcherParser[T]) error {
 	_, ok := r.matchers[name]
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
@@ -47,7 +47,7 @@ func (r *matcherParserRegistry[T]) Add(name string, p MatcherParser[T]) error {
 	return nil
 }
 
-func (r *matcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T], defaultParam interface{}) error {
+func (r *MatcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T], defaultParam interface{}) error {
 	_, ok := r.matchers[name]
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
@@ -60,7 +60,7 @@ func (r *matcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T
 	return nil
 }
 
-func (r *matcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string, MatcherParser[T], interface{}) {
+func (r *MatcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string, MatcherParser[T], interface{}) {
 	var name string
 	var param interface{}
 	withParam := false
@@ -101,7 +101,7 @@ func (r *matcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string
 	return name, p.parser, param
 }
 
-func (r *matcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validator, x interface{}) model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validator, x interface{}) model.Matcher[T] {
 	name, parser, param := r.get(v, x)
 	if parser == nil {
 		return nil
@@ -114,7 +114,7 @@ func (r *matcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validato
 	return m
 }
 
-func (r *matcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validator, x interface{}) []model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validator, x interface{}) []model.Matcher[T] {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil
@@ -136,13 +136,13 @@ func (r *matcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validat
 	return matchers
 }
 
-type StatusMatcherRegistry = matcherParserRegistry[int]
+type StatusMatcherRegistry = MatcherParserRegistry[int]
 
 func NewStatusMatcherRegistry() *StatusMatcherRegistry {
 	return newMatcherParserRegistry[int]("status")
 }
 
-type StreamMatcherRegistry = matcherParserRegistry[[]byte]
+type StreamMatcherRegistry = MatcherParserRegistry[[]byte]
 
 func NewStreamMatcherRegistry() *StreamMatcherRegistry {
 	return newMatcherParserRegistry[[]byte]("stream")

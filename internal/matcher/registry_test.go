@@ -40,7 +40,7 @@ func parseViolationMatcher(_ *model.Env, v *spec.Validator, _ *StatusMatcherRegi
 }
 
 var _ = Describe("MatcherRegistry", func() {
-	var r *matcherParserRegistry[int]
+	var r *MatcherParserRegistry[int]
 	zeroName := "zero"
 	zeroWithDefaultName := "zeroWithDefault"
 
