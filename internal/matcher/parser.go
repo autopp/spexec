@@ -21,5 +21,5 @@ import (
 
 type MatcherParser[T any] func(env *model.Env, v *spec.Validator, r *MatcherParserRegistry[T], x interface{}) model.Matcher[T]
 
-type StatusMatcherParser = MatcherParser[model.StatusMatcher]
-type StreamMatcherParser = MatcherParser[model.StreamMatcher]
+type StatusMatcherParser = MatcherParser[int]
+type StreamMatcherParser = MatcherParser[[]byte]
