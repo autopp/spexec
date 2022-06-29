@@ -46,11 +46,12 @@ func NewExampleStreamMatcher(matched bool, message string, err error) *ExampleSt
 	return newExampleMatcher[[]byte](matched, message, err)
 }
 
-func GenParseExampleStatusMatcher(calls []any, matched bool, message string, err error) matcher.StatusMatcherParser {
+func GenParseExampleStatusMatcher(matched bool, message string, err error) (matcher.StatusMatcherParser, []any) {
+	calls := make([]any, 0)
 	return func(env *model.Env, v *spec.Validator, r *matcher.StatusMatcherRegistry, x any) model.StatusMatcher {
 		calls = append(calls, x)
 		return NewExampleStatusMatcher(matched, message, err)
-	}
+	}, calls
 }
 
 func GenFailedParseStatusMatcher(violationMessage string) matcher.StatusMatcherParser {
@@ -60,11 +61,12 @@ func GenFailedParseStatusMatcher(violationMessage string) matcher.StatusMatcherP
 	}
 }
 
-func GenParseExampleStreamMatcher(calls []any, matched bool, message string, err error) matcher.StreamMatcherParser {
+func GenParseExampleStreamMatcher(matched bool, message string, err error) (matcher.StreamMatcherParser, []any) {
+	calls := make([]any, 0)
 	return func(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 		calls = append(calls, x)
 		return NewExampleStreamMatcher(matched, message, err)
-	}
+	}, calls
 }
 
 func GenFailedParseStreamMatcher(violationMessage string) matcher.StreamMatcherParser {
