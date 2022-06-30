@@ -1,65 +1,41 @@
-package matcher
+package matcher_test
 
 import (
 	"fmt"
 
+	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/matcher/testutil"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-type zeroMatcher struct {
-	expected bool
-}
-
-func (m *zeroMatcher) Match(actual int) (bool, string, error) {
-	if actual == 0 {
-		if m.expected {
-			return true, "status shoud not be zero", nil
-		} else {
-			return false, "status should be zero", nil
-		}
-	}
-
-	if m.expected {
-		return false, "status should be zero", nil
-	}
-	return true, "status shoud not be zero", nil
-}
-
-func parseZeroMatcher(_ *model.Env, _ *spec.Validator, r *StatusMatcherRegistry, x interface{}) model.StatusMatcher {
-	return &zeroMatcher{expected: x.(bool)}
-}
-
 const violationMessage = "syntax error"
 
-func parseViolationMatcher(_ *model.Env, v *spec.Validator, _ *StatusMatcherRegistry, _ interface{}) model.StatusMatcher {
-	v.AddViolation(violationMessage)
-	return nil
-}
-
 var _ = Describe("MatcherRegistry", func() {
-	var r *MatcherParserRegistry[int]
-	zeroName := "zero"
-	zeroWithDefaultName := "zeroWithDefault"
+	var r *matcher.MatcherParserRegistry[int]
+	var parseExampleMatcher matcher.MatcherParser[int]
+	name := "example"
+	withDefaultName := "exampleWithDefault"
 
 	JustBeforeEach(func() {
-		r = newMatcherParserRegistry[int]("int")
+		r = matcher.NewMatcherParserRegistry[int]("int")
+		parseExampleMatcher, _ = testutil.GenParseExampleStatusMatcher(true, "matcher message", nil)
 	})
 
 	Describe("Add()", func() {
 		Context("when the given name is not registered yet", func() {
 			It("returns nil", func() {
-				err := r.Add(zeroName, parseZeroMatcher)
+				err := r.Add(name, parseExampleMatcher)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		Context("when the given name is registered already", func() {
 			It("returns error", func() {
-				r.Add(zeroName, parseZeroMatcher)
-				err := r.Add(zeroName, parseZeroMatcher)
+				r.Add(name, parseExampleMatcher)
+				err := r.Add(name, parseExampleMatcher)
 				Expect(err).To(HaveOccurred())
 			})
 		})
@@ -68,30 +44,44 @@ var _ = Describe("MatcherRegistry", func() {
 	Describe("AddWithDefault()", func() {
 		Context("when the given name is not registered yet", func() {
 			It("returns nil", func() {
-				err := r.AddWithDefault(zeroName, parseZeroMatcher, true)
+				err := r.AddWithDefault(withDefaultName, parseExampleMatcher, true)
 				Expect(err).NotTo(HaveOccurred())
 			})
 		})
 
 		Context("when the given name is registered already", func() {
 			It("returns error", func() {
-				r.AddWithDefault(zeroName, parseZeroMatcher, true)
-				err := r.AddWithDefault(zeroName, parseZeroMatcher, true)
+				r.AddWithDefault(withDefaultName, parseExampleMatcher, true)
+				err := r.AddWithDefault(withDefaultName, parseExampleMatcher, true)
 				Expect(err).To(HaveOccurred())
 			})
 		})
 	})
 
-	Describe("ParseMatcher(env, )", func() {
+	Describe("ParseMatcher()", func() {
 		var v *spec.Validator
-		zeroWithDefaultName := "zeroWithDefault"
-		violationName := "violation"
+		var parserCalls *testutil.ParserCalls
+		var parseExampleMatcher matcher.MatcherParser[int]
+		var parseExampleMatcherWithDefault matcher.MatcherParser[int]
+		var parserWithDefaultCalls *testutil.ParserCalls
+		var failedParseMatcher matcher.MatcherParser[int]
+
+		name := "example"
+		withDefaultName := "exampleWithDefault"
+		failedName := "violation"
+
 		var env *model.Env
 
 		JustBeforeEach(func() {
-			r.Add(zeroName, parseZeroMatcher)
-			r.AddWithDefault(zeroWithDefaultName, parseZeroMatcher, true)
-			r.Add(violationName, parseViolationMatcher)
+			parseExampleMatcher, parserCalls = testutil.GenParseExampleStatusMatcher(true, "matcher message", nil)
+			r.Add(name, parseExampleMatcher)
+
+			parseExampleMatcherWithDefault, parserWithDefaultCalls = testutil.GenParseExampleStatusMatcher(true, "matcher message", nil)
+			r.AddWithDefault(withDefaultName, parseExampleMatcherWithDefault, 42)
+
+			failedParseMatcher = testutil.GenFailedParseStatusMatcher(violationMessage)
+			r.Add(failedName, failedParseMatcher)
+
 			v, _ = spec.NewValidator("")
 			env = model.NewEnv(nil)
 		})
@@ -99,18 +89,19 @@ var _ = Describe("MatcherRegistry", func() {
 		Context("for matcher without default parameter", func() {
 			Context("when param is passed and it returns matcher", func() {
 				It("returns the parsed matcher", func() {
-					m := r.ParseMatcher(env, v, model.Map{zeroName: true})
+					m := r.ParseMatcher(env, v, model.Map{name: 42})
 
-					Expect(m).To(BeAssignableToTypeOf(&zeroMatcher{}))
+					Expect(m).To(BeAssignableToTypeOf(&testutil.ExampleStatusMatcher{}))
+					Expect(parserCalls.Calls).To(Equal([]any{42}))
 					Expect(v.Error()).NotTo(HaveOccurred())
 				})
 			})
 
 			Context("when param is not passed", func() {
 				It("adds violation", func() {
-					r.ParseMatcher(env, v, zeroName)
+					r.ParseMatcher(env, v, name)
 
-					Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: parameter is required", zeroName)))
+					Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: parameter is required", name)))
 				})
 			})
 		})
@@ -118,19 +109,19 @@ var _ = Describe("MatcherRegistry", func() {
 		Context("for matcher with default parameter", func() {
 			Context("when param is passed and it returns matcher", func() {
 				It("returns the parsed matcher", func() {
-					m := r.ParseMatcher(env, v, model.Map{zeroWithDefaultName: false})
+					m := r.ParseMatcher(env, v, model.Map{withDefaultName: false})
 
-					Expect(m).To(BeAssignableToTypeOf(&zeroMatcher{}))
+					Expect(m).To(BeAssignableToTypeOf(&testutil.ExampleStatusMatcher{}))
 					Expect(v.Error()).NotTo(HaveOccurred())
 				})
 			})
 
 			Context("when param is not passed", func() {
 				It("returns the parsed matcher", func() {
-					m := r.ParseMatcher(env, v, zeroWithDefaultName)
+					m := r.ParseMatcher(env, v, withDefaultName)
 
-					Expect(m).To(BeAssignableToTypeOf(&zeroMatcher{}))
-					Expect(m.(*zeroMatcher).expected).To(Equal(true))
+					Expect(m).To(BeAssignableToTypeOf(&testutil.ExampleStatusMatcher{}))
+					Expect(parserWithDefaultCalls.Calls).To(Equal([]any{42}))
 					Expect(v.Error()).NotTo(HaveOccurred())
 				})
 			})
@@ -138,8 +129,8 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
-				r.ParseMatcher(env, v, model.Map{violationName: nil})
-				Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: %s", violationName, violationMessage)))
+				r.ParseMatcher(env, v, model.Map{failedName: nil})
+				Expect(v.Error()).To(MatchError(fmt.Sprintf("$.%s: %s", failedName, violationMessage)))
 			})
 		})
 
@@ -153,7 +144,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when size of the given map is not one", func() {
 			It("adds violations", func() {
-				m := r.ParseMatcher(env, v, model.Map{zeroName: nil, violationName: nil})
+				m := r.ParseMatcher(env, v, model.Map{name: nil, failedName: nil})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -168,25 +159,37 @@ var _ = Describe("MatcherRegistry", func() {
 		})
 	})
 
-	Describe("ParseMatchers", func() {
+	Describe("ParseMatchers()", func() {
 		var v *spec.Validator
-		violationName := "violation"
+		var parseExampleMatcher matcher.MatcherParser[int]
+		var parseExampleMatcherWithDefault matcher.MatcherParser[int]
+		var failedParseMatcher matcher.MatcherParser[int]
+
+		name := "example"
+		withDefaultName := "exampleWithDefault"
+		failedName := "violation"
 		var env *model.Env
 
 		JustBeforeEach(func() {
-			r.Add(zeroName, parseZeroMatcher)
-			r.AddWithDefault(zeroWithDefaultName, parseZeroMatcher, true)
-			r.Add(violationName, parseViolationMatcher)
+			parseExampleMatcher, _ = testutil.GenParseExampleStatusMatcher(true, "matcher message", nil)
+			r.Add(name, parseExampleMatcher)
+
+			parseExampleMatcherWithDefault, _ = testutil.GenParseExampleStatusMatcher(true, "matcher message", nil)
+			r.AddWithDefault(withDefaultName, parseExampleMatcherWithDefault, 42)
+
+			failedParseMatcher = testutil.GenFailedParseStatusMatcher(violationMessage)
+			r.Add(failedName, failedParseMatcher)
+
 			v, _ = spec.NewValidator("")
 			env = model.NewEnv(nil)
 		})
 
 		Context("when params are valid", func() {
 			It("returns the parsed matchers", func() {
-				m := r.ParseMatchers(env, v, model.Seq{model.Map{zeroName: true}, zeroWithDefaultName})
+				m := r.ParseMatchers(env, v, model.Seq{model.Map{name: true}, withDefaultName})
 
-				Expect(m[0]).To(BeAssignableToTypeOf(&zeroMatcher{}))
-				Expect(m[1]).To(BeAssignableToTypeOf(&zeroMatcher{}))
+				Expect(m[0]).To(BeAssignableToTypeOf(&testutil.ExampleStatusMatcher{}))
+				Expect(m[1]).To(BeAssignableToTypeOf(&testutil.ExampleStatusMatcher{}))
 				Expect(v.Error()).NotTo(HaveOccurred())
 			})
 		})
@@ -201,7 +204,7 @@ var _ = Describe("MatcherRegistry", func() {
 
 		Context("when the given name is registered and it adds violations", func() {
 			It("cascades violations", func() {
-				m := r.ParseMatchers(env, v, model.Seq{model.Map{violationName: nil}})
+				m := r.ParseMatchers(env, v, model.Seq{model.Map{failedName: nil}})
 				Expect(m).To(BeNil())
 				Expect(v.Error()).To(HaveOccurred())
 			})
@@ -219,12 +222,12 @@ var _ = Describe("MatcherRegistry", func() {
 
 var _ = Describe("NewStatusMatcherRegistry()", func() {
 	It("returns new registry", func() {
-		Expect(NewStatusMatcherRegistry()).NotTo(BeNil())
+		Expect(matcher.NewStatusMatcherRegistry()).NotTo(BeNil())
 	})
 })
 
 var _ = Describe("NewStreamMatcherRegistry()", func() {
 	It("returns new registry", func() {
-		Expect(NewStreamMatcherRegistry()).NotTo(BeNil())
+		Expect(matcher.NewStreamMatcherRegistry()).NotTo(BeNil())
 	})
 })

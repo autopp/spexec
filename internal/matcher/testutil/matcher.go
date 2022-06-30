@@ -10,7 +10,6 @@ type exampleMatcher[T any] struct {
 	matched bool
 	message string
 	err     error
-	calls   int
 }
 
 func newExampleMatcher[T any](matched bool, message string, err error) *exampleMatcher[T] {
@@ -18,20 +17,18 @@ func newExampleMatcher[T any](matched bool, message string, err error) *exampleM
 		matched: matched,
 		message: message,
 		err:     err,
-		calls:   0,
 	}
 }
 
 func (m *exampleMatcher[T]) Match(actual T) (bool, string, error) {
-	m.calls++
 	if m.err != nil {
 		return false, "", m.err
 	}
 	return m.matched, m.message, nil
 }
 
-func (m *exampleMatcher[T]) Calls() int {
-	return m.calls
+type ParserCalls struct {
+	Calls []any
 }
 
 type ExampleStatusMatcher = exampleMatcher[int]
@@ -46,10 +43,10 @@ func NewExampleStreamMatcher(matched bool, message string, err error) *ExampleSt
 	return newExampleMatcher[[]byte](matched, message, err)
 }
 
-func GenParseExampleStatusMatcher(matched bool, message string, err error) (matcher.StatusMatcherParser, []any) {
-	calls := make([]any, 0)
+func GenParseExampleStatusMatcher(matched bool, message string, err error) (matcher.StatusMatcherParser, *ParserCalls) {
+	calls := &ParserCalls{Calls: make([]any, 0)}
 	return func(env *model.Env, v *spec.Validator, r *matcher.StatusMatcherRegistry, x any) model.StatusMatcher {
-		calls = append(calls, x)
+		calls.Calls = append(calls.Calls, x)
 		return NewExampleStatusMatcher(matched, message, err)
 	}, calls
 }
@@ -61,10 +58,10 @@ func GenFailedParseStatusMatcher(violationMessage string) matcher.StatusMatcherP
 	}
 }
 
-func GenParseExampleStreamMatcher(matched bool, message string, err error) (matcher.StreamMatcherParser, []any) {
-	calls := make([]any, 0)
+func GenParseExampleStreamMatcher(matched bool, message string, err error) (matcher.StreamMatcherParser, *ParserCalls) {
+	calls := &ParserCalls{Calls: make([]any, 0)}
 	return func(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
-		calls = append(calls, x)
+		calls.Calls = append(calls.Calls, x)
 		return NewExampleStreamMatcher(matched, message, err)
 	}, calls
 }

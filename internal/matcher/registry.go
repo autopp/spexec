@@ -31,7 +31,7 @@ type MatcherParserRegistry[T any] struct {
 	matchers map[string]*matcherParserEntry[T]
 }
 
-func newMatcherParserRegistry[T any](target string) *MatcherParserRegistry[T] {
+func NewMatcherParserRegistry[T any](target string) *MatcherParserRegistry[T] {
 	return &MatcherParserRegistry[T]{target: target, matchers: make(map[string]*matcherParserEntry[T])}
 }
 
@@ -139,11 +139,11 @@ func (r *MatcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validat
 type StatusMatcherRegistry = MatcherParserRegistry[int]
 
 func NewStatusMatcherRegistry() *StatusMatcherRegistry {
-	return newMatcherParserRegistry[int]("status")
+	return NewMatcherParserRegistry[int]("status")
 }
 
 type StreamMatcherRegistry = MatcherParserRegistry[[]byte]
 
 func NewStreamMatcherRegistry() *StreamMatcherRegistry {
-	return newMatcherParserRegistry[[]byte]("stream")
+	return NewMatcherParserRegistry[[]byte]("stream")
 }
