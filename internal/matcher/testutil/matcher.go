@@ -24,7 +24,23 @@ func (m *exampleMatcher[T]) Match(actual T) (bool, string, error) {
 	if m.err != nil {
 		return false, "", m.err
 	}
-	return m.matched, m.message, nil
+
+	var message string
+	if m.matched {
+		message = m.SuccessMessage()
+	} else {
+		message = m.FailureMessage()
+	}
+
+	return m.matched, message, nil
+}
+
+func (m *exampleMatcher[T]) SuccessMessage() string {
+	return m.message + " success"
+}
+
+func (m *exampleMatcher[T]) FailureMessage() string {
+	return m.message + " failure"
 }
 
 type ParserCalls struct {
