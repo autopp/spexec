@@ -22,8 +22,8 @@ var _ = Describe("AnyMatcher", func() {
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))
 		},
-		Entry("when actual is matched to any inner matcher, returns true", []model.StreamMatcher{failureExampleMatcher, successExampleMatcher}, true, `successExampleMatcher message`),
-		Entry("when actual is not matched to all of inner matchers, returns false", []model.StreamMatcher{failureExampleMatcher, failureExampleMatcher}, false, `should satisfy any of [failureExampleMatcher message], [failureExampleMatcher message]`),
+		Entry("when actual is matched to any inner matcher, returns true", []model.StreamMatcher{failureExampleMatcher, successExampleMatcher}, true, successExampleMatcher.SuccessMessage()),
+		Entry("when actual is not matched to all of inner matchers, returns false", []model.StreamMatcher{failureExampleMatcher, failureExampleMatcher}, false, `should satisfy any of [`+failureExampleMatcher.FailureMessage()+`], [`+failureExampleMatcher.FailureMessage()+``),
 	)
 })
 
