@@ -18,14 +18,14 @@ import (
 type unmarshalableToYAML struct {
 }
 
-func (unmarshalableToYAML) MarshalYAML() (interface{}, error) {
+func (unmarshalableToYAML) MarshalYAML() (any, error) {
 	return nil, errors.New("cannot marshal to YAML")
 }
 
 var _ = Describe("Validator", func() {
 	var v *Validator
 
-	BeValidationError := func(message interface{}) types.GomegaMatcher {
+	BeValidationError := func(message any) types.GomegaMatcher {
 		matcher, ok := message.(types.GomegaMatcher)
 		if !ok {
 			matcher = Equal(message)
@@ -508,7 +508,7 @@ var _ = Describe("Validator", func() {
 
 	Describe("MustBeDuration()", func() {
 		DescribeTable("with a duration string or positive integer (success)",
-			func(given interface{}, expected time.Duration) {
+			func(given any, expected time.Duration) {
 				d, b := v.MustBeDuration(given)
 
 				Expect(d).To(Equal(expected))
@@ -557,8 +557,8 @@ var _ = Describe("Validator", func() {
 		Context("when the given map has specified field", func() {
 			It("calls the callback with the value in patch of the field and return it and true", func() {
 				contained := model.Seq{42, "hello"}
-				var passed interface{}
-				x, exists := v.MayHave(model.Map{"field": contained}, "field", func(x interface{}) {
+				var passed any
+				x, exists := v.MayHave(model.Map{"field": contained}, "field", func(x any) {
 					passed = x
 					v.AddViolation("error")
 				})
@@ -572,7 +572,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("dose not call the callback and return something and false", func() {
-				_, exists := v.MayHave(make(model.Map), "field", func(x interface{}) {
+				_, exists := v.MayHave(make(model.Map), "field", func(x any) {
 					v.AddViolation("error")
 				})
 
@@ -710,7 +710,7 @@ var _ = Describe("Validator", func() {
 
 	Describe("ForInSeq()", func() {
 		It("calls callback with each index and element in path of it", func() {
-			v.ForInSeq(model.Seq{42, "hello"}, func(i int, x interface{}) bool {
+			v.ForInSeq(model.Seq{42, "hello"}, func(i int, x any) bool {
 				v.AddViolation("%d:%#v", i, x)
 				return true
 			})
@@ -720,7 +720,7 @@ var _ = Describe("Validator", func() {
 
 		It("stops calling callback when it returns false", func() {
 			calls := make([]int, 0)
-			v.ForInSeq(model.Seq{"a", "b", "c", "d"}, func(i int, x interface{}) bool {
+			v.ForInSeq(model.Seq{"a", "b", "c", "d"}, func(i int, x any) bool {
 				calls = append(calls, i)
 				return i < 2
 			})
@@ -913,7 +913,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		DescribeTable("adds vioration",
-			func(env interface{}, prefix string) {
+			func(env any, prefix string) {
 				e, _, ok := v.MayHaveEnvSeq(model.Map{"env": env}, "env")
 
 				Expect(e).To(BeNil())
@@ -968,7 +968,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		DescribeTable("adds violation",
-			func(command interface{}, prefix string) {
+			func(command any, prefix string) {
 				e, _, ok := v.MayHaveCommand(model.Map{"command": command}, "command")
 
 				Expect(e).To(BeNil())
@@ -1003,7 +1003,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		DescribeTable("adds violation",
-			func(command interface{}, prefix string) {
+			func(command any, prefix string) {
 				e, ok := v.MustHaveCommand(model.Map{"command": command}, "command")
 
 				Expect(e).To(BeNil())

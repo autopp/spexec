@@ -22,7 +22,7 @@ import (
 )
 
 type TemplateRef interface {
-	Expand(value interface{}, env *Env) (interface{}, error)
+	Expand(value any, env *Env) (any, error)
 }
 
 type TemplateVar struct {
@@ -33,7 +33,7 @@ func NewTemplateVar(name string) *TemplateVar {
 	return &TemplateVar{name}
 }
 
-func (tv *TemplateVar) Expand(value interface{}, env *Env) (interface{}, error) {
+func (tv *TemplateVar) Expand(value any, env *Env) (any, error) {
 	value, ok := env.Lookup(tv.name)
 	if !ok {
 		return nil, errors.Errorf(errors.ErrInvalidSpec, "undefined var: %s", tv.name)
@@ -54,7 +54,7 @@ func NewTemplateFieldRef(field string, next TemplateRef) *TemplateFieldRef {
 	}
 }
 
-func (tf *TemplateFieldRef) Expand(value interface{}, env *Env) (interface{}, error) {
+func (tf *TemplateFieldRef) Expand(value any, env *Env) (any, error) {
 	m, ok := value.(Map)
 
 	if !ok {
@@ -88,7 +88,7 @@ func NewTemplateIndexRef(index int, next TemplateRef) *TemplateIndexRef {
 	}
 }
 
-func (ti *TemplateIndexRef) Expand(value interface{}, env *Env) (interface{}, error) {
+func (ti *TemplateIndexRef) Expand(value any, env *Env) (any, error) {
 	s, ok := value.(Seq)
 
 	if !ok {
@@ -121,13 +121,13 @@ func NewTemplateValue(value any, refs []TemplateRef) *TemplateValue {
 	}
 }
 
-func (tv *TemplateValue) Expand(env *Env) (interface{}, error) {
+func (tv *TemplateValue) Expand(env *Env) (any, error) {
 	buf := new(bytes.Buffer)
 	if err := gob.NewEncoder(buf).Encode(&tv.value); err != nil {
 		return nil, err
 	}
 
-	var copied interface{}
+	var copied any
 	if err := gob.NewDecoder(buf).Decode(&copied); err != nil {
 		return nil, err
 	}
@@ -178,6 +178,6 @@ func (t *Templatable[T]) Expand(env *Env) (T, error) {
 }
 
 func init() {
-	gob.Register([]interface{}{})
-	gob.Register(map[string]interface{}{})
+	gob.Register([]any{})
+	gob.Register(map[string]any{})
 }

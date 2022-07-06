@@ -23,7 +23,7 @@ import (
 type matcherParserEntry[T any] struct {
 	parser       MatcherParser[T]
 	hasDefault   bool
-	defaultParam interface{}
+	defaultParam any
 }
 
 type MatcherParserRegistry[T any] struct {
@@ -47,7 +47,7 @@ func (r *MatcherParserRegistry[T]) Add(name string, p MatcherParser[T]) error {
 	return nil
 }
 
-func (r *MatcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T], defaultParam interface{}) error {
+func (r *MatcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T], defaultParam any) error {
 	_, ok := r.matchers[name]
 	if ok {
 		return errors.Errorf(errors.ErrInternalError, "matcher %s is already registered", name)
@@ -60,9 +60,9 @@ func (r *MatcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T
 	return nil
 }
 
-func (r *MatcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string, MatcherParser[T], interface{}) {
+func (r *MatcherParserRegistry[T]) get(v *spec.Validator, x any) (string, MatcherParser[T], any) {
 	var name string
-	var param interface{}
+	var param any
 	withParam := false
 
 	switch specifier := x.(type) {
@@ -101,7 +101,7 @@ func (r *MatcherParserRegistry[T]) get(v *spec.Validator, x interface{}) (string
 	return name, p.parser, param
 }
 
-func (r *MatcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validator, x interface{}) model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validator, x any) model.Matcher[T] {
 	name, parser, param := r.get(v, x)
 	if parser == nil {
 		return nil
@@ -114,14 +114,14 @@ func (r *MatcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validato
 	return m
 }
 
-func (r *MatcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validator, x interface{}) []model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validator, x any) []model.Matcher[T] {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil
 	}
 
 	matchers := make([]model.Matcher[T], len(params))
-	ok = v.ForInSeq(params, func(i int, param interface{}) bool {
+	ok = v.ForInSeq(params, func(i int, param any) bool {
 		m := r.ParseMatcher(env, v, param)
 		if m == nil {
 			return false

@@ -49,7 +49,7 @@ var _ = Describe("ParseSuccessMatcher", func() {
 	})
 
 	DescribeTable("failure cases",
-		func(given interface{}) {
+		func(given any) {
 			m := ParseSuccessMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())

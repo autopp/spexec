@@ -49,7 +49,7 @@ var _ = Describe("ParseBeEmptyMatcher", func() {
 	})
 
 	DescribeTable("failure cases",
-		func(given interface{}) {
+		func(given any) {
 			m := ParseBeEmptyMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())

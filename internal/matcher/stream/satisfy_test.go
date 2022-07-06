@@ -45,7 +45,7 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 	})
 
 	DescribeTable("success cases",
-		func(given interface{}, expectedCommand []string, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
+		func(given any, expectedCommand []string, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
 			m := ParseSatisfyMatcher(env, v, r, given)
 
 			Expect(v.Error()).To(BeNil())
@@ -83,7 +83,7 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 	)
 
 	DescribeTable("failure cases",
-		func(given interface{}, prefix string) {
+		func(given any, prefix string) {
 			m := ParseSatisfyMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())

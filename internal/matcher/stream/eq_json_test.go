@@ -59,7 +59,7 @@ var _ = Describe("ParseEqJSONMatcher", func() {
 
 	Describe("with json incompatible", func() {
 		It("adds violation and returns nil", func() {
-			m := ParseEqJSONMatcher(env, v, r, map[interface{}]interface{}{1: 42})
+			m := ParseEqJSONMatcher(env, v, r, map[any]any{1: 42})
 
 			Expect(m).To(BeNil())
 			Expect(v.Error()).To(MatchError(HavePrefix("$: parameter is not json value: ")))

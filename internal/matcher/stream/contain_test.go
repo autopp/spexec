@@ -51,7 +51,7 @@ var _ = Describe("ParseContainMatcher", func() {
 	})
 
 	DescribeTable("failure cases",
-		func(given interface{}) {
+		func(given any) {
 			m := ParseContainMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())

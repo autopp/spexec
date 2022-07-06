@@ -58,7 +58,7 @@ var _ = Describe("ParseNotMatcher", func() {
 	})
 
 	DescribeTable("failure cases",
-		func(given interface{}, prefix string) {
+		func(given any, prefix string) {
 			m := ParseNotMatcher(env, v, r, given)
 
 			Expect(m).To(BeNil())

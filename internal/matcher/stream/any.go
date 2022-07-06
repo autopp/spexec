@@ -43,7 +43,7 @@ func (m *AnyMatcher) Match(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should satisfy any of %s", strings.Join(messages, ", ")), nil
 }
 
-func ParseAnyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func ParseAnyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	matchers := r.ParseMatchers(env, v, x)
 	if matchers == nil {
 		return nil

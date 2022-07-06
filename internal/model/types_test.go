@@ -8,7 +8,7 @@ import (
 )
 
 var _ = DescribeTable("TypeOf()",
-	func(x interface{}, expected Type) {
+	func(x any, expected Type) {
 		Expect(TypeOf(x)).To(Equal(expected))
 	},
 	Entry(`when 42 given, returns TypeInt`, 42, TypeInt),
@@ -22,7 +22,7 @@ var _ = DescribeTable("TypeOf()",
 )
 
 var _ = DescribeTable("TypeNameOf()",
-	func(x interface{}, expected string) {
+	func(x any, expected string) {
 		Expect(TypeNameOf(x)).To(Equal(expected))
 	},
 	Entry(`when 42 given, returns "int"`, 42, "int"),

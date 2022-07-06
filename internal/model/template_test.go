@@ -11,7 +11,7 @@ var dummyExpandedValue = "dummyExpandedValue"
 
 type dummyTemplateRef struct{}
 
-func (dummyTemplateRef) Expand(value interface{}, env *Env) (interface{}, error) {
+func (dummyTemplateRef) Expand(value any, env *Env) (any, error) {
 	return dummyExpandedValue, nil
 }
 
@@ -19,7 +19,7 @@ var dummyError = errors.New("dummyError")
 
 type errorTemplateRef struct{}
 
-func (errorTemplateRef) Expand(value interface{}, env *Env) (interface{}, error) {
+func (errorTemplateRef) Expand(value any, env *Env) (any, error) {
 	return nil, dummyError
 }
 

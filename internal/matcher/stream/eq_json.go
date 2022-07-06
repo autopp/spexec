@@ -27,12 +27,12 @@ import (
 )
 
 type EqJSONMatcher struct {
-	expected       interface{}
+	expected       any
 	expectedString string
 }
 
 func (m *EqJSONMatcher) Match(actual []byte) (bool, string, error) {
-	var actualBody interface{}
+	var actualBody any
 	if err := util.DecodeJSON(bytes.NewReader(actual), &actualBody); err != nil {
 		return false, fmt.Sprintf("cannot recognize as json: %s", err), nil
 	}
@@ -44,14 +44,14 @@ func (m *EqJSONMatcher) Match(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should be %s, but got %s", m.expectedString, string(actual)), nil
 }
 
-func ParseEqJSONMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func ParseEqJSONMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	expectedBytes, err := json.Marshal(x)
 	if err != nil {
 		v.AddViolation("parameter is not json value: %s", err)
 		return nil
 	}
 
-	var expected interface{}
+	var expected any
 	err = util.DecodeJSON(bytes.NewReader(expectedBytes), &expected)
 	if err != nil {
 		v.AddViolation("parameter is not json value: %s", err)

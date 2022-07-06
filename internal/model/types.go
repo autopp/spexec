@@ -19,8 +19,8 @@ import (
 	"fmt"
 )
 
-type Map = map[string]interface{}
-type Seq = []interface{}
+type Map = map[string]any
+type Seq = []any
 
 type Type int
 
@@ -43,7 +43,7 @@ var typeNames = map[Type]string{
 	TypeMap:    "map",
 }
 
-func TypeOf(x interface{}) Type {
+func TypeOf(x any) Type {
 	if x == nil {
 		return TypeNil
 	}
@@ -77,7 +77,7 @@ func TypeOf(x interface{}) Type {
 	return TypeUnkown
 }
 
-func TypeNameOf(x interface{}) string {
+func TypeNameOf(x any) string {
 	if name, ok := typeNames[TypeOf(x)]; ok {
 		return name
 	}

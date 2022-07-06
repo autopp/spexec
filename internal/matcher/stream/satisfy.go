@@ -48,7 +48,7 @@ func (m *SatisfyMatcher) Match(actual []byte) (bool, string, error) {
 	return true, "should make the given command fail", nil
 }
 
-func ParseSatisfyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func ParseSatisfyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	p, ok := v.MustBeMap(x)
 	if !ok {
 		return nil

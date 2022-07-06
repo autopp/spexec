@@ -38,7 +38,7 @@ func (m *EqMatcher) Match(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should be %q, but got:\n----------------------------------------\n%s\n----------------------------------------", m.expected, dmp.DiffPrettyText(diffs)), nil
 }
 
-func ParseEqMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func ParseEqMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	expected, ok := v.MustBeString(x)
 	if !ok {
 		return nil
