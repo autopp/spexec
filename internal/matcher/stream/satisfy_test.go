@@ -36,17 +36,15 @@ var _ = Describe("SatisfyMatcher", func() {
 var _ = Describe("ParseSatisfyMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
-	var env *model.Env
 
 	JustBeforeEach(func() {
 		v, _ = spec.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
-		env = model.NewEnv(nil)
 	})
 
 	DescribeTable("success cases",
 		func(given any, expectedCommand []string, expectedEnv []util.StringVar, expectedTimeout time.Duration) {
-			m := ParseSatisfyMatcher(env, v, r, given)
+			m := ParseSatisfyMatcher(v, r, given)
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -84,7 +82,7 @@ var _ = Describe("ParseSatisfyMatcher", func() {
 
 	DescribeTable("failure cases",
 		func(given any, prefix string) {
-			m := ParseSatisfyMatcher(env, v, r, given)
+			m := ParseSatisfyMatcher(v, r, given)
 
 			Expect(m).To(BeNil())
 			err := v.Error()

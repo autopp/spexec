@@ -44,7 +44,7 @@ func (m *SuccessMatcher) Match(actual int) (bool, string, error) {
 	return false, fmt.Sprintf(unexpectedSuccessFormat, actual), nil
 }
 
-func ParseSuccessMatcher(env *model.Env, v *spec.Validator, r *matcher.StatusMatcherRegistry, x any) model.StatusMatcher {
+func ParseSuccessMatcher(v *spec.Validator, r *matcher.StatusMatcherRegistry, x any) model.StatusMatcher {
 	expected, ok := v.MustBeBool(x)
 	if !ok {
 		return nil

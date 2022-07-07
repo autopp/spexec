@@ -101,20 +101,20 @@ func (r *MatcherParserRegistry[T]) get(v *spec.Validator, x any) (string, Matche
 	return name, p.parser, param
 }
 
-func (r *MatcherParserRegistry[T]) ParseMatcher(env *model.Env, v *spec.Validator, x any) model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatcher(v *spec.Validator, x any) model.Matcher[T] {
 	name, parser, param := r.get(v, x)
 	if parser == nil {
 		return nil
 	}
 	var m model.Matcher[T]
 	v.InField(name, func() {
-		m = parser(env, v, r, param)
+		m = parser(v, r, param)
 	})
 
 	return m
 }
 
-func (r *MatcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validator, x any) []model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatchers(v *spec.Validator, x any) []model.Matcher[T] {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil
@@ -122,7 +122,7 @@ func (r *MatcherParserRegistry[T]) ParseMatchers(env *model.Env, v *spec.Validat
 
 	matchers := make([]model.Matcher[T], len(params))
 	ok = v.ForInSeq(params, func(i int, param any) bool {
-		m := r.ParseMatcher(env, v, param)
+		m := r.ParseMatcher(v, param)
 		if m == nil {
 			return false
 		}

@@ -30,7 +30,6 @@ var _ = Describe("AnyMatcher", func() {
 var _ = Describe("ParseAnyMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StreamMatcherRegistry
-	var env *model.Env
 	var parseExampleMatcher matcher.StreamMatcherParser
 	var parserCalls *testutil.ParserCalls
 
@@ -40,12 +39,11 @@ var _ = Describe("ParseAnyMatcher", func() {
 		parseExampleMatcher, parserCalls = testutil.GenParseExampleStreamMatcher(true, "message", nil)
 		r.Add("example", parseExampleMatcher)
 		r.Add("failure", testutil.GenFailedParseStreamMatcher("parse error"))
-		env = model.NewEnv(nil)
 	})
 
 	Describe("with defined matchers", func() {
 		It("returns matcher", func() {
-			m := ParseAnyMatcher(env, v, r, model.Seq{model.Map{"example": "hello"}, model.Map{"example": "hi"}})
+			m := ParseAnyMatcher(v, r, model.Seq{model.Map{"example": "hello"}, model.Map{"example": "hi"}})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
@@ -56,7 +54,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 
 	DescribeTable("failure cases",
 		func(given any, prefix string) {
-			m := ParseAnyMatcher(env, v, r, given)
+			m := ParseAnyMatcher(v, r, given)
 
 			Expect(m).To(BeNil())
 			err := v.Error()

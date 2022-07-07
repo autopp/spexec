@@ -228,15 +228,15 @@ func (p *Parser) loadCommandExpect(env *model.Env, v *spec.Validator, expect mod
 	}
 
 	v.MayHave(expect, "status", func(status any) {
-		statusMatcher = p.statusMR.ParseMatcher(env, v, status)
+		statusMatcher = p.statusMR.ParseMatcher(v, status)
 	})
 
 	v.MayHave(expect, "stdout", func(stdout any) {
-		stdoutMatcher = p.streamMR.ParseMatcher(env, v, stdout)
+		stdoutMatcher = p.streamMR.ParseMatcher(v, stdout)
 	})
 
 	v.MayHave(expect, "stderr", func(stderr any) {
-		stderrMatcher = p.streamMR.ParseMatcher(env, v, stderr)
+		stderrMatcher = p.streamMR.ParseMatcher(v, stderr)
 	})
 
 	return statusMatcher, stdoutMatcher, stderrMatcher

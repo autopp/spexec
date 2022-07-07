@@ -44,7 +44,7 @@ func (m *BeEmptyMatcher) Match(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf(unexpectedEmptyFormat), nil
 }
 
-func ParseBeEmptyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
+func ParseBeEmptyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	expected, ok := v.MustBeBool(x)
 	if !ok {
 		return nil

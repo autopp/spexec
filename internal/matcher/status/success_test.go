@@ -2,7 +2,6 @@ package status
 
 import (
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -28,17 +27,15 @@ var _ = Describe("SuccessMatcher", func() {
 var _ = Describe("ParseSuccessMatcher", func() {
 	var v *spec.Validator
 	var r *matcher.StatusMatcherRegistry
-	var env *model.Env
 
 	JustBeforeEach(func() {
 		v, _ = spec.NewValidator("")
 		r = matcher.NewStatusMatcherRegistry()
-		env = model.NewEnv(nil)
 	})
 
 	Describe("with bool", func() {
 		It("returns matcher", func() {
-			m := ParseSuccessMatcher(env, v, r, true)
+			m := ParseSuccessMatcher(v, r, true)
 
 			Expect(m).NotTo(BeNil())
 			Expect(v.Error()).To(BeNil())
@@ -50,7 +47,7 @@ var _ = Describe("ParseSuccessMatcher", func() {
 
 	DescribeTable("failure cases",
 		func(given any) {
-			m := ParseSuccessMatcher(env, v, r, given)
+			m := ParseSuccessMatcher(v, r, given)
 
 			Expect(m).To(BeNil())
 			Expect(v.Error()).To(HaveOccurred())

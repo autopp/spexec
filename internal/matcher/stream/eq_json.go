@@ -44,7 +44,7 @@ func (m *EqJSONMatcher) Match(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should be %s, but got %s", m.expectedString, string(actual)), nil
 }
 
-func ParseEqJSONMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
+func ParseEqJSONMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	expectedBytes, err := json.Marshal(x)
 	if err != nil {
 		v.AddViolation("parameter is not json value: %s", err)
