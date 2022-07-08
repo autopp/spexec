@@ -23,7 +23,6 @@ import (
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
 )
@@ -98,7 +97,7 @@ func (p *Parser) load(env *model.Env, filename string, b io.Reader, unmarshal fu
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	v, err := spec.NewValidator(filename)
+	v, err := model.NewValidator(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +105,7 @@ func (p *Parser) load(env *model.Env, filename string, b io.Reader, unmarshal fu
 	return p.loadSpec(env, v, x)
 }
 
-func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c any) ([]*model.Test, error) {
+func (p *Parser) loadSpec(env *model.Env, v *model.Validator, c any) ([]*model.Test, error) {
 	cmap, ok := v.MustBeMap(c)
 	if !ok {
 		return nil, v.Error()
@@ -138,7 +137,7 @@ func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c any) ([]*model.Te
 	return ts, v.Error()
 }
 
-func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x any) *model.Test {
+func (p *Parser) loadTest(env *model.Env, v *model.Validator, x any) *model.Test {
 	tc, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
@@ -184,7 +183,7 @@ func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x any) *model.Test 
 	return t
 }
 
-func (p *Parser) loadCommandStdin(v *spec.Validator, stdin any) []byte {
+func (p *Parser) loadCommandStdin(v *model.Validator, stdin any) []byte {
 	if stdinString, ok := v.MayBeString(stdin); ok {
 		return []byte(stdinString)
 	} else if stdinMap, ok := v.MayBeMap(stdin); ok {
@@ -220,7 +219,7 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin any) []byte {
 	}
 }
 
-func (p *Parser) loadCommandExpect(env *model.Env, v *spec.Validator, expect model.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
+func (p *Parser) loadCommandExpect(env *model.Env, v *model.Validator, expect model.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
 	var statusMatcher model.StatusMatcher
 	var stdoutMatcher, stderrMatcher model.StreamMatcher
 	if p.isStrict {

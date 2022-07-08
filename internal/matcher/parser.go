@@ -16,10 +16,9 @@ package matcher
 
 import (
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 )
 
-type MatcherParser[T any] func(v *spec.Validator, r *MatcherParserRegistry[T], x any) model.Matcher[T]
+type MatcherParser[T any] func(v *model.Validator, r *MatcherParserRegistry[T], x any) model.Matcher[T]
 
 type StatusMatcherParser = MatcherParser[int]
 type StreamMatcherParser = MatcherParser[[]byte]

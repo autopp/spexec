@@ -8,7 +8,6 @@ import (
 	"github.com/autopp/spexec/internal/matcher/status"
 	"github.com/autopp/spexec/internal/matcher/stream"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -89,7 +88,7 @@ var _ = Describe("Parser", func() {
 	Describe("loadSpec", func() {
 		DescribeTable("success cases",
 			func(s any, expected Fields) {
-				v, _ := spec.NewValidator("testdata/spec.yaml")
+				v, _ := model.NewValidator("testdata/spec.yaml")
 				actual, err := p.loadSpec(env, v, s)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actual).To(MatchAllElementsWithIndex(IndexIdentity, Elements{
@@ -159,7 +158,7 @@ var _ = Describe("Parser", func() {
 
 		DescribeTable("failure cases",
 			func(s any, expectedErr string) {
-				v, _ := spec.NewValidator("testdata/spec.yaml")
+				v, _ := model.NewValidator("testdata/spec.yaml")
 				_, err := p.loadSpec(env, v, s)
 				Expect(err).To(MatchError(expectedErr))
 			},
@@ -228,7 +227,7 @@ var _ = Describe("Parser", func() {
 	Describe("loadTest", func() {
 		DescribeTable("success cases",
 			func(test any, expected Fields) {
-				v, _ := spec.NewValidator("testdata/spec.yaml")
+				v, _ := model.NewValidator("testdata/spec.yaml")
 				actual := p.loadTest(env, v, test)
 				Expect(v.Error()).NotTo(HaveOccurred())
 				Expect(actual).To(PointTo(MatchAllFields(expected)))
@@ -328,7 +327,7 @@ var _ = Describe("Parser", func() {
 
 		DescribeTable("failure cases",
 			func(test any, expectedErr string) {
-				v, _ := spec.NewValidator("testdata/spec.yaml")
+				v, _ := model.NewValidator("testdata/spec.yaml")
 				p.loadTest(env, v, test)
 				Expect(v.Error()).To(MatchError(expectedErr))
 			},
@@ -380,7 +379,7 @@ var _ = Describe("Parser", func() {
 	Describe("loadCommandStdin", func() {
 		DescribeTable("success cases",
 			func(stdin any, expected string) {
-				v, _ := spec.NewValidator("")
+				v, _ := model.NewValidator("")
 				actual := p.loadCommandStdin(v, stdin)
 				Expect(v.Error()).NotTo(HaveOccurred())
 				Expect(string(actual)).To(Equal(expected))
@@ -391,7 +390,7 @@ var _ = Describe("Parser", func() {
 
 		DescribeTable("failure cases",
 			func(stdin any, expectedErr string) {
-				v, _ := spec.NewValidator("")
+				v, _ := model.NewValidator("")
 				Expect(p.loadCommandStdin(v, stdin)).To(BeNil())
 				Expect(v.Error()).To(MatchError(expectedErr))
 			},
@@ -407,7 +406,7 @@ var _ = Describe("Parser", func() {
 	Describe("loadCommandExpect", func() {
 		DescribeTable("success cases",
 			func(expect model.Map, statusMatcherShouldBeSet bool, stdoutMatcherShouldBeSet, stderrMatcherShouldBeSet bool) {
-				v, _ := spec.NewValidator("")
+				v, _ := model.NewValidator("")
 				actualStdin, actualStdout, actualStderr := p.loadCommandExpect(env, v, expect)
 				Expect(v.Error()).NotTo(HaveOccurred())
 				if statusMatcherShouldBeSet {
@@ -435,7 +434,7 @@ var _ = Describe("Parser", func() {
 
 		DescribeTable("failure cases",
 			func(expect model.Map, expectedErr string) {
-				v, _ := spec.NewValidator("")
+				v, _ := model.NewValidator("")
 				p.loadCommandExpect(env, v, expect)
 				Expect(v.Error()).To(MatchError(expectedErr))
 			},

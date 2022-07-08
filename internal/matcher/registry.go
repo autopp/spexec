@@ -17,7 +17,6 @@ package matcher
 import (
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 )
 
 type matcherParserEntry[T any] struct {
@@ -60,7 +59,7 @@ func (r *MatcherParserRegistry[T]) AddWithDefault(name string, p MatcherParser[T
 	return nil
 }
 
-func (r *MatcherParserRegistry[T]) get(v *spec.Validator, x any) (string, MatcherParser[T], any) {
+func (r *MatcherParserRegistry[T]) get(v *model.Validator, x any) (string, MatcherParser[T], any) {
 	var name string
 	var param any
 	withParam := false
@@ -101,7 +100,7 @@ func (r *MatcherParserRegistry[T]) get(v *spec.Validator, x any) (string, Matche
 	return name, p.parser, param
 }
 
-func (r *MatcherParserRegistry[T]) ParseMatcher(v *spec.Validator, x any) model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatcher(v *model.Validator, x any) model.Matcher[T] {
 	name, parser, param := r.get(v, x)
 	if parser == nil {
 		return nil
@@ -114,7 +113,7 @@ func (r *MatcherParserRegistry[T]) ParseMatcher(v *spec.Validator, x any) model.
 	return m
 }
 
-func (r *MatcherParserRegistry[T]) ParseMatchers(v *spec.Validator, x any) []model.Matcher[T] {
+func (r *MatcherParserRegistry[T]) ParseMatchers(v *model.Validator, x any) []model.Matcher[T] {
 	params, ok := v.MustBeSeq(x)
 	if !ok {
 		return nil

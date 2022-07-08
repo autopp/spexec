@@ -6,7 +6,6 @@ import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/matcher/testutil"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -59,7 +58,7 @@ var _ = Describe("MatcherRegistry", func() {
 	})
 
 	Describe("ParseMatcher()", func() {
-		var v *spec.Validator
+		var v *model.Validator
 		var parserCalls *testutil.ParserCalls
 		var parseExampleMatcher matcher.MatcherParser[int]
 		var parseExampleMatcherWithDefault matcher.MatcherParser[int]
@@ -80,7 +79,7 @@ var _ = Describe("MatcherRegistry", func() {
 			failedParseMatcher = testutil.GenFailedParseStatusMatcher(violationMessage)
 			r.Add(failedName, failedParseMatcher)
 
-			v, _ = spec.NewValidator("")
+			v, _ = model.NewValidator("")
 		})
 
 		Context("for matcher without default parameter", func() {
@@ -157,7 +156,7 @@ var _ = Describe("MatcherRegistry", func() {
 	})
 
 	Describe("ParseMatchers()", func() {
-		var v *spec.Validator
+		var v *model.Validator
 		var parseExampleMatcher matcher.MatcherParser[int]
 		var parseExampleMatcherWithDefault matcher.MatcherParser[int]
 		var failedParseMatcher matcher.MatcherParser[int]
@@ -176,7 +175,7 @@ var _ = Describe("MatcherRegistry", func() {
 			failedParseMatcher = testutil.GenFailedParseStatusMatcher(violationMessage)
 			r.Add(failedName, failedParseMatcher)
 
-			v, _ = spec.NewValidator("")
+			v, _ = model.NewValidator("")
 		})
 
 		Context("when params are valid", func() {

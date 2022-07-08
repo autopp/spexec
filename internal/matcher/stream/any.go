@@ -20,7 +20,6 @@ import (
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 )
 
 type AnyMatcher struct {
@@ -43,7 +42,7 @@ func (m *AnyMatcher) Match(actual []byte) (bool, string, error) {
 	return false, fmt.Sprintf("should satisfy any of %s", strings.Join(messages, ", ")), nil
 }
 
-func ParseAnyMatcher(v *spec.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
+func ParseAnyMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	matchers := r.ParseMatchers(v, x)
 	if matchers == nil {
 		return nil

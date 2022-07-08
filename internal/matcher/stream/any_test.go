@@ -4,7 +4,6 @@ import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/matcher/testutil"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -28,13 +27,13 @@ var _ = Describe("AnyMatcher", func() {
 })
 
 var _ = Describe("ParseAnyMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
 	var parseExampleMatcher matcher.StreamMatcherParser
 	var parserCalls *testutil.ParserCalls
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 		parseExampleMatcher, parserCalls = testutil.GenParseExampleStreamMatcher(true, "message", nil)
 		r.Add("example", parseExampleMatcher)

@@ -2,7 +2,7 @@ package stream
 
 import (
 	"github.com/autopp/spexec/internal/matcher"
-	"github.com/autopp/spexec/internal/spec"
+	"github.com/autopp/spexec/internal/model"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -25,11 +25,11 @@ var _ = Describe("BeEmptyMatcher", func() {
 })
 
 var _ = Describe("ParseBeEmptyMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 	})
 

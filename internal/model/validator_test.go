@@ -1,4 +1,4 @@
-package spec
+package model
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -114,9 +113,9 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MayBeMap()", func() {
-		Context("with a model.Map", func() {
-			It("returns the given model.Map and true", func() {
-				given := make(model.Map)
+		Context("with a Map", func() {
+			It("returns the given Map and true", func() {
+				given := make(Map)
 				m, b := v.MayBeMap(given)
 
 				Expect(m).To(Equal(given))
@@ -124,7 +123,7 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("with a not model.Map", func() {
+		Context("with a not Map", func() {
 			It("returns something and false", func() {
 				_, b := v.MayBeMap(42)
 
@@ -134,9 +133,9 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MustBeMap()", func() {
-		Context("with a model.Map", func() {
-			It("returns the given model.Map and true", func() {
-				given := make(model.Map)
+		Context("with a Map", func() {
+			It("returns the given Map and true", func() {
+				given := make(Map)
 				m, b := v.MustBeMap(given)
 
 				Expect(m).To(Equal(given))
@@ -144,7 +143,7 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("with a not model.Map", func() {
+		Context("with a not Map", func() {
 			It("adds violation and returns something and false", func() {
 				_, b := v.MustBeMap(42)
 
@@ -155,9 +154,9 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MustBeSeq()", func() {
-		Context("with a model.Seq", func() {
-			It("returns the given model.Seq and true", func() {
-				given := make(model.Seq, 0)
+		Context("with a Seq", func() {
+			It("returns the given Seq and true", func() {
+				given := make(Seq, 0)
 				m, b := v.MustBeSeq(given)
 
 				Expect(m).To(Equal(given))
@@ -165,7 +164,7 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("with a not model.Seq", func() {
+		Context("with a not Seq", func() {
 			It("adds violation and returns something and false", func() {
 				_, b := v.MustBeSeq(42)
 
@@ -219,7 +218,7 @@ var _ = Describe("Validator", func() {
 	Describe("MayBeQualified", func() {
 		Context("with 1 element map", func() {
 			It("returns the qualifier, the value and true", func() {
-				given := model.Map{"$": "answer"}
+				given := Map{"$": "answer"}
 				q, v, b := v.MayBeQualified(given)
 				Expect(q).To(Equal("$"))
 				Expect(v).To(Equal("answer"))
@@ -237,7 +236,7 @@ var _ = Describe("Validator", func() {
 
 		Context("with two or more elements map", func() {
 			It("returns empty values and false", func() {
-				given := model.Map{"$": "answer", "$$": 42}
+				given := Map{"$": "answer", "$$": 42}
 				_, _, b := v.MayBeQualified(given)
 				Expect(b).To(BeFalse())
 			})
@@ -247,7 +246,7 @@ var _ = Describe("Validator", func() {
 	Describe("MayBeVariable", func() {
 		Context("with 1 element map which contain '$' and the name", func() {
 			It("returns the name and true", func() {
-				given := model.Map{"$": "answer"}
+				given := Map{"$": "answer"}
 				name, b := v.MayBeVariable(given)
 				Expect(name).To(Equal("answer"))
 				Expect(b).To(BeTrue())
@@ -256,7 +255,7 @@ var _ = Describe("Validator", func() {
 
 		Context("with 1 elements map contain '$' and not string", func() {
 			It("returns something and false", func() {
-				given := model.Map{"$": 42}
+				given := Map{"$": 42}
 				_, b := v.MayBeVariable(given)
 				Expect(b).To(BeFalse())
 			})
@@ -264,7 +263,7 @@ var _ = Describe("Validator", func() {
 
 		Context("with 1 elements map contain '$' and not variable name", func() {
 			It("returns something and false", func() {
-				given := model.Map{"$": "foo bar"}
+				given := Map{"$": "foo bar"}
 				_, b := v.MayBeVariable(given)
 				Expect(b).To(BeFalse())
 			})
@@ -272,7 +271,7 @@ var _ = Describe("Validator", func() {
 
 		Context("with 1 element map without '$'", func() {
 			It("returns something and false", func() {
-				given := model.Map{"$$": "answer"}
+				given := Map{"$$": "answer"}
 				_, b := v.MayBeVariable(given)
 				Expect(b).To(BeFalse())
 			})
@@ -288,7 +287,7 @@ var _ = Describe("Validator", func() {
 
 		Context("with two or more elements map", func() {
 			It("returns something and false", func() {
-				given := model.Map{"$": "answer", "$$": 42}
+				given := Map{"$": "answer", "$$": 42}
 				_, b := v.MayBeVariable(given)
 				Expect(b).To(BeFalse())
 			})
@@ -301,7 +300,7 @@ var _ = Describe("Validator", func() {
 				given := "hello"
 				actual, b := v.MustBeStringExpr(given)
 
-				Expect(actual).To(Equal(model.NewLiteralStringExpr(given)))
+				Expect(actual).To(Equal(NewLiteralStringExpr(given)))
 				Expect(b).To(BeTrue())
 			})
 		})
@@ -309,17 +308,17 @@ var _ = Describe("Validator", func() {
 		Context("with a map which contains type='env'", func() {
 			Context("and name='MESSAGE'", func() {
 				It("returns envStringExpr and true", func() {
-					given := model.Map{"type": "env", "name": "MESSAGE"}
+					given := Map{"type": "env", "name": "MESSAGE"}
 					actual, b := v.MustBeStringExpr(given)
 
-					Expect(actual).To(Equal(model.NewEnvStringExpr("MESSAGE")))
+					Expect(actual).To(Equal(NewEnvStringExpr("MESSAGE")))
 					Expect(b).To(BeTrue())
 				})
 			})
 
 			Context("and dose not contain name", func() {
 				It("adds violation and returns something and false", func() {
-					given := model.Map{"type": "env"}
+					given := Map{"type": "env"}
 					_, b := v.MustBeStringExpr(given)
 
 					Expect(b).To(BeFalse())
@@ -331,17 +330,17 @@ var _ = Describe("Validator", func() {
 		Context("with a map which contains type='file'", func() {
 			Context("and value='hello world'", func() {
 				It("returns fileStringExpr and true", func() {
-					given := model.Map{"type": "file", "value": "hello"}
+					given := Map{"type": "file", "value": "hello"}
 					actual, b := v.MustBeStringExpr(given)
 
-					Expect(actual).To(Equal(model.NewFileStringExpr("", "hello")))
+					Expect(actual).To(Equal(NewFileStringExpr("", "hello")))
 					Expect(b).To(BeTrue())
 				})
 			})
 
 			Context("and value is not string", func() {
 				It("adds violation and returns something and false", func() {
-					given := model.Map{"type": "file", "value": 42}
+					given := Map{"type": "file", "value": 42}
 					_, b := v.MustBeStringExpr(given)
 
 					Expect(b).To(BeFalse())
@@ -352,10 +351,10 @@ var _ = Describe("Validator", func() {
 			Context("and format='yaml'", func() {
 				Context("and value is yaml compatible", func() {
 					It("returns fileStringExpr and true", func() {
-						given := model.Map{"type": "file", "format": "yaml", "value": model.Map{"answer": 42}}
+						given := Map{"type": "file", "format": "yaml", "value": Map{"answer": 42}}
 						actual, b := v.MustBeStringExpr(given)
 
-						Expect(actual).To(Equal(model.NewFileStringExpr("*.yaml", "answer: 42\n")))
+						Expect(actual).To(Equal(NewFileStringExpr("*.yaml", "answer: 42\n")))
 						Expect(b).To(BeTrue())
 						Expect(v.Error()).NotTo(HaveOccurred())
 					})
@@ -364,7 +363,7 @@ var _ = Describe("Validator", func() {
 				Context("and value is not yaml compatible", func() {
 
 					It("adds violation and returns something and false", func() {
-						given := model.Map{"type": "file", "format": "yaml", "value": model.Map{"answer": unmarshalableToYAML{}}}
+						given := Map{"type": "file", "format": "yaml", "value": Map{"answer": unmarshalableToYAML{}}}
 						_, b := v.MustBeStringExpr(given)
 
 						Expect(b).To(BeFalse())
@@ -374,7 +373,7 @@ var _ = Describe("Validator", func() {
 
 				Context("and dose not contain value", func() {
 					It("adds violation and returns something and false", func() {
-						given := model.Map{"type": "file", "format": "yaml"}
+						given := Map{"type": "file", "format": "yaml"}
 						_, b := v.MustBeStringExpr(given)
 
 						Expect(b).To(BeFalse())
@@ -385,7 +384,7 @@ var _ = Describe("Validator", func() {
 
 			Context("and format='unknown'", func() {
 				It("adds violation and returns something and false", func() {
-					given := model.Map{"type": "file", "format": "unknown"}
+					given := Map{"type": "file", "format": "unknown"}
 					_, b := v.MustBeStringExpr(given)
 
 					Expect(b).To(BeFalse())
@@ -395,7 +394,7 @@ var _ = Describe("Validator", func() {
 
 			Context("and format is not string", func() {
 				It("adds violation and returns something and false", func() {
-					given := model.Map{"type": "file", "format": 42}
+					given := Map{"type": "file", "format": 42}
 					_, b := v.MustBeStringExpr(given)
 
 					Expect(b).To(BeFalse())
@@ -405,7 +404,7 @@ var _ = Describe("Validator", func() {
 
 			Context("and dose not contain value", func() {
 				It("adds violation and returns something and false", func() {
-					given := model.Map{"type": "file"}
+					given := Map{"type": "file"}
 					_, b := v.MustBeStringExpr(given)
 
 					Expect(b).To(BeFalse())
@@ -416,7 +415,7 @@ var _ = Describe("Validator", func() {
 
 		Context("with a map which contains unknown type", func() {
 			It("adds violation and returns something and false", func() {
-				given := model.Map{"type": "unknown"}
+				given := Map{"type": "unknown"}
 				_, b := v.MustBeStringExpr(given)
 
 				Expect(b).To(BeFalse())
@@ -426,7 +425,7 @@ var _ = Describe("Validator", func() {
 
 		Context("with a map which dose not contain type", func() {
 			It("adds violation and returns something and false", func() {
-				given := model.Map{}
+				given := Map{}
 				_, b := v.MustBeStringExpr(given)
 
 				Expect(b).To(BeFalse())
@@ -535,8 +534,8 @@ var _ = Describe("Validator", func() {
 	Describe("MustHave()", func() {
 		Context("when the given map has specified field", func() {
 			It("returns value of the field and true", func() {
-				contained := model.Seq{42, "hello"}
-				x, ok := v.MustHave(model.Map{"field": contained}, "field")
+				contained := Seq{42, "hello"}
+				x, ok := v.MustHave(Map{"field": contained}, "field")
 
 				Expect(x).To(Equal(contained))
 				Expect(ok).To(BeTrue())
@@ -545,7 +544,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("adds violation and returns something and false", func() {
-				_, ok := v.MustHave(make(model.Map), "field")
+				_, ok := v.MustHave(make(Map), "field")
 
 				Expect(ok).To(BeFalse())
 				Expect(v.Error()).To(BeValidationError("$: should have .field"))
@@ -556,9 +555,9 @@ var _ = Describe("Validator", func() {
 	Describe("MayHave()", func() {
 		Context("when the given map has specified field", func() {
 			It("calls the callback with the value in patch of the field and return it and true", func() {
-				contained := model.Seq{42, "hello"}
+				contained := Seq{42, "hello"}
 				var passed any
-				x, exists := v.MayHave(model.Map{"field": contained}, "field", func(x any) {
+				x, exists := v.MayHave(Map{"field": contained}, "field", func(x any) {
 					passed = x
 					v.AddViolation("error")
 				})
@@ -572,7 +571,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("dose not call the callback and return something and false", func() {
-				_, exists := v.MayHave(make(model.Map), "field", func(x any) {
+				_, exists := v.MayHave(make(Map), "field", func(x any) {
 					v.AddViolation("error")
 				})
 
@@ -583,11 +582,11 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MayHaveMap()", func() {
-		Context("when the given map has specified field which is a model.Map", func() {
+		Context("when the given map has specified field which is a Map", func() {
 			It("calls the callback with the map in map in path of the field and returns the it, true, true", func() {
-				contained := make(model.Map)
-				var passed model.Map
-				m, exists, ok := v.MayHaveMap(model.Map{"field": contained}, "field", func(m model.Map) {
+				contained := make(Map)
+				var passed Map
+				m, exists, ok := v.MayHaveMap(Map{"field": contained}, "field", func(m Map) {
 					passed = m
 					v.AddViolation("error")
 				})
@@ -602,7 +601,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("dose not call the callback and returns something, false, true", func() {
-				_, exists, ok := v.MayHaveMap(make(model.Map), "field", func(model.Map) {
+				_, exists, ok := v.MayHaveMap(make(Map), "field", func(Map) {
 					v.AddViolation("error")
 				})
 
@@ -612,9 +611,9 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("when the given map has specified field which is not a model.Map", func() {
+		Context("when the given map has specified field which is not a Map", func() {
 			It("dose not call the callback, adds violation, and returns something, false, false", func() {
-				_, exists, ok := v.MayHaveMap(model.Map{"field": "hello"}, "field", func(model.Map) {
+				_, exists, ok := v.MayHaveMap(Map{"field": "hello"}, "field", func(Map) {
 					v.AddViolation("error")
 				})
 
@@ -626,11 +625,11 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MayHaveSeq()", func() {
-		Context("when the given map has specified field which is a model.Seq", func() {
+		Context("when the given map has specified field which is a Seq", func() {
 			It("calls the callback with the map in map in path of the field and returns the it, true, true", func() {
-				contained := make(model.Seq, 0)
-				var passed model.Seq
-				m, exists, ok := v.MayHaveSeq(model.Map{"field": contained}, "field", func(s model.Seq) {
+				contained := make(Seq, 0)
+				var passed Seq
+				m, exists, ok := v.MayHaveSeq(Map{"field": contained}, "field", func(s Seq) {
 					passed = s
 					v.AddViolation("error")
 				})
@@ -645,7 +644,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("dose not call the callback and returns something, false, true", func() {
-				_, exists, ok := v.MayHaveSeq(make(model.Map), "field", func(model.Seq) {
+				_, exists, ok := v.MayHaveSeq(make(Map), "field", func(Seq) {
 					v.AddViolation("error")
 				})
 
@@ -655,9 +654,9 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("when the given map has specified field which is not a model.Seq", func() {
+		Context("when the given map has specified field which is not a Seq", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
-				_, exists, ok := v.MayHaveSeq(model.Map{"field": "hello"}, "field", func(model.Seq) {
+				_, exists, ok := v.MayHaveSeq(Map{"field": "hello"}, "field", func(Seq) {
 					v.AddViolation("error")
 				})
 
@@ -669,11 +668,11 @@ var _ = Describe("Validator", func() {
 	})
 
 	Describe("MustHaveSeq()", func() {
-		Context("when the given map has specified field which is a model.Seq", func() {
+		Context("when the given map has specified field which is a Seq", func() {
 			It("calls the callback with the map in map in path of the field and returns the it, true", func() {
-				contained := make(model.Seq, 0)
-				var passed model.Seq
-				m, ok := v.MustHaveSeq(model.Map{"field": contained}, "field", func(s model.Seq) {
+				contained := make(Seq, 0)
+				var passed Seq
+				m, ok := v.MustHaveSeq(Map{"field": contained}, "field", func(s Seq) {
 					passed = s
 					v.AddViolation("error")
 				})
@@ -687,7 +686,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("dose not call the callback and returns something, false", func() {
-				_, ok := v.MustHaveSeq(make(model.Map), "field", func(model.Seq) {
+				_, ok := v.MustHaveSeq(make(Map), "field", func(Seq) {
 					v.AddViolation("error")
 				})
 
@@ -696,9 +695,9 @@ var _ = Describe("Validator", func() {
 			})
 		})
 
-		Context("when the given map has specified field which is not a model.Seq", func() {
+		Context("when the given map has specified field which is not a Seq", func() {
 			It("dose not call the callback, add violation and returns something, false", func() {
-				_, ok := v.MustHaveSeq(model.Map{"field": "hello"}, "field", func(model.Seq) {
+				_, ok := v.MustHaveSeq(Map{"field": "hello"}, "field", func(Seq) {
 					v.AddViolation("error")
 				})
 
@@ -710,7 +709,7 @@ var _ = Describe("Validator", func() {
 
 	Describe("ForInSeq()", func() {
 		It("calls callback with each index and element in path of it", func() {
-			v.ForInSeq(model.Seq{42, "hello"}, func(i int, x any) bool {
+			v.ForInSeq(Seq{42, "hello"}, func(i int, x any) bool {
 				v.AddViolation("%d:%#v", i, x)
 				return true
 			})
@@ -720,7 +719,7 @@ var _ = Describe("Validator", func() {
 
 		It("stops calling callback when it returns false", func() {
 			calls := make([]int, 0)
-			v.ForInSeq(model.Seq{"a", "b", "c", "d"}, func(i int, x any) bool {
+			v.ForInSeq(Seq{"a", "b", "c", "d"}, func(i int, x any) bool {
 				calls = append(calls, i)
 				return i < 2
 			})
@@ -732,7 +731,7 @@ var _ = Describe("Validator", func() {
 	Describe("MayHaveString()", func() {
 		Context("when the given map has specified field which is a string", func() {
 			It("returns the it, true, true", func() {
-				s, exists, ok := v.MayHaveString(model.Map{"field": "hello"}, "field")
+				s, exists, ok := v.MayHaveString(Map{"field": "hello"}, "field")
 
 				Expect(s).To(Equal("hello"))
 				Expect(exists).To(BeTrue())
@@ -742,7 +741,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("returns something, false, true", func() {
-				_, exists, ok := v.MayHaveString(model.Map{}, "field")
+				_, exists, ok := v.MayHaveString(Map{}, "field")
 
 				Expect(v.Error()).To(BeNil())
 				Expect(exists).To(BeFalse())
@@ -752,7 +751,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map has specified field which is not a string", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
-				_, exists, ok := v.MayHaveString(model.Map{"field": 42}, "field")
+				_, exists, ok := v.MayHaveString(Map{"field": 42}, "field")
 
 				Expect(v.Error()).To(BeValidationError("$.field: should be string, but is int"))
 				Expect(exists).To(BeFalse())
@@ -764,7 +763,7 @@ var _ = Describe("Validator", func() {
 	Describe("MustHaveString()", func() {
 		Context("when the given map has specified field which is a string", func() {
 			It("returns the it, true, true", func() {
-				s, ok := v.MustHaveString(model.Map{"field": "hello"}, "field")
+				s, ok := v.MustHaveString(Map{"field": "hello"}, "field")
 
 				Expect(s).To(Equal("hello"))
 				Expect(ok).To(BeTrue())
@@ -773,7 +772,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("returns something, false, true", func() {
-				_, ok := v.MustHaveString(model.Map{}, "field")
+				_, ok := v.MustHaveString(Map{}, "field")
 
 				Expect(v.Error()).To(BeValidationError("$: should have .field as string"))
 				Expect(ok).To(BeFalse())
@@ -782,7 +781,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map has specified field which is not a string", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
-				_, ok := v.MustHaveString(model.Map{"field": 42}, "field")
+				_, ok := v.MustHaveString(Map{"field": 42}, "field")
 
 				Expect(v.Error()).To(BeValidationError("$.field: should be string, but is int"))
 				Expect(ok).To(BeFalse())
@@ -793,7 +792,7 @@ var _ = Describe("Validator", func() {
 	Describe("MayHaveInt()", func() {
 		Context("when the given map has specified field which is a int", func() {
 			It("returns the it, true, true", func() {
-				s, exists, ok := v.MayHaveInt(model.Map{"field": 42}, "field")
+				s, exists, ok := v.MayHaveInt(Map{"field": 42}, "field")
 
 				Expect(s).To(Equal(42))
 				Expect(exists).To(BeTrue())
@@ -803,7 +802,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("returns something, false, true", func() {
-				_, exists, ok := v.MayHaveInt(model.Map{}, "field")
+				_, exists, ok := v.MayHaveInt(Map{}, "field")
 
 				Expect(v.Error()).To(BeNil())
 				Expect(exists).To(BeFalse())
@@ -813,7 +812,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map has specified field which is not a int", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
-				_, exists, ok := v.MayHaveInt(model.Map{"field": "hello"}, "field")
+				_, exists, ok := v.MayHaveInt(Map{"field": "hello"}, "field")
 
 				Expect(v.Error()).To(BeValidationError("$.field: should be int, but is string"))
 				Expect(exists).To(BeFalse())
@@ -825,7 +824,7 @@ var _ = Describe("Validator", func() {
 	Describe("MayHaveBool()", func() {
 		Context("when the given map has specified field which is a bool", func() {
 			It("returns the it, true, true", func() {
-				b, exists, ok := v.MayHaveBool(model.Map{"field": true}, "field")
+				b, exists, ok := v.MayHaveBool(Map{"field": true}, "field")
 
 				Expect(b).To(Equal(true))
 				Expect(exists).To(BeTrue())
@@ -835,7 +834,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("returns something, false, true", func() {
-				_, exists, ok := v.MayHaveBool(model.Map{}, "field")
+				_, exists, ok := v.MayHaveBool(Map{}, "field")
 
 				Expect(v.Error()).To(BeNil())
 				Expect(exists).To(BeFalse())
@@ -845,7 +844,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map has specified field which is not a bool", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
-				_, exists, ok := v.MayHaveBool(model.Map{"field": "hello"}, "field")
+				_, exists, ok := v.MayHaveBool(Map{"field": "hello"}, "field")
 
 				Expect(v.Error()).To(BeValidationError("$.field: should be bool, but is string"))
 				Expect(exists).To(BeFalse())
@@ -857,7 +856,7 @@ var _ = Describe("Validator", func() {
 	Describe("MayHaveDuration()", func() {
 		Context("when the given map has specified field which is a duration string", func() {
 			It("returns the duration, true, true", func() {
-				d, exists, ok := v.MayHaveDuration(model.Map{"field": "1s"}, "field")
+				d, exists, ok := v.MayHaveDuration(Map{"field": "1s"}, "field")
 
 				Expect(d).To(Equal(1 * time.Second))
 				Expect(exists).To(BeTrue())
@@ -867,7 +866,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("returns something, false, true", func() {
-				_, exists, ok := v.MayHaveDuration(model.Map{}, "field")
+				_, exists, ok := v.MayHaveDuration(Map{}, "field")
 
 				Expect(v.Error()).To(BeNil())
 				Expect(exists).To(BeFalse())
@@ -877,7 +876,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map has specified field which is not a duration string", func() {
 			It("dose not call the callback, add violation and returns something, false, false", func() {
-				_, exists, ok := v.MayHaveDuration(model.Map{"field": "666"}, "field")
+				_, exists, ok := v.MayHaveDuration(Map{"field": "666"}, "field")
 
 				Expect(v.Error()).To(BeValidationError(MatchRegexp(`\$\.field: should be positive integer or duration string, but cannot parse`)))
 				Expect(exists).To(BeFalse())
@@ -889,7 +888,7 @@ var _ = Describe("Validator", func() {
 	Describe("MayHaveEnvSeq", func() {
 		Context("when the given map has specified field which is a seq of key-value", func() {
 			It("returns parsed array", func() {
-				e, exists, ok := v.MayHaveEnvSeq(model.Map{"env": model.Seq{model.Map{"name": "a", "value": "foo"}, model.Map{"name": "b", "value": "bar"}}}, "env")
+				e, exists, ok := v.MayHaveEnvSeq(Map{"env": Seq{Map{"name": "a", "value": "foo"}, Map{"name": "b", "value": "bar"}}}, "env")
 
 				Expect(v.Error()).To(BeNil())
 				Expect(e).To(Equal([]util.StringVar{
@@ -903,7 +902,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("returns nil", func() {
-				e, exists, ok := v.MayHaveEnvSeq(model.Map{}, "env")
+				e, exists, ok := v.MayHaveEnvSeq(Map{}, "env")
 
 				Expect(v.Error()).To(BeNil())
 				Expect(e).To(BeNil())
@@ -914,31 +913,31 @@ var _ = Describe("Validator", func() {
 
 		DescribeTable("adds vioration",
 			func(env any, prefix string) {
-				e, _, ok := v.MayHaveEnvSeq(model.Map{"env": env}, "env")
+				e, _, ok := v.MayHaveEnvSeq(Map{"env": env}, "env")
 
 				Expect(e).To(BeNil())
 				Expect(ok).To(BeFalse())
 				Expect(v.Error()).To(BeValidationError(HavePrefix(prefix)))
 			},
-			Entry("when the filed is not seq", model.Map{}, "$.env:"),
+			Entry("when the filed is not seq", Map{}, "$.env:"),
 			Entry("when the field contains invalid key-value (name is not string)",
-				model.Seq{model.Map{"name": "a", "value": "foo"}, model.Map{"name": 0, "value": "foo"}},
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": 0, "value": "foo"}},
 				"$.env[1].name:",
 			),
 			Entry("when the field contains invalid key-value (name is not var name)",
-				model.Seq{model.Map{"name": "a", "value": "foo"}, model.Map{"name": "0a", "value": "foo"}},
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "0a", "value": "foo"}},
 				"$.env[1].name:",
 			),
 			Entry("when the field contains invalid key-value (name is missing)",
-				model.Seq{model.Map{"name": "a", "value": "foo"}, model.Map{"value": "foo"}},
+				Seq{Map{"name": "a", "value": "foo"}, Map{"value": "foo"}},
 				"$.env[1]:",
 			),
 			Entry("when the field contains invalid key-value (value is not string)",
-				model.Seq{model.Map{"name": "a", "value": "foo"}, model.Map{"name": "a", "value": 42}},
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "a", "value": 42}},
 				"$.env[1].value:",
 			),
 			Entry("when the field contains invalid key-value (value is missing)",
-				model.Seq{model.Map{"name": "a", "value": "foo"}, model.Map{"name": "a"}},
+				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "a"}},
 				"$.env[1]:",
 			),
 		)
@@ -947,10 +946,10 @@ var _ = Describe("Validator", func() {
 	Describe("MayHaveCommand", func() {
 		Context("when the given map has specified field which is array of string", func() {
 			It("returns parsed array", func() {
-				e, exists, ok := v.MayHaveCommand(model.Map{"command": model.Seq{"sh", "-c", "true"}}, "command")
+				e, exists, ok := v.MayHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]model.StringExpr{model.NewLiteralStringExpr("sh"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr("true")}))
+				Expect(e).To(Equal([]StringExpr{NewLiteralStringExpr("sh"), NewLiteralStringExpr("-c"), NewLiteralStringExpr("true")}))
 				Expect(exists).To(BeTrue())
 				Expect(ok).To(BeTrue())
 			})
@@ -958,7 +957,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("returns nil", func() {
-				e, exists, ok := v.MayHaveCommand(model.Map{}, "command")
+				e, exists, ok := v.MayHaveCommand(Map{}, "command")
 
 				Expect(v.Error()).To(BeNil())
 				Expect(e).To(BeNil())
@@ -969,32 +968,32 @@ var _ = Describe("Validator", func() {
 
 		DescribeTable("adds violation",
 			func(command any, prefix string) {
-				e, _, ok := v.MayHaveCommand(model.Map{"command": command}, "command")
+				e, _, ok := v.MayHaveCommand(Map{"command": command}, "command")
 
 				Expect(e).To(BeNil())
 				Expect(ok).To(BeFalse())
 				Expect(v.Error()).To(BeValidationError(HavePrefix(prefix)))
 			},
-			Entry("when the filed is not seq", model.Map{}, "$.command:"),
-			Entry("when the field contains not string", model.Seq{"sh", 1}, "$.command[1]:"),
-			Entry("when the field is empty seq", model.Seq{}, "$.command"),
+			Entry("when the filed is not seq", Map{}, "$.command:"),
+			Entry("when the field contains not string", Seq{"sh", 1}, "$.command[1]:"),
+			Entry("when the field is empty seq", Seq{}, "$.command"),
 		)
 	})
 
 	Describe("MustHaveCommand", func() {
 		Context("when the given map has specified field which is array of string", func() {
 			It("returns parsed array", func() {
-				e, ok := v.MustHaveCommand(model.Map{"command": model.Seq{"sh", "-c", "true"}}, "command")
+				e, ok := v.MustHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]model.StringExpr{model.NewLiteralStringExpr("sh"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr("true")}))
+				Expect(e).To(Equal([]StringExpr{NewLiteralStringExpr("sh"), NewLiteralStringExpr("-c"), NewLiteralStringExpr("true")}))
 				Expect(ok).To(BeTrue())
 			})
 		})
 
 		Context("when the given map dose not have specified field", func() {
 			It("adds ", func() {
-				e, ok := v.MustHaveCommand(model.Map{}, "command")
+				e, ok := v.MustHaveCommand(Map{}, "command")
 
 				Expect(e).To(BeNil())
 				Expect(ok).To(BeFalse())
@@ -1004,27 +1003,27 @@ var _ = Describe("Validator", func() {
 
 		DescribeTable("adds violation",
 			func(command any, prefix string) {
-				e, ok := v.MustHaveCommand(model.Map{"command": command}, "command")
+				e, ok := v.MustHaveCommand(Map{"command": command}, "command")
 
 				Expect(e).To(BeNil())
 				Expect(ok).To(BeFalse())
 				Expect(v.Error()).To(BeValidationError(HavePrefix(prefix)))
 			},
-			Entry("when the filed is not seq", model.Map{}, "$.command:"),
-			Entry("when the field contains not string", model.Seq{"sh", 1}, "$.command[1]:"),
-			Entry("when the field is empty seq", model.Seq{}, "$.command"),
+			Entry("when the filed is not seq", Map{}, "$.command:"),
+			Entry("when the field contains not string", Seq{"sh", 1}, "$.command[1]:"),
+			Entry("when the field is empty seq", Seq{}, "$.command"),
 		)
 	})
 
 	Describe("MustContainOnly()", func() {
 		It("returns true and adds no error when the given map contains only specified", func() {
-			m := model.Map{"foo": 1, "baz": "spexec"}
+			m := Map{"foo": 1, "baz": "spexec"}
 			Expect(v.MustContainOnly(m, "foo", "bar", "baz")).To(BeTrue())
 			Expect(v.Error()).To(BeNil())
 		})
 
 		It("returns false and adds error when the given map contains not specified field", func() {
-			m := model.Map{"foo": 1, "baz": "spexec"}
+			m := Map{"foo": 1, "baz": "spexec"}
 			Expect(v.MustContainOnly(m, "foo", "bar")).To(BeFalse())
 			Expect(v.Error()).To(BeValidationError(Equal(`$: field .baz is not expected`)))
 		})

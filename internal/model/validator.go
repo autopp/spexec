@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spec
+package model
 
 import (
 	"encoding/json"
@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/autopp/spexec/internal/errors"
-	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
 )
@@ -102,24 +101,24 @@ func (v *Validator) AddViolation(format string, args ...any) {
 	v.violations = append(v.violations, violation{path: strings.Join(v.paths, ""), message: message})
 }
 
-func (v *Validator) MayBeMap(x any) (model.Map, bool) {
-	m, ok := x.(model.Map)
+func (v *Validator) MayBeMap(x any) (Map, bool) {
+	m, ok := x.(Map)
 	return m, ok
 }
 
-func (v *Validator) MustBeMap(x any) (model.Map, bool) {
+func (v *Validator) MustBeMap(x any) (Map, bool) {
 	if m, ok := v.MayBeMap(x); ok {
 		return m, true
 	}
-	v.AddViolation("should be map, but is %s", model.TypeNameOf(x))
+	v.AddViolation("should be map, but is %s", TypeNameOf(x))
 	return nil, false
 }
 
-func (v *Validator) MustBeSeq(x any) (model.Seq, bool) {
-	if s, ok := x.(model.Seq); ok {
+func (v *Validator) MustBeSeq(x any) (Seq, bool) {
+	if s, ok := x.(Seq); ok {
 		return s, true
 	}
-	v.AddViolation("should be seq, but is %s", model.TypeNameOf(x))
+	v.AddViolation("should be seq, but is %s", TypeNameOf(x))
 	return nil, false
 }
 
@@ -131,7 +130,7 @@ func (v *Validator) MayBeString(x any) (string, bool) {
 func (v *Validator) MustBeString(x any) (string, bool) {
 	s, ok := v.MayBeString(x)
 	if !ok {
-		v.AddViolation("should be string, but is %s", model.TypeNameOf(x))
+		v.AddViolation("should be string, but is %s", TypeNameOf(x))
 	}
 
 	return s, ok
@@ -170,14 +169,14 @@ func (v *Validator) MayBeVariable(x any) (string, bool) {
 	return name, true
 }
 
-func (v *Validator) MustBeStringExpr(x any) (model.StringExpr, bool) {
+func (v *Validator) MustBeStringExpr(x any) (StringExpr, bool) {
 	if s, ok := v.MayBeString(x); ok {
-		return model.NewLiteralStringExpr(s), true
+		return NewLiteralStringExpr(s), true
 	}
 
 	m, ok := v.MayBeMap(x)
 	if !ok {
-		v.AddViolation("should be string or map, but is %s", model.TypeNameOf(x))
+		v.AddViolation("should be string or map, but is %s", TypeNameOf(x))
 		return nil, false
 	}
 
@@ -192,7 +191,7 @@ func (v *Validator) MustBeStringExpr(x any) (model.StringExpr, bool) {
 		if !ok {
 			return nil, false
 		}
-		return model.NewEnvStringExpr(name), true
+		return NewEnvStringExpr(name), true
 	case "file":
 		format, exists, ok := v.MayHaveString(m, "format")
 		if !ok {
@@ -208,7 +207,7 @@ func (v *Validator) MustBeStringExpr(x any) (model.StringExpr, bool) {
 			if !ok {
 				return nil, false
 			}
-			return model.NewFileStringExpr("", value), true
+			return NewFileStringExpr("", value), true
 		case "yaml":
 			value, ok := v.MustHave(m, "value")
 			if !ok {
@@ -222,7 +221,7 @@ func (v *Validator) MustBeStringExpr(x any) (model.StringExpr, bool) {
 				return nil, false
 			}
 
-			return model.NewFileStringExpr("*.yaml", string(marshaled)), true
+			return NewFileStringExpr("*.yaml", string(marshaled)), true
 		default:
 			v.InField("format", func() {
 				v.AddViolation(`should be a "raw" or "yaml", but is %q`, format)
@@ -249,7 +248,7 @@ func (v *Validator) MustBeInt(x any) (int, bool) {
 		}
 		return int(i), err == nil
 	default:
-		v.AddViolation("should be int, but is %s", model.TypeNameOf(x))
+		v.AddViolation("should be int, but is %s", TypeNameOf(x))
 		return 0, false
 	}
 }
@@ -257,7 +256,7 @@ func (v *Validator) MustBeInt(x any) (int, bool) {
 func (v *Validator) MustBeBool(x any) (bool, bool) {
 	b, ok := x.(bool)
 	if !ok {
-		v.AddViolation("should be bool, but is %s", model.TypeNameOf(x))
+		v.AddViolation("should be bool, but is %s", TypeNameOf(x))
 	}
 
 	return b, ok
@@ -271,7 +270,7 @@ func (v *Validator) MustBeDuration(x any) (time.Duration, bool) {
 
 	s, ok := x.(string)
 	if !ok {
-		v.AddViolation("should be positive integer or duration string, but is %s", model.TypeNameOf(x))
+		v.AddViolation("should be positive integer or duration string, but is %s", TypeNameOf(x))
 		return 0, false
 	}
 	d, err := time.ParseDuration(s)
@@ -283,7 +282,7 @@ func (v *Validator) MustBeDuration(x any) (time.Duration, bool) {
 	return d, true
 }
 
-func (v *Validator) MustHave(m model.Map, key string) (any, bool) {
+func (v *Validator) MustHave(m Map, key string) (any, bool) {
 	x, ok := m[key]
 	if !ok {
 		v.AddViolation("should have .%s", key)
@@ -291,7 +290,7 @@ func (v *Validator) MustHave(m model.Map, key string) (any, bool) {
 	return x, ok
 }
 
-func (v *Validator) MayHave(m model.Map, key string, f func(any)) (any, bool) {
+func (v *Validator) MayHave(m Map, key string, f func(any)) (any, bool) {
 	x, ok := m[key]
 	if !ok {
 		return nil, false
@@ -304,13 +303,13 @@ func (v *Validator) MayHave(m model.Map, key string, f func(any)) (any, bool) {
 	return x, true
 }
 
-func (v *Validator) MayHaveMap(m model.Map, key string, f func(model.Map)) (model.Map, bool, bool) {
+func (v *Validator) MayHaveMap(m Map, key string, f func(Map)) (Map, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return nil, false, true
 	}
 
-	var inner model.Map
+	var inner Map
 	v.InField(key, func() {
 		inner, ok = v.MustBeMap(x)
 		if ok {
@@ -321,13 +320,13 @@ func (v *Validator) MayHaveMap(m model.Map, key string, f func(model.Map)) (mode
 	return inner, ok, ok
 }
 
-func (v *Validator) MayHaveSeq(m model.Map, key string, f func(model.Seq)) (model.Seq, bool, bool) {
+func (v *Validator) MayHaveSeq(m Map, key string, f func(Seq)) (Seq, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return nil, false, true
 	}
 
-	var s model.Seq
+	var s Seq
 	v.InField(key, func() {
 		s, ok = v.MustBeSeq(x)
 		if ok {
@@ -338,7 +337,7 @@ func (v *Validator) MayHaveSeq(m model.Map, key string, f func(model.Seq)) (mode
 	return s, ok, ok
 }
 
-func (v *Validator) MustHaveSeq(m model.Map, key string, f func(model.Seq)) (model.Seq, bool) {
+func (v *Validator) MustHaveSeq(m Map, key string, f func(Seq)) (Seq, bool) {
 	s, exists, ok := v.MayHaveSeq(m, key, f)
 
 	if !exists && ok {
@@ -348,7 +347,7 @@ func (v *Validator) MustHaveSeq(m model.Map, key string, f func(model.Seq)) (mod
 	return s, exists && ok
 }
 
-func (v *Validator) ForInSeq(s model.Seq, f func(i int, x any) bool) bool {
+func (v *Validator) ForInSeq(s Seq, f func(i int, x any) bool) bool {
 	ok := true
 	for i, x := range s {
 		v.InIndex(i, func() {
@@ -363,7 +362,7 @@ func (v *Validator) ForInSeq(s model.Seq, f func(i int, x any) bool) bool {
 	return ok
 }
 
-func (v *Validator) MayHaveString(m model.Map, key string) (string, bool, bool) {
+func (v *Validator) MayHaveString(m Map, key string) (string, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return "", false, true
@@ -377,7 +376,7 @@ func (v *Validator) MayHaveString(m model.Map, key string) (string, bool, bool) 
 	return s, ok, ok
 }
 
-func (v *Validator) MustHaveString(m model.Map, key string) (string, bool) {
+func (v *Validator) MustHaveString(m Map, key string) (string, bool) {
 	s, exists, ok := v.MayHaveString(m, key)
 
 	if !exists && ok {
@@ -387,7 +386,7 @@ func (v *Validator) MustHaveString(m model.Map, key string) (string, bool) {
 	return s, exists && ok
 }
 
-func (v *Validator) MayHaveInt(m model.Map, key string) (int, bool, bool) {
+func (v *Validator) MayHaveInt(m Map, key string) (int, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return 0, false, true
@@ -401,7 +400,7 @@ func (v *Validator) MayHaveInt(m model.Map, key string) (int, bool, bool) {
 	return i, ok, ok
 }
 
-func (v *Validator) MayHaveBool(m model.Map, key string) (bool, bool, bool) {
+func (v *Validator) MayHaveBool(m Map, key string) (bool, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return false, false, true
@@ -415,7 +414,7 @@ func (v *Validator) MayHaveBool(m model.Map, key string) (bool, bool, bool) {
 	return b, ok, ok
 }
 
-func (v *Validator) MayHaveDuration(m model.Map, key string) (time.Duration, bool, bool) {
+func (v *Validator) MayHaveDuration(m Map, key string) (time.Duration, bool, bool) {
 	x, ok := m[key]
 	if !ok {
 		return 0, false, true
@@ -429,13 +428,13 @@ func (v *Validator) MayHaveDuration(m model.Map, key string) (time.Duration, boo
 	return d, ok, ok
 }
 
-func (v *Validator) MayHaveEnvSeq(m model.Map, key string) ([]util.StringVar, bool, bool) {
+func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bool) {
 	var ret []util.StringVar
 	ok := true
-	_, _, isSeq := v.MayHaveSeq(m, "env", func(env model.Seq) {
+	_, _, isSeq := v.MayHaveSeq(m, "env", func(env Seq) {
 		ret = []util.StringVar{}
 		v.ForInSeq(env, func(i int, x any) bool {
-			var envVar model.Map
+			var envVar Map
 			envVar, ok = v.MustBeMap(x)
 			if !ok {
 				return false
@@ -466,13 +465,13 @@ func (v *Validator) MayHaveEnvSeq(m model.Map, key string) ([]util.StringVar, bo
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MayHaveCommand(m model.Map, key string) ([]model.StringExpr, bool, bool) {
-	var ret []model.StringExpr
+func (v *Validator) MayHaveCommand(m Map, key string) ([]StringExpr, bool, bool) {
+	var ret []StringExpr
 	ok := true
-	_, _, isSeq := v.MayHaveSeq(m, key, func(command model.Seq) {
-		ret = make([]model.StringExpr, len(command))
+	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
+		ret = make([]StringExpr, len(command))
 		v.ForInSeq(command, func(i int, x any) bool {
-			var c model.StringExpr
+			var c StringExpr
 			c, ok = v.MustBeStringExpr(x)
 			ret[i] = c
 			return ok
@@ -491,7 +490,7 @@ func (v *Validator) MayHaveCommand(m model.Map, key string) ([]model.StringExpr,
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MustHaveCommand(m model.Map, key string) ([]model.StringExpr, bool) {
+func (v *Validator) MustHaveCommand(m Map, key string) ([]StringExpr, bool) {
 	c, exists, ok := v.MayHaveCommand(m, key)
 
 	if !exists && ok {
@@ -501,7 +500,7 @@ func (v *Validator) MustHaveCommand(m model.Map, key string) ([]model.StringExpr
 	return c, exists && ok
 }
 
-func (v *Validator) MustContainOnly(m model.Map, keys ...string) bool {
+func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
 	dict := map[string]struct{}{}
 	for _, key := range keys {
 		dict[key] = struct{}{}

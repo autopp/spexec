@@ -5,7 +5,6 @@ import (
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -35,11 +34,11 @@ var _ = Describe("EqJSONMatcher", func() {
 })
 
 var _ = Describe("ParseEqJSONMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 	})
 

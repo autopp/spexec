@@ -5,7 +5,6 @@ import (
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -34,11 +33,11 @@ var _ = Describe("SatisfyMatcher", func() {
 })
 
 var _ = Describe("ParseSatisfyMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("")
 		r = matcher.NewStreamMatcherRegistry()
 	})
 
