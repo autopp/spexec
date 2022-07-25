@@ -1,4 +1,4 @@
-package parser
+package spec
 
 import (
 	"path/filepath"
@@ -26,7 +26,7 @@ var _ = Describe("Parser", func() {
 		statusMR.Add("eq", status.ParseEqMatcher)
 		streamMR := matcher.NewStreamMatcherRegistry()
 		streamMR.Add("eq", stream.ParseEqMatcher)
-		p = New(statusMR, streamMR, true)
+		p = NewParser(statusMR, streamMR, true)
 		env = model.NewEnv(nil)
 	})
 

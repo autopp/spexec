@@ -72,19 +72,19 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR matc
 	if err != nil {
 		return nil, err
 	}
-	statusMatcher := statusMR.ParseMatcher(env, v, status)
+	statusMatcher := statusMR.ParseMatcher(v, status)
 
 	stdout, err := tt.StdoutMatcher.Expand(env)
 	if err != nil {
 		return nil, err
 	}
-	stdoutMatcher := streamMR.ParseMatcher(env, v, stdout)
+	stdoutMatcher := streamMR.ParseMatcher(v, stdout)
 
 	stderr, err := tt.StderrMatcher.Expand(env)
 	if err != nil {
 		return nil, err
 	}
-	stderrMatcher := streamMR.ParseMatcher(env, v, stderr)
+	stderrMatcher := streamMR.ParseMatcher(v, stderr)
 
 	tEnv := make([]util.StringVar, 0, len(tt.Env))
 	for _, tsv := range tt.Env {

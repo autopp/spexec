@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package parser
+package spec
 
 import (
 	"io"
@@ -54,7 +54,7 @@ type Parser struct {
 	isStrict bool
 }
 
-func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry, isStrict bool) *Parser {
+func NewParser(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry, isStrict bool) *Parser {
 	return &Parser{statusMR, streamMR, isStrict}
 }
 

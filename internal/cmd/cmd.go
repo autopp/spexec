@@ -25,7 +25,7 @@ import (
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
-	"github.com/autopp/spexec/internal/spec/parser"
+	"github.com/autopp/spexec/internal/spec"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -125,7 +125,7 @@ func (o *options) run() error {
 	statusMR := status.NewStatusMatcherRegistryWithBuiltins()
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 
-	p := parser.New(statusMR, streamMR, o.isStrict)
+	p := spec.NewParser(statusMR, streamMR, o.isStrict)
 	specs := []struct {
 		filename string
 		tests    []*model.Test
