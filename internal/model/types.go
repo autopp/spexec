@@ -48,29 +48,20 @@ func TypeOf(x any) Type {
 		return TypeNil
 	}
 
-	if _, ok := x.(int); ok {
+	switch casted := x.(type) {
+	case int:
 		return TypeInt
-	}
-
-	if i, ok := x.(json.Number); ok {
-		if _, err := i.Int64(); err == nil {
+	case json.Number:
+		if _, err := casted.Int64(); err == nil {
 			return TypeInt
 		}
-	}
-
-	if _, ok := x.(bool); ok {
+	case bool:
 		return TypeBool
-	}
-
-	if _, ok := x.(string); ok {
+	case string:
 		return TypeString
-	}
-
-	if _, ok := x.(Seq); ok {
+	case Seq:
 		return TypeSeq
-	}
-
-	if _, ok := x.(Map); ok {
+	case Map:
 		return TypeMap
 	}
 
