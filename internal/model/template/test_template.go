@@ -28,14 +28,14 @@ type TemplatableStringVar struct {
 }
 
 type TestTemplate struct {
-	Name          model.Templatable[string]
+	Name          *model.Templatable[string]
 	SpecFilename  string
-	Dir           model.Templatable[string]
-	Command       []model.Templatable[model.StringExpr]
-	Stdin         model.Templatable[string]
-	StatusMatcher model.Templatable[any]
-	StdoutMatcher model.Templatable[any]
-	StderrMatcher model.Templatable[any]
+	Dir           *model.Templatable[string]
+	Command       []*model.Templatable[model.StringExpr]
+	Stdin         *model.Templatable[string]
+	StatusMatcher *model.Templatable[any]
+	StdoutMatcher *model.Templatable[any]
+	StderrMatcher *model.Templatable[any]
 	Env           []TemplatableStringVar
 	Timeout       time.Duration
 	TeeStdout     bool
