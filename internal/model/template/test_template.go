@@ -24,7 +24,7 @@ import (
 
 type TemplatableStringVar struct {
 	Name  string
-	Value model.Templatable[string]
+	Value *model.Templatable[string]
 }
 
 type TestTemplate struct {
