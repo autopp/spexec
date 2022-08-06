@@ -42,7 +42,7 @@ type TestTemplate struct {
 	TeeStderr     bool
 }
 
-func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR matcher.StatusMatcherRegistry, streamMR matcher.StreamMatcherRegistry) (*model.Test, error) {
+func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) (*model.Test, error) {
 	name, err := tt.Name.Expand(env)
 	if err != nil {
 		return nil, err
