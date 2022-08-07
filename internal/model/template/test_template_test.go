@@ -35,6 +35,7 @@ var _ = Describe("TestTemplate", func() {
 
 				// Act & Assert
 				Expect(tt.Expand(env, v, statusMR, streamMR)).To(Equal(expected))
+				Expect(v.Error()).NotTo(HaveOccurred())
 			},
 			Entry("with no placeholder",
 				&TestTemplate{
