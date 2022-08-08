@@ -17,6 +17,7 @@ package template
 import (
 	"time"
 
+	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
@@ -31,7 +32,7 @@ type TestTemplate struct {
 	Name          *model.Templatable[string]
 	SpecFilename  string
 	Dir           *model.Templatable[string]
-	Command       []*model.Templatable[model.StringExpr]
+	Command       []*model.Templatable[any]
 	Stdin         *model.Templatable[string]
 	StatusMatcher *model.Templatable[any]
 	StdoutMatcher *model.Templatable[any]
@@ -55,9 +56,16 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 
 	command := make([]model.StringExpr, 0, len(tt.Command))
 	for _, ct := range tt.Command {
-		c, err := ct.Expand(env)
+		x, err := ct.Expand(env)
 		if err != nil {
 			return nil, err
+		}
+
+		// TODO: error handling
+		c, ok := v.MustBeStringExpr(x)
+
+		if !ok {
+			return nil, errors.New(errors.ErrInvalidSpec, "should be string expr")
 		}
 
 		command = append(command, c)

@@ -42,8 +42,8 @@ var _ = Describe("TestTemplate", func() {
 					Name:         model.NewTemplatableFromValue("sample test"),
 					SpecFilename: "sample.yaml",
 					Dir:          model.NewTemplatableFromValue(""),
-					Command: []*model.Templatable[model.StringExpr]{
-						model.NewTemplatableFromValue(model.NewLiteralStringExpr("echo")),
+					Command: []*model.Templatable[any]{
+						model.NewTemplatableFromValue[any]("echo"),
 					},
 					Stdin: model.NewTemplatableFromValue(""),
 					Env: []TemplatableStringVar{
@@ -79,8 +79,8 @@ var _ = Describe("TestTemplate", func() {
 					Name:         model.NewTemplatableFromTemplateValue[string](model.NewTemplateValue(model.Map{"$": "name"}, []model.TemplateRef{model.NewTemplateVar("name")})),
 					SpecFilename: "sample.yaml",
 					Dir:          model.NewTemplatableFromValue(""),
-					Command: []*model.Templatable[model.StringExpr]{
-						model.NewTemplatableFromValue(model.NewLiteralStringExpr("echo")),
+					Command: []*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"$": "command"}, []model.TemplateRef{model.NewTemplateVar("command")})),
 					},
 					Stdin: model.NewTemplatableFromValue(""),
 					Env: []TemplatableStringVar{
