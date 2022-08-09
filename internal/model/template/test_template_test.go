@@ -34,8 +34,8 @@ var _ = Describe("TestTemplate", func() {
 				streamMR.Add("streamExample", streamMatcherParser)
 
 				// Act & Assert
-				Expect(tt.Expand(env, v, statusMR, streamMR)).To(Equal(expected))
 				Expect(v.Error()).NotTo(HaveOccurred())
+				Expect(tt.Expand(env, v, statusMR, streamMR)).To(Equal(expected))
 			},
 			Entry("with no placeholder",
 				&TestTemplate{
