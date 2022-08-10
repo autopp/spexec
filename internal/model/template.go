@@ -156,6 +156,10 @@ func NewTemplatableFromTemplateValue[T any](tv *TemplateValue) *Templatable[T] {
 	return &Templatable[T]{tv: tv}
 }
 
+func NewTemplatableFromVariable[T any](name string) *Templatable[T] {
+	return NewTemplatableFromTemplateValue[T](NewTemplateValue(Map{"$": name}, []TemplateRef{NewTemplateVar(name)}))
+}
+
 func (t *Templatable[T]) Expand(env *Env) (T, error) {
 	if t.tv == nil {
 		return t.value, nil
