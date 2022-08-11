@@ -76,11 +76,11 @@ var _ = Describe("TestTemplate", func() {
 			),
 			Entry("with placeholders",
 				&TestTemplate{
-					Name:         model.NewTemplatableFromTemplateValue[string](model.NewTemplateValue(model.Map{"$": "name"}, []model.TemplateRef{model.NewTemplateVar("name")})),
+					Name:         model.NewTemplatableFromVariable[string]("name"),
 					SpecFilename: "sample.yaml",
 					Dir:          model.NewTemplatableFromValue(""),
 					Command: []*model.Templatable[any]{
-						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"$": "command"}, []model.TemplateRef{model.NewTemplateVar("command")})),
+						model.NewTemplatableFromVariable[any]("command"),
 					},
 					Stdin: model.NewTemplatableFromValue(""),
 					Env: []TemplatableStringVar{
@@ -89,9 +89,9 @@ var _ = Describe("TestTemplate", func() {
 							Value: model.NewTemplatableFromValue("hello"),
 						},
 					},
-					StatusMatcher: model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"$": "statusMatcher"}, []model.TemplateRef{model.NewTemplateVar("statusMatcher")})),
-					StdoutMatcher: model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"$": "streamMatcher"}, []model.TemplateRef{model.NewTemplateVar("streamMatcher")})),
-					StderrMatcher: model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"$": "streamMatcher"}, []model.TemplateRef{model.NewTemplateVar("streamMatcher")})),
+					StatusMatcher: model.NewTemplatableFromVariable[any]("statusMatcher"),
+					StdoutMatcher: model.NewTemplatableFromVariable[any]("streamMatcher"),
+					StderrMatcher: model.NewTemplatableFromVariable[any]("streamMatcher"),
 					TeeStdout:     false,
 					TeeStderr:     false,
 					Timeout:       1 * time.Second,
