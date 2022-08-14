@@ -1,8 +1,6 @@
 package model
 
 import (
-	"errors"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -11,16 +9,17 @@ var dummyExpandedValue = "dummyExpandedValue"
 
 type dummyTemplateRef struct{}
 
-func (dummyTemplateRef) Expand(value any, env *Env) (any, error) {
-	return dummyExpandedValue, nil
+func (dummyTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool) {
+	return dummyExpandedValue, true
 }
 
-var dummyError = errors.New("dummyError")
+var dummyError = "dummyError"
 
 type errorTemplateRef struct{}
 
-func (errorTemplateRef) Expand(value any, env *Env) (any, error) {
-	return nil, dummyError
+func (errorTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool) {
+	v.AddViolation(dummyError)
+	return nil, false
 }
 
 var _ = Describe("TemplateVar", func() {
@@ -28,17 +27,22 @@ var _ = Describe("TemplateVar", func() {
 		It("returns bound value when var is defined", func() {
 			env := NewEnv(nil)
 			env.Define("answer", "42")
+			v, _ := NewValidator("")
 
 			tv := NewTemplateVar("answer")
-			Expect(tv.Expand(Map{"$": "answer"}, env)).To(Equal("42"))
+			actual, ok := tv.Expand(env, v, Map{"$": "answer"})
+			Expect(ok).To(BeTrue())
+			Expect(actual).To(Equal("42"))
 		})
 
 		It("returns error when var is not defined", func() {
 			env := NewEnv(nil)
+			v, _ := NewValidator("")
 
 			tv := NewTemplateVar("answer")
-			_, err := tv.Expand(Map{"$": "answer"}, env)
-			Expect(err).To(HaveOccurred())
+			_, ok := tv.Expand(env, v, Map{"$": "answer"})
+			Expect(ok).To(BeFalse())
+			Expect(v.Error()).To(HaveOccurred())
 		})
 	})
 })
@@ -48,30 +52,36 @@ var _ = Describe("TemplateFieldRef", func() {
 		var tf *TemplateFieldRef
 		field := "answer"
 		var env *Env
+		var v *Validator
 
 		JustBeforeEach(func() {
 			tf = NewTemplateFieldRef(field, dummyTemplateRef{})
 			env = NewEnv(nil)
+			v, _ = NewValidator("")
 		})
 
 		It("returns expanded value when given contains the field", func() {
 			given := Map{"answer": Map{"$": "answer"}}
 
-			Expect(tf.Expand(given, env)).To(Equal(Map{"answer": dummyExpandedValue}))
+			actual, ok := tf.Expand(env, v, given)
+			Expect(ok).To(BeTrue())
+			Expect(actual).To(Equal(Map{"answer": dummyExpandedValue}))
 		})
 
 		It("returns error when given dose not contain the field", func() {
 			given := Map{"notAnswer": Map{"$": "answer"}}
 
-			_, err := tf.Expand(given, env)
-			Expect(err).To(HaveOccurred())
+			_, ok := tf.Expand(env, v, given)
+			Expect(ok).To(BeFalse())
+			Expect(v.Error()).To(HaveOccurred())
 		})
 
 		It("returns error when given is not map", func() {
 			given := Seq{Map{"$": "answer"}}
 
-			_, err := tf.Expand(given, env)
-			Expect(err).To(HaveOccurred())
+			_, ok := tf.Expand(env, v, given)
+			Expect(ok).To(BeFalse())
+			Expect(v.Error()).To(HaveOccurred())
 		})
 	})
 })
@@ -80,30 +90,36 @@ var _ = Describe("TemplateIndexRef", func() {
 	Describe("Expand()", func() {
 		var tf *TemplateIndexRef
 		var env *Env
+		var v *Validator
 
 		JustBeforeEach(func() {
 			tf = NewTemplateIndexRef(1, dummyTemplateRef{})
 			env = NewEnv(nil)
+			v, _ = NewValidator("")
 		})
 
 		It("returns expanded value when given contains the element", func() {
 			given := Seq{42, Map{"$": "answer"}}
 
-			Expect(tf.Expand(given, env)).To(Equal(Seq{42, dummyExpandedValue}))
+			actual, ok := tf.Expand(env, v, given)
+			Expect(ok).To(BeTrue())
+			Expect(actual).To(Equal(Seq{42, dummyExpandedValue}))
 		})
 
 		It("returns error when given dose not contain the element", func() {
 			given := Seq{42}
 
-			_, err := tf.Expand(given, env)
-			Expect(err).To(HaveOccurred())
+			_, ok := tf.Expand(env, v, given)
+			Expect(ok).To(BeFalse())
+			Expect(v.Error()).To(HaveOccurred())
 		})
 
 		It("returns error when given is not seq", func() {
 			given := Map{"answer": Map{"$": "answer"}}
 
-			_, err := tf.Expand(given, env)
-			Expect(err).To(HaveOccurred())
+			_, ok := tf.Expand(env, v, given)
+			Expect(ok).To(BeFalse())
+			Expect(v.Error()).To(HaveOccurred())
 		})
 	})
 })
@@ -137,7 +153,7 @@ var _ = Describe("TemplateValue", func() {
 			)
 
 			_, err := tv.Expand(NewEnv(nil))
-			Expect(err).To(MatchError(dummyError))
+			Expect(err).To(HaveOccurred())
 		})
 	})
 })
@@ -178,7 +194,7 @@ var _ = Describe("Templatable", func() {
 			)
 
 			_, err := t.Expand(env)
-			Expect(err).To(MatchError(dummyError))
+			Expect(err).To(HaveOccurred())
 		})
 	})
 })

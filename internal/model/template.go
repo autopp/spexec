@@ -22,7 +22,7 @@ import (
 )
 
 type TemplateRef interface {
-	Expand(value any, env *Env) (any, error)
+	Expand(env *Env, v *Validator, value any) (any, bool)
 }
 
 type TemplateVar struct {
@@ -33,13 +33,14 @@ func NewTemplateVar(name string) *TemplateVar {
 	return &TemplateVar{name}
 }
 
-func (tv *TemplateVar) Expand(value any, env *Env) (any, error) {
+func (tv *TemplateVar) Expand(env *Env, v *Validator, value any) (any, bool) {
 	value, ok := env.Lookup(tv.name)
 	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "undefined var: %s", tv.name)
+		v.AddViolation("undefined var: %s", tv.name)
+		return nil, false
 	}
 
-	return value, nil
+	return value, true
 }
 
 type TemplateFieldRef struct {
@@ -54,26 +55,29 @@ func NewTemplateFieldRef(field string, next TemplateRef) *TemplateFieldRef {
 	}
 }
 
-func (tf *TemplateFieldRef) Expand(value any, env *Env) (any, error) {
-	m, ok := value.(Map)
-
+func (tf *TemplateFieldRef) Expand(env *Env, v *Validator, value any) (any, bool) {
+	m, ok := v.MustBeMap(value)
 	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "expect to be map, but got %s", TypeNameOf(value))
+		return nil, false
 	}
 
-	v, ok := m[tf.field]
+	field, ok := v.MustHave(m, tf.field)
 	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "expect to contains .%s", tf.field)
+		return nil, false
 	}
 
-	expanded, err := tf.next.Expand(v, env)
-	if err != nil {
-		return nil, err
+	var expanded any
+	v.InField(tf.field, func() {
+		expanded, ok = tf.next.Expand(env, v, field)
+	})
+
+	if !ok {
+		return nil, false
 	}
 
 	m[tf.field] = expanded
 
-	return m, nil
+	return m, true
 }
 
 type TemplateIndexRef struct {
@@ -88,25 +92,28 @@ func NewTemplateIndexRef(index int, next TemplateRef) *TemplateIndexRef {
 	}
 }
 
-func (ti *TemplateIndexRef) Expand(value any, env *Env) (any, error) {
-	s, ok := value.(Seq)
-
+func (ti *TemplateIndexRef) Expand(env *Env, v *Validator, value any) (any, bool) {
+	s, ok := v.MustBeSeq(value)
 	if !ok {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "expect to be seq, but got %s", TypeNameOf(value))
+		return nil, false
 	}
 
 	if ti.index >= len(s) {
-		return nil, errors.Errorf(errors.ErrInvalidSpec, "expect to have %d items", ti.index)
+		v.AddViolation("expect to have %d items", ti.index)
+		return nil, false
 	}
 
-	expanded, err := ti.next.Expand(s[ti.index], env)
-	if err != nil {
-		return nil, err
+	var expanded any
+	v.InIndex(ti.index, func() {
+		expanded, ok = ti.next.Expand(env, v, s[ti.index])
+	})
+	if !ok {
+		return nil, false
 	}
 
 	s[ti.index] = expanded
 
-	return s, nil
+	return s, true
 }
 
 type TemplateValue struct {
@@ -133,10 +140,12 @@ func (tv *TemplateValue) Expand(env *Env) (any, error) {
 	}
 
 	for _, ref := range tv.refs {
-		var err error
-		copied, err = ref.Expand(copied, env)
-		if err != nil {
-			return nil, err
+		var ok bool
+		// TODO: use validator from parameter
+		v, _ := NewValidator("")
+		copied, ok = ref.Expand(env, v, copied)
+		if !ok {
+			return nil, v.Error()
 		}
 	}
 
