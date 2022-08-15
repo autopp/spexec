@@ -126,6 +126,11 @@ var _ = Describe("TemplateIndexRef", func() {
 
 var _ = Describe("TemplateValue", func() {
 	Describe("Expand()", func() {
+		var v *Validator
+		JustBeforeEach(func() {
+			v, _ = NewValidator("")
+		})
+
 		It("returns expanded value", func() {
 			tv := NewTemplateValue(
 				Map{"foo": Map{"$": "x"}, "bar": Seq{Map{"$": "y"}}},
@@ -138,8 +143,9 @@ var _ = Describe("TemplateValue", func() {
 			env.Define("x", "hello")
 			env.Define("y", "bye")
 
-			actual, err := tv.Expand(env)
+			actual, err := tv.Expand(env, v)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(v.Error()).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(Map{"foo": "hello", "bar": Seq{"bye"}}))
 			Expect(actual).NotTo(Equal(tv.value))
 		})
@@ -152,7 +158,7 @@ var _ = Describe("TemplateValue", func() {
 				},
 			)
 
-			_, err := tv.Expand(NewEnv(nil))
+			_, err := tv.Expand(NewEnv(nil), v)
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -185,7 +191,7 @@ var _ = Describe("Templatable", func() {
 			)
 
 			_, err := t.Expand(env)
-			Expect(err).To(MatchError("expect int, but got string"))
+			Expect(err).To(HaveOccurred())
 		})
 
 		It("returns error, when with wrong type value", func() {

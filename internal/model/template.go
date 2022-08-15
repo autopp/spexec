@@ -128,7 +128,7 @@ func NewTemplateValue(value any, refs []TemplateRef) *TemplateValue {
 	}
 }
 
-func (tv *TemplateValue) Expand(env *Env) (any, error) {
+func (tv *TemplateValue) Expand(env *Env, v *Validator) (any, error) {
 	buf := new(bytes.Buffer)
 	if err := gob.NewEncoder(buf).Encode(&tv.value); err != nil {
 		return nil, err
@@ -141,8 +141,6 @@ func (tv *TemplateValue) Expand(env *Env) (any, error) {
 
 	for _, ref := range tv.refs {
 		var ok bool
-		// TODO: use validator from parameter
-		v, _ := NewValidator("")
 		copied, ok = ref.Expand(env, v, copied)
 		if !ok {
 			return nil, v.Error()
@@ -174,17 +172,19 @@ func (t *Templatable[T]) Expand(env *Env) (T, error) {
 		return t.value, nil
 	}
 
-	v, err := t.tv.Expand(env)
+	// TODO: use validator from parameter
+	v, _ := NewValidator("")
+	value, err := t.tv.Expand(env, v)
 
 	if err != nil {
 		var defaultV T
 		return defaultV, err
 	}
 
-	x, ok := v.(T)
+	x, ok := value.(T)
 	if !ok {
 		var defaultV T
-		return defaultV, errors.Errorf(errors.ErrInvalidSpec, "expect %T, but got %T", defaultV, v)
+		return defaultV, errors.Errorf(errors.ErrInvalidSpec, "expect %T, but got %T", defaultV, value)
 	}
 
 	return x, nil
