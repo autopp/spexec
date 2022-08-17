@@ -44,19 +44,19 @@ type TestTemplate struct {
 }
 
 func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) (*model.Test, error) {
-	name, err := tt.Name.Expand(env)
+	name, err := tt.Name.Expand(env, v)
 	if err != nil {
 		return nil, err
 	}
 
-	dir, err := tt.Dir.Expand(env)
+	dir, err := tt.Dir.Expand(env, v)
 	if err != nil {
 		return nil, err
 	}
 
 	command := make([]model.StringExpr, 0, len(tt.Command))
 	for _, ct := range tt.Command {
-		x, err := ct.Expand(env)
+		x, err := ct.Expand(env, v)
 		if err != nil {
 			return nil, err
 		}
@@ -71,24 +71,24 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 		command = append(command, c)
 	}
 
-	stdin, err := tt.Stdin.Expand(env)
+	stdin, err := tt.Stdin.Expand(env, v)
 	if err != nil {
 		return nil, err
 	}
 
-	status, err := tt.StatusMatcher.Expand(env)
+	status, err := tt.StatusMatcher.Expand(env, v)
 	if err != nil {
 		return nil, err
 	}
 	statusMatcher := statusMR.ParseMatcher(v, status)
 
-	stdout, err := tt.StdoutMatcher.Expand(env)
+	stdout, err := tt.StdoutMatcher.Expand(env, v)
 	if err != nil {
 		return nil, err
 	}
 	stdoutMatcher := streamMR.ParseMatcher(v, stdout)
 
-	stderr, err := tt.StderrMatcher.Expand(env)
+	stderr, err := tt.StderrMatcher.Expand(env, v)
 	if err != nil {
 		return nil, err
 	}
@@ -96,7 +96,7 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 
 	tEnv := make([]util.StringVar, 0, len(tt.Env))
 	for _, tsv := range tt.Env {
-		value, err := tsv.Value.Expand(env)
+		value, err := tsv.Value.Expand(env, v)
 		if err != nil {
 			return nil, err
 		}

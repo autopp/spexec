@@ -167,14 +167,16 @@ var _ = Describe("TemplateValue", func() {
 var _ = Describe("Templatable", func() {
 	Describe("Expand()", func() {
 		var env *Env
+		var v *Validator
 		BeforeEach(func() {
 			env = NewEnv(nil)
+			v, _ = NewValidator("")
 		})
 
 		It("returns wrapped value, when with simple value", func() {
 			t := NewTemplatableFromValue("hello")
 
-			Expect(t.Expand(env)).To(Equal("hello"))
+			Expect(t.Expand(env, v)).To(Equal("hello"))
 		})
 
 		It("returns expanded value, when with template value", func() {
@@ -182,7 +184,7 @@ var _ = Describe("Templatable", func() {
 				NewTemplateValue(Map{"$": "x"}, []TemplateRef{dummyTemplateRef{}}),
 			)
 
-			Expect(t.Expand(env)).To(Equal(dummyExpandedValue))
+			Expect(t.Expand(env, v)).To(Equal(dummyExpandedValue))
 		})
 
 		It("returns error, when with wrong type value", func() {
@@ -190,7 +192,7 @@ var _ = Describe("Templatable", func() {
 				NewTemplateValue(Map{"$": "x"}, []TemplateRef{dummyTemplateRef{}}),
 			)
 
-			_, err := t.Expand(env)
+			_, err := t.Expand(env, v)
 			Expect(err).To(HaveOccurred())
 		})
 
@@ -199,7 +201,7 @@ var _ = Describe("Templatable", func() {
 				NewTemplateValue(Map{"$": "x"}, []TemplateRef{errorTemplateRef{}}),
 			)
 
-			_, err := t.Expand(env)
+			_, err := t.Expand(env, v)
 			Expect(err).To(HaveOccurred())
 		})
 	})

@@ -167,24 +167,22 @@ func NewTemplatableFromVariable[T any](name string) *Templatable[T] {
 	return NewTemplatableFromTemplateValue[T](NewTemplateValue(Map{"$": name}, []TemplateRef{NewTemplateVar(name)}))
 }
 
-func (t *Templatable[T]) Expand(env *Env) (T, error) {
+func (t *Templatable[T]) Expand(env *Env, v *Validator) (T, error) {
 	if t.tv == nil {
 		return t.value, nil
 	}
 
-	// TODO: use validator from parameter
-	v, _ := NewValidator("")
-	value, err := t.tv.Expand(env, v)
+	expanded, err := t.tv.Expand(env, v)
 
 	if err != nil {
 		var defaultV T
 		return defaultV, err
 	}
 
-	x, ok := value.(T)
+	x, ok := expanded.(T)
 	if !ok {
 		var defaultV T
-		return defaultV, errors.Errorf(errors.ErrInvalidSpec, "expect %T, but got %T", defaultV, value)
+		return defaultV, errors.Errorf(errors.ErrInvalidSpec, "expect %T, but got %T", defaultV, expanded)
 	}
 
 	return x, nil
