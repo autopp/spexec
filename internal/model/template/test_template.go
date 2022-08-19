@@ -17,7 +17,6 @@ package template
 import (
 	"time"
 
-	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
@@ -62,12 +61,7 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 		}
 
 		// TODO: error handling
-		c, ok := v.MustBeStringExpr(x)
-
-		if !ok {
-			return nil, errors.New(errors.ErrInvalidSpec, "should be string expr")
-		}
-
+		c, _ := v.MustBeStringExpr(x)
 		command = append(command, c)
 	}
 
