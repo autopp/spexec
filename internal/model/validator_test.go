@@ -14,6 +14,15 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
+var BeValidationError = func(message any) types.GomegaMatcher {
+	matcher, ok := message.(types.GomegaMatcher)
+	if !ok {
+		matcher = Equal(message)
+	}
+
+	return And(HaveOccurred(), WithTransform(func(err error) string { return err.Error() }, matcher))
+}
+
 type unmarshalableToYAML struct {
 }
 
@@ -23,15 +32,6 @@ func (unmarshalableToYAML) MarshalYAML() (any, error) {
 
 var _ = Describe("Validator", func() {
 	var v *Validator
-
-	BeValidationError := func(message any) types.GomegaMatcher {
-		matcher, ok := message.(types.GomegaMatcher)
-		if !ok {
-			matcher = Equal(message)
-		}
-
-		return And(HaveOccurred(), WithTransform(func(err error) string { return err.Error() }, matcher))
-	}
 
 	JustBeforeEach(func() {
 		v, _ = NewValidator("")
