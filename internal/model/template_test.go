@@ -32,6 +32,7 @@ var _ = Describe("TemplateVar", func() {
 			tv := NewTemplateVar("answer")
 			actual, ok := tv.Expand(env, v, Map{"$": "answer"})
 			Expect(ok).To(BeTrue())
+			Expect(v.Error()).NotTo(HaveOccurred())
 			Expect(actual).To(Equal("42"))
 		})
 
@@ -65,6 +66,7 @@ var _ = Describe("TemplateFieldRef", func() {
 
 			actual, ok := tf.Expand(env, v, given)
 			Expect(ok).To(BeTrue())
+			Expect(v.Error()).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(Map{"answer": dummyExpandedValue}))
 		})
 
@@ -103,6 +105,7 @@ var _ = Describe("TemplateIndexRef", func() {
 
 			actual, ok := tf.Expand(env, v, given)
 			Expect(ok).To(BeTrue())
+			Expect(v.Error()).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(Seq{42, dummyExpandedValue}))
 		})
 
@@ -177,6 +180,7 @@ var _ = Describe("Templatable", func() {
 			t := NewTemplatableFromValue("hello")
 
 			Expect(t.Expand(env, v)).To(Equal("hello"))
+			Expect(v.Error()).NotTo(HaveOccurred())
 		})
 
 		It("returns expanded value, when with template value", func() {
@@ -185,6 +189,7 @@ var _ = Describe("Templatable", func() {
 			)
 
 			Expect(t.Expand(env, v)).To(Equal(dummyExpandedValue))
+			Expect(v.Error()).NotTo(HaveOccurred())
 		})
 
 		It("returns error, when with wrong type value", func() {
