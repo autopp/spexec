@@ -36,7 +36,9 @@ func NewTemplateVar(name string) *TemplateVar {
 func (tv *TemplateVar) Expand(env *Env, v *Validator, value any) (any, bool) {
 	value, ok := env.Lookup(tv.name)
 	if !ok {
-		v.AddViolation("undefined var: %s", tv.name)
+		v.InField("$"+tv.name, func() {
+			v.AddViolation("is not defined")
+		})
 		return nil, false
 	}
 

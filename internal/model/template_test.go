@@ -43,7 +43,7 @@ var _ = Describe("TemplateVar", func() {
 			tv := NewTemplateVar("answer")
 			_, ok := tv.Expand(env, v, Map{"$": "answer"})
 			Expect(ok).To(BeFalse())
-			Expect(v.Error()).To(HaveOccurred())
+			Expect(v.Error()).To(BeValidationError("$.$answer: is not defined"))
 		})
 	})
 })
