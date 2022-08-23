@@ -9,17 +9,17 @@ var dummyExpandedValue = "dummyExpandedValue"
 
 type dummyTemplateRef struct{}
 
-func (dummyTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool) {
-	return dummyExpandedValue, true
+func (dummyTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
+	return dummyExpandedValue, true, nil
 }
 
 var dummyError = "dummyError"
 
 type errorTemplateRef struct{}
 
-func (errorTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool) {
+func (errorTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
 	v.AddViolation(dummyError)
-	return nil, false
+	return nil, false, nil
 }
 
 var _ = Describe("TemplateVar", func() {
@@ -30,9 +30,10 @@ var _ = Describe("TemplateVar", func() {
 			v, _ := NewValidator("")
 
 			tv := NewTemplateVar("answer")
-			actual, ok := tv.Expand(env, v, Map{"$": "answer"})
+			actual, ok, err := tv.Expand(env, v, Map{"$": "answer"})
 			Expect(ok).To(BeTrue())
 			Expect(v.Error()).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal("42"))
 		})
 
@@ -41,9 +42,10 @@ var _ = Describe("TemplateVar", func() {
 			v, _ := NewValidator("")
 
 			tv := NewTemplateVar("answer")
-			_, ok := tv.Expand(env, v, Map{"$": "answer"})
+			_, ok, err := tv.Expand(env, v, Map{"$": "answer"})
 			Expect(ok).To(BeFalse())
 			Expect(v.Error()).To(BeValidationError("$.$answer: is not defined"))
+			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 })
@@ -64,25 +66,28 @@ var _ = Describe("TemplateFieldRef", func() {
 		It("returns expanded value when given contains the field", func() {
 			given := Map{"answer": Map{"$": "answer"}}
 
-			actual, ok := tf.Expand(env, v, given)
+			actual, ok, err := tf.Expand(env, v, given)
 			Expect(ok).To(BeTrue())
 			Expect(v.Error()).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(Map{"answer": dummyExpandedValue}))
 		})
 
 		It("returns error when given dose not contain the field", func() {
 			given := Map{"notAnswer": Map{"$": "answer"}}
 
-			_, ok := tf.Expand(env, v, given)
+			_, ok, err := tf.Expand(env, v, given)
 			Expect(ok).To(BeFalse())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(v.Error()).To(HaveOccurred())
 		})
 
 		It("returns error when given is not map", func() {
 			given := Seq{Map{"$": "answer"}}
 
-			_, ok := tf.Expand(env, v, given)
+			_, ok, err := tf.Expand(env, v, given)
 			Expect(ok).To(BeFalse())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(v.Error()).To(HaveOccurred())
 		})
 	})
@@ -103,25 +108,28 @@ var _ = Describe("TemplateIndexRef", func() {
 		It("returns expanded value when given contains the element", func() {
 			given := Seq{42, Map{"$": "answer"}}
 
-			actual, ok := tf.Expand(env, v, given)
+			actual, ok, err := tf.Expand(env, v, given)
 			Expect(ok).To(BeTrue())
 			Expect(v.Error()).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(Seq{42, dummyExpandedValue}))
 		})
 
 		It("returns error when given dose not contain the element", func() {
 			given := Seq{42}
 
-			_, ok := tf.Expand(env, v, given)
+			_, ok, err := tf.Expand(env, v, given)
 			Expect(ok).To(BeFalse())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(v.Error()).To(HaveOccurred())
 		})
 
 		It("returns error when given is not seq", func() {
 			given := Map{"answer": Map{"$": "answer"}}
 
-			_, ok := tf.Expand(env, v, given)
+			_, ok, err := tf.Expand(env, v, given)
 			Expect(ok).To(BeFalse())
+			Expect(err).NotTo(HaveOccurred())
 			Expect(v.Error()).To(HaveOccurred())
 		})
 	})

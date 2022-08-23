@@ -22,7 +22,7 @@ import (
 )
 
 type TemplateRef interface {
-	Expand(env *Env, v *Validator, value any) (any, bool)
+	Expand(env *Env, v *Validator, value any) (any, bool, error)
 }
 
 type TemplateVar struct {
@@ -33,16 +33,16 @@ func NewTemplateVar(name string) *TemplateVar {
 	return &TemplateVar{name}
 }
 
-func (tv *TemplateVar) Expand(env *Env, v *Validator, value any) (any, bool) {
+func (tv *TemplateVar) Expand(env *Env, v *Validator, value any) (any, bool, error) {
 	value, ok := env.Lookup(tv.name)
 	if !ok {
 		v.InField("$"+tv.name, func() {
 			v.AddViolation("is not defined")
 		})
-		return nil, false
+		return nil, false, nil
 	}
 
-	return value, true
+	return value, true, nil
 }
 
 type TemplateFieldRef struct {
@@ -57,29 +57,29 @@ func NewTemplateFieldRef(field string, next TemplateRef) *TemplateFieldRef {
 	}
 }
 
-func (tf *TemplateFieldRef) Expand(env *Env, v *Validator, value any) (any, bool) {
+func (tf *TemplateFieldRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
 	m, ok := v.MustBeMap(value)
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
 
 	field, ok := v.MustHave(m, tf.field)
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
 
 	var expanded any
 	v.InField(tf.field, func() {
-		expanded, ok = tf.next.Expand(env, v, field)
+		expanded, ok, _ = tf.next.Expand(env, v, field)
 	})
 
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
 
 	m[tf.field] = expanded
 
-	return m, true
+	return m, true, nil
 }
 
 type TemplateIndexRef struct {
@@ -94,28 +94,28 @@ func NewTemplateIndexRef(index int, next TemplateRef) *TemplateIndexRef {
 	}
 }
 
-func (ti *TemplateIndexRef) Expand(env *Env, v *Validator, value any) (any, bool) {
+func (ti *TemplateIndexRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
 	s, ok := v.MustBeSeq(value)
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
 
 	if ti.index >= len(s) {
 		v.AddViolation("expect to have %d items", ti.index)
-		return nil, false
+		return nil, false, nil
 	}
 
 	var expanded any
 	v.InIndex(ti.index, func() {
-		expanded, ok = ti.next.Expand(env, v, s[ti.index])
+		expanded, ok, _ = ti.next.Expand(env, v, s[ti.index])
 	})
 	if !ok {
-		return nil, false
+		return nil, false, nil
 	}
 
 	s[ti.index] = expanded
 
-	return s, true
+	return s, true, nil
 }
 
 type TemplateValue struct {
@@ -143,7 +143,12 @@ func (tv *TemplateValue) Expand(env *Env, v *Validator) (any, error) {
 
 	for _, ref := range tv.refs {
 		var ok bool
-		copied, ok = ref.Expand(env, v, copied)
+		var err error
+		copied, ok, err = ref.Expand(env, v, copied)
+		if err != nil {
+			return nil, err
+		}
+
 		if !ok {
 			return nil, v.Error()
 		}
