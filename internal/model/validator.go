@@ -517,6 +517,17 @@ func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
 	return ok
 }
 
+func (v *Validator) LastViolation() string {
+	n := len(v.violations)
+	if n == 0 {
+		return ""
+	}
+
+	violation := v.violations[n-1]
+
+	return violation.path + ": " + violation.message
+}
+
 func (v *Validator) Error() error {
 	if len(v.violations) == 0 {
 		return nil

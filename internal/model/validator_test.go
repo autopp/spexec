@@ -1028,4 +1028,16 @@ var _ = Describe("Validator", func() {
 			Expect(v.Error()).To(BeValidationError(Equal(`$: field .baz is not expected`)))
 		})
 	})
+
+	Describe("LastViolation()", func() {
+		It("returns last violation message", func() {
+			v.AddViolation("first violation")
+			v.AddViolation("second violation")
+			Expect(v.LastViolation()).To(Equal("$: second violation"))
+		})
+
+		It("returns empty when violation is not add", func() {
+			Expect(v.LastViolation()).To(Equal(""))
+		})
+	})
 })
