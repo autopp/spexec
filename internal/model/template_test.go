@@ -76,19 +76,15 @@ var _ = Describe("TemplateFieldRef", func() {
 		It("returns error when given dose not contain the field", func() {
 			given := Map{"notAnswer": Map{"$": "answer"}}
 
-			_, ok, err := tf.Expand(env, v, given)
-			Expect(ok).To(BeFalse())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v.Error()).To(HaveOccurred())
+			_, _, err := tf.Expand(env, v, given)
+			Expect(err).To(BeValidationError("unexpected template structure: $: should have .answer"))
 		})
 
 		It("returns error when given is not map", func() {
 			given := Seq{Map{"$": "answer"}}
 
-			_, ok, err := tf.Expand(env, v, given)
-			Expect(ok).To(BeFalse())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v.Error()).To(HaveOccurred())
+			_, _, err := tf.Expand(env, v, given)
+			Expect(err).To(BeValidationError("unexpected template structure: $: should be map, but is seq"))
 		})
 	})
 })

@@ -60,18 +60,23 @@ func NewTemplateFieldRef(field string, next TemplateRef) *TemplateFieldRef {
 func (tf *TemplateFieldRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
 	m, ok := v.MustBeMap(value)
 	if !ok {
-		return nil, false, nil
+		return nil, false, unexpectedTemplateStructureError(v)
 	}
 
 	field, ok := v.MustHave(m, tf.field)
 	if !ok {
-		return nil, false, nil
+		return nil, false, unexpectedTemplateStructureError(v)
 	}
 
 	var expanded any
+	var err error
 	v.InField(tf.field, func() {
-		expanded, ok, _ = tf.next.Expand(env, v, field)
+		expanded, ok, err = tf.next.Expand(env, v, field)
 	})
+
+	if err != nil {
+		return nil, false, err
+	}
 
 	if !ok {
 		return nil, false, nil
@@ -198,4 +203,8 @@ func (t *Templatable[T]) Expand(env *Env, v *Validator) (T, error) {
 func init() {
 	gob.Register([]any{})
 	gob.Register(map[string]any{})
+}
+
+func unexpectedTemplateStructureError(v *Validator) error {
+	return errors.Errorf(errors.ErrInternalError, "unexpected template structure: %s", v.LastViolation())
 }
