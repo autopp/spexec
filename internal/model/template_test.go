@@ -114,19 +114,15 @@ var _ = Describe("TemplateIndexRef", func() {
 		It("returns error when given dose not contain the element", func() {
 			given := Seq{42}
 
-			_, ok, err := tf.Expand(env, v, given)
-			Expect(ok).To(BeFalse())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v.Error()).To(HaveOccurred())
+			_, _, err := tf.Expand(env, v, given)
+			Expect(err).To(BeValidationError("unexpected template structure: $: should have 2 items"))
 		})
 
 		It("returns error when given is not seq", func() {
 			given := Map{"answer": Map{"$": "answer"}}
 
-			_, ok, err := tf.Expand(env, v, given)
-			Expect(ok).To(BeFalse())
-			Expect(err).NotTo(HaveOccurred())
-			Expect(v.Error()).To(HaveOccurred())
+			_, _, err := tf.Expand(env, v, given)
+			Expect(err).To(BeValidationError("unexpected template structure: $: should be seq, but is map"))
 		})
 	})
 })

@@ -102,12 +102,12 @@ func NewTemplateIndexRef(index int, next TemplateRef) *TemplateIndexRef {
 func (ti *TemplateIndexRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
 	s, ok := v.MustBeSeq(value)
 	if !ok {
-		return nil, false, nil
+		return nil, false, unexpectedTemplateStructureError(v)
 	}
 
 	if ti.index >= len(s) {
-		v.AddViolation("expect to have %d items", ti.index)
-		return nil, false, nil
+		v.AddViolation("should have %d items", ti.index+1)
+		return nil, false, unexpectedTemplateStructureError(v)
 	}
 
 	var expanded any
