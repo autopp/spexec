@@ -111,9 +111,15 @@ func (ti *TemplateIndexRef) Expand(env *Env, v *Validator, value any) (any, bool
 	}
 
 	var expanded any
+	var err error
 	v.InIndex(ti.index, func() {
-		expanded, ok, _ = ti.next.Expand(env, v, s[ti.index])
+		expanded, ok, err = ti.next.Expand(env, v, s[ti.index])
 	})
+
+	if err != nil {
+		return nil, false, err
+	}
+
 	if !ok {
 		return nil, false, nil
 	}
