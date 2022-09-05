@@ -1,6 +1,7 @@
 package model
 
 import (
+	"github.com/autopp/spexec/internal/errors"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
@@ -18,8 +19,7 @@ var dummyError = "dummyError"
 type errorTemplateRef struct{}
 
 func (errorTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
-	v.AddViolation(dummyError)
-	return nil, false, nil
+	return nil, false, errors.New(errors.ErrInternalError, dummyError)
 }
 
 var _ = Describe("TemplateVar", func() {
@@ -52,18 +52,18 @@ var _ = Describe("TemplateVar", func() {
 
 var _ = Describe("TemplateFieldRef", func() {
 	Describe("Expand()", func() {
-		var tf *TemplateFieldRef
 		field := "answer"
 		var env *Env
 		var v *Validator
 
 		JustBeforeEach(func() {
-			tf = NewTemplateFieldRef(field, dummyTemplateRef{})
+
 			env = NewEnv(nil)
 			v, _ = NewValidator("")
 		})
 
 		It("returns expanded value when given contains the field", func() {
+			tf := NewTemplateFieldRef(field, dummyTemplateRef{})
 			given := Map{"answer": Map{"$": "answer"}}
 
 			actual, ok, err := tf.Expand(env, v, given)
@@ -74,6 +74,7 @@ var _ = Describe("TemplateFieldRef", func() {
 		})
 
 		It("returns error when given dose not contain the field", func() {
+			tf := NewTemplateFieldRef(field, dummyTemplateRef{})
 			given := Map{"notAnswer": Map{"$": "answer"}}
 
 			_, _, err := tf.Expand(env, v, given)
@@ -81,27 +82,35 @@ var _ = Describe("TemplateFieldRef", func() {
 		})
 
 		It("returns error when given is not map", func() {
+			tf := NewTemplateFieldRef(field, dummyTemplateRef{})
 			given := Seq{Map{"$": "answer"}}
 
 			_, _, err := tf.Expand(env, v, given)
 			Expect(err).To(BeValidationError("unexpected template structure: $: should be map, but is seq"))
+		})
+
+		It("returns error when it occured in nested field", func() {
+			tf := NewTemplateFieldRef(field, errorTemplateRef{})
+			given := Map{"answer": Map{"$": "answer"}}
+
+			_, _, err := tf.Expand(env, v, given)
+			Expect(err).To(MatchError(dummyError))
 		})
 	})
 })
 
 var _ = Describe("TemplateIndexRef", func() {
 	Describe("Expand()", func() {
-		var tf *TemplateIndexRef
 		var env *Env
 		var v *Validator
 
 		JustBeforeEach(func() {
-			tf = NewTemplateIndexRef(1, dummyTemplateRef{})
 			env = NewEnv(nil)
 			v, _ = NewValidator("")
 		})
 
 		It("returns expanded value when given contains the element", func() {
+			tf := NewTemplateIndexRef(1, dummyTemplateRef{})
 			given := Seq{42, Map{"$": "answer"}}
 
 			actual, ok, err := tf.Expand(env, v, given)
@@ -112,6 +121,7 @@ var _ = Describe("TemplateIndexRef", func() {
 		})
 
 		It("returns error when given dose not contain the element", func() {
+			tf := NewTemplateIndexRef(1, dummyTemplateRef{})
 			given := Seq{42}
 
 			_, _, err := tf.Expand(env, v, given)
@@ -119,10 +129,19 @@ var _ = Describe("TemplateIndexRef", func() {
 		})
 
 		It("returns error when given is not seq", func() {
+			tf := NewTemplateIndexRef(1, dummyTemplateRef{})
 			given := Map{"answer": Map{"$": "answer"}}
 
 			_, _, err := tf.Expand(env, v, given)
 			Expect(err).To(BeValidationError("unexpected template structure: $: should be seq, but is map"))
+		})
+
+		It("returns error when it occured in the element", func() {
+			tf := NewTemplateIndexRef(1, errorTemplateRef{})
+			given := Seq{42, Map{"$": "answer"}}
+
+			_, _, err := tf.Expand(env, v, given)
+			Expect(err).To(MatchError(dummyError))
 		})
 	})
 })
