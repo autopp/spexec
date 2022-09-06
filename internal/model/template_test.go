@@ -14,6 +14,15 @@ func (dummyTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool, er
 	return dummyExpandedValue, true, nil
 }
 
+var dummyViolation = "dummyViolation"
+
+type violationTemplateRef struct{}
+
+func (violationTemplateRef) Expand(env *Env, v *Validator, value any) (any, bool, error) {
+	v.AddViolation(dummyViolation)
+	return nil, false, nil
+}
+
 var dummyError = "dummyError"
 
 type errorTemplateRef struct{}
@@ -73,6 +82,16 @@ var _ = Describe("TemplateFieldRef", func() {
 			Expect(actual).To(Equal(Map{"answer": dummyExpandedValue}))
 		})
 
+		It("returns false when violation is occured in nested field", func() {
+			tf := NewTemplateFieldRef(field, violationTemplateRef{})
+			given := Map{"answer": Map{"$": "answer"}}
+
+			_, ok, err := tf.Expand(env, v, given)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ok).To(BeFalse())
+			Expect(v.Error()).To(BeValidationError("$.answer: " + dummyViolation))
+		})
+
 		It("returns error when given dose not contain the field", func() {
 			tf := NewTemplateFieldRef(field, dummyTemplateRef{})
 			given := Map{"notAnswer": Map{"$": "answer"}}
@@ -118,6 +137,16 @@ var _ = Describe("TemplateIndexRef", func() {
 			Expect(v.Error()).NotTo(HaveOccurred())
 			Expect(err).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(Seq{42, dummyExpandedValue}))
+		})
+
+		It("returns false when violation is occured in the element", func() {
+			tf := NewTemplateIndexRef(1, violationTemplateRef{})
+			given := Seq{42, Map{"$": "answer"}}
+
+			_, ok, err := tf.Expand(env, v, given)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ok).To(BeFalse())
+			Expect(v.Error()).To(BeValidationError("$[1]: " + dummyViolation))
 		})
 
 		It("returns error when given dose not contain the element", func() {
