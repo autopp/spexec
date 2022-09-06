@@ -36,7 +36,7 @@ var _ = Describe("TemplateVar", func() {
 		It("returns bound value when var is defined", func() {
 			env := NewEnv(nil)
 			env.Define("answer", "42")
-			v, _ := NewValidator("")
+			v, _ := NewValidator("", true)
 
 			tv := NewTemplateVar("answer")
 			actual, ok, err := tv.Expand(env, v, Map{"$": "answer"})
@@ -48,7 +48,7 @@ var _ = Describe("TemplateVar", func() {
 
 		It("returns error when var is not defined", func() {
 			env := NewEnv(nil)
-			v, _ := NewValidator("")
+			v, _ := NewValidator("", true)
 
 			tv := NewTemplateVar("answer")
 			_, ok, err := tv.Expand(env, v, Map{"$": "answer"})
@@ -68,7 +68,7 @@ var _ = Describe("TemplateFieldRef", func() {
 		JustBeforeEach(func() {
 
 			env = NewEnv(nil)
-			v, _ = NewValidator("")
+			v, _ = NewValidator("", true)
 		})
 
 		It("returns expanded value when given contains the field", func() {
@@ -125,7 +125,7 @@ var _ = Describe("TemplateIndexRef", func() {
 
 		JustBeforeEach(func() {
 			env = NewEnv(nil)
-			v, _ = NewValidator("")
+			v, _ = NewValidator("", true)
 		})
 
 		It("returns expanded value when given contains the element", func() {
@@ -179,7 +179,7 @@ var _ = Describe("TemplateValue", func() {
 	Describe("Expand()", func() {
 		var v *Validator
 		JustBeforeEach(func() {
-			v, _ = NewValidator("")
+			v, _ = NewValidator("", true)
 		})
 
 		It("returns expanded value", func() {
@@ -221,7 +221,7 @@ var _ = Describe("Templatable", func() {
 		var v *Validator
 		BeforeEach(func() {
 			env = NewEnv(nil)
-			v, _ = NewValidator("")
+			v, _ = NewValidator("", true)
 		})
 
 		It("returns wrapped value, when with simple value", func() {

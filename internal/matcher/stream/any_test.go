@@ -33,7 +33,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 	var parserCalls *testutil.ParserCalls
 
 	JustBeforeEach(func() {
-		v, _ = model.NewValidator("")
+		v, _ = model.NewValidator("", true)
 		r = matcher.NewStreamMatcherRegistry()
 		parseExampleMatcher, parserCalls = testutil.GenParseExampleStreamMatcher(true, "message", nil)
 		r.Add("example", parseExampleMatcher)

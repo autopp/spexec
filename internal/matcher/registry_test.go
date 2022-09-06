@@ -79,7 +79,7 @@ var _ = Describe("MatcherRegistry", func() {
 			failedParseMatcher = testutil.GenFailedParseStatusMatcher(violationMessage)
 			r.Add(failedName, failedParseMatcher)
 
-			v, _ = model.NewValidator("")
+			v, _ = model.NewValidator("", true)
 		})
 
 		Context("for matcher without default parameter", func() {
@@ -175,7 +175,7 @@ var _ = Describe("MatcherRegistry", func() {
 			failedParseMatcher = testutil.GenFailedParseStatusMatcher(violationMessage)
 			r.Add(failedName, failedParseMatcher)
 
-			v, _ = model.NewValidator("")
+			v, _ = model.NewValidator("", true)
 		})
 
 		Context("when params are valid", func() {

@@ -31,7 +31,7 @@ var _ = Describe("ParseEqMatcher", func() {
 	var r *matcher.StatusMatcherRegistry
 
 	JustBeforeEach(func() {
-		v, _ = model.NewValidator("")
+		v, _ = model.NewValidator("", true)
 		r = matcher.NewStatusMatcherRegistry()
 	})
 

@@ -34,7 +34,7 @@ var _ = Describe("Validator", func() {
 	var v *Validator
 
 	JustBeforeEach(func() {
-		v, _ = NewValidator("")
+		v, _ = NewValidator("", true)
 	})
 
 	Describe("Filename and GetDir()", func() {
@@ -48,7 +48,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		It("with filename, returns absolute path and directory of it", func() {
-			v, _ = NewValidator("validator_test.go")
+			v, _ = NewValidator("validator_test.go", true)
 			filename, _ := filepath.Abs("validator_test.go")
 			Expect(v.Filename).To(Equal(filename))
 			Expect(v.GetDir()).To(Equal(filepath.Dir(filename)))

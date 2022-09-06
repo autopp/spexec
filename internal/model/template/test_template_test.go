@@ -24,7 +24,7 @@ var _ = Describe("TestTemplate", func() {
 				env.Define("statusMatcher", model.Map{"statusExample": nil})
 				env.Define("streamMatcher", model.Map{"streamExample": nil})
 
-				v, _ := model.NewValidator("")
+				v, _ := model.NewValidator("", true)
 				statusMR := matcher.NewStatusMatcherRegistry()
 				statusMatcherParser, _ := testutil.GenParseExampleStatusMatcher(true, "message", nil)
 				statusMR.Add("statusExample", statusMatcherParser)

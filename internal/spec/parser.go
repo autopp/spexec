@@ -97,7 +97,7 @@ func (p *Parser) load(env *model.Env, filename string, b io.Reader, unmarshal fu
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	v, err := model.NewValidator(filename)
+	v, err := model.NewValidator(filename, p.isStrict)
 	if err != nil {
 		return nil, err
 	}

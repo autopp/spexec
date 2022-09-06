@@ -40,9 +40,10 @@ type Validator struct {
 	dir        string
 	paths      []string
 	violations []violation
+	isStrict   bool
 }
 
-func NewValidator(filename string) (*Validator, error) {
+func NewValidator(filename string, isStrict bool) (*Validator, error) {
 	var dir string
 	if len(filename) == 0 {
 		var err error
@@ -64,6 +65,7 @@ func NewValidator(filename string) (*Validator, error) {
 		dir:        dir,
 		paths:      []string{"$"},
 		violations: make([]violation, 0),
+		isStrict:   isStrict,
 	}, nil
 }
 
