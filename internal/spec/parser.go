@@ -113,9 +113,7 @@ func (p *Parser) loadSpec(env *model.Env, v *model.Validator, c any) ([]*model.T
 
 	ts := make([]*model.Test, 0)
 
-	if p.isStrict {
-		v.MustContainOnly(cmap, "spexec", "tests")
-	}
+	v.MustContainOnly(cmap, "spexec", "tests")
 
 	version, exists, ok := v.MayHaveString(cmap, "spexec")
 	if ok && exists {
@@ -143,9 +141,7 @@ func (p *Parser) loadTest(env *model.Env, v *model.Validator, x any) *model.Test
 		return nil
 	}
 
-	if p.isStrict {
-		v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout", "teeStdout", "teeStderr")
-	}
+	v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout", "teeStdout", "teeStderr")
 
 	t := new(model.Test)
 	t.SpecFilename = v.Filename
@@ -187,7 +183,7 @@ func (p *Parser) loadCommandStdin(v *model.Validator, stdin any) []byte {
 	if stdinString, ok := v.MayBeString(stdin); ok {
 		return []byte(stdinString)
 	} else if stdinMap, ok := v.MayBeMap(stdin); ok {
-		if p.isStrict && !v.MustContainOnly(stdinMap, "format", "value") {
+		if !v.MustContainOnly(stdinMap, "format", "value") {
 			return nil
 		}
 
@@ -222,9 +218,7 @@ func (p *Parser) loadCommandStdin(v *model.Validator, stdin any) []byte {
 func (p *Parser) loadCommandExpect(env *model.Env, v *model.Validator, expect model.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
 	var statusMatcher model.StatusMatcher
 	var stdoutMatcher, stderrMatcher model.StreamMatcher
-	if p.isStrict {
-		v.MustContainOnly(expect, "status", "stdout", "stderr")
-	}
+	v.MustContainOnly(expect, "status", "stdout", "stderr")
 
 	v.MayHave(expect, "status", func(status any) {
 		statusMatcher = p.statusMR.ParseMatcher(v, status)

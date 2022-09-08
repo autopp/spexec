@@ -503,6 +503,10 @@ func (v *Validator) MustHaveCommand(m Map, key string) ([]StringExpr, bool) {
 }
 
 func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
+	if !v.isStrict {
+		return true
+	}
+
 	dict := map[string]struct{}{}
 	for _, key := range keys {
 		dict[key] = struct{}{}
