@@ -34,7 +34,8 @@ var _ = Describe("Parser", func() {
 
 		DescribeTable("with valid file",
 			func(filename string, expected Elements) {
-				actual, err := p.ParseFile(env, filepath.Join("testdata", filename))
+				v, _ := model.NewValidator(filepath.Join("testdata", filename), true)
+				actual, err := p.ParseFile(env, v, filepath.Join("testdata", filename))
 				Expect(err).NotTo(HaveOccurred())
 				Expect(actual).To(MatchAllElementsWithIndex(IndexIdentity, expected))
 			},
@@ -79,7 +80,8 @@ var _ = Describe("Parser", func() {
 
 		Describe("with no exist file", func() {
 			It("returns err", func() {
-				_, err := p.ParseFile(env, filepath.Join("testdata", "unknown.yaml"))
+				v, _ := model.NewValidator(filepath.Join("testdata", "unknown.yaml"), true)
+				_, err := p.ParseFile(env, v, filepath.Join("testdata", "unknown.yaml"))
 				Expect(err).To(HaveOccurred())
 			})
 		})

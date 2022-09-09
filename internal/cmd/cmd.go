@@ -134,14 +134,22 @@ func (o *options) run() error {
 	var err error
 	env := model.NewEnv(nil)
 	if o.isStdin {
-		tests, err = p.ParseStdin(env)
+		v, err := model.NewValidator("", o.isStrict)
+		if err != nil {
+			return err
+		}
+		tests, err = p.ParseStdin(env, v)
 		specs = append(specs, struct {
 			filename string
 			tests    []*model.Test
 		}{"<stdin>", tests})
 	} else {
 		for _, filename := range o.filenames {
-			tests, err = p.ParseFile(env, filename)
+			v, err := model.NewValidator(filename, o.isStrict)
+			if err != nil {
+				break
+			}
+			tests, err = p.ParseFile(env, v, filename)
 			if err != nil {
 				break
 			}

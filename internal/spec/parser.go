@@ -58,11 +58,11 @@ func NewParser(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.Stream
 	return &Parser{statusMR, streamMR, isStrict}
 }
 
-func (p *Parser) ParseStdin(env *model.Env) ([]*model.Test, error) {
-	return p.parseYAML(env, "", os.Stdin)
+func (p *Parser) ParseStdin(env *model.Env, v *model.Validator) ([]*model.Test, error) {
+	return p.parseYAML(env, v, "", os.Stdin)
 }
 
-func (p *Parser) ParseFile(env *model.Env, filename string) ([]*model.Test, error) {
+func (p *Parser) ParseFile(env *model.Env, v *model.Validator, filename string) ([]*model.Test, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
@@ -72,35 +72,35 @@ func (p *Parser) ParseFile(env *model.Env, filename string) ([]*model.Test, erro
 	var tests []*model.Test
 	ext := filepath.Ext(filename)
 	if ext == ".yml" || ext == ".yaml" {
-		tests, err = p.parseYAML(env, filename, f)
+		tests, err = p.parseYAML(env, v, filename, f)
 	} else {
-		tests, err = p.parseJSON(env, filename, f)
+		tests, err = p.parseJSON(env, v, filename, f)
 	}
 
 	return tests, err
 }
 
-func (p *Parser) parseYAML(env *model.Env, filename string, in io.Reader) ([]*model.Test, error) {
-	return p.load(env, filename, in, func(in io.Reader, out any) error {
+func (p *Parser) parseYAML(env *model.Env, v *model.Validator, filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(env, v, filename, in, func(in io.Reader, out any) error {
 		return yaml.NewDecoder(in).Decode(out)
 	})
 }
 
-func (p *Parser) parseJSON(env *model.Env, filename string, in io.Reader) ([]*model.Test, error) {
-	return p.load(env, filename, in, util.DecodeJSON)
+func (p *Parser) parseJSON(env *model.Env, v *model.Validator, filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(env, v, filename, in, util.DecodeJSON)
 }
 
-func (p *Parser) load(env *model.Env, filename string, b io.Reader, unmarshal func(in io.Reader, out any) error) ([]*model.Test, error) {
+func (p *Parser) load(env *model.Env, v *model.Validator, filename string, b io.Reader, unmarshal func(in io.Reader, out any) error) ([]*model.Test, error) {
 	var x any
 	err := unmarshal(b, &x)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	v, err := model.NewValidator(filename, p.isStrict)
-	if err != nil {
-		return nil, err
-	}
+	// v, err := model.NewValidator(filename, p.isStrict)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return p.loadSpec(env, v, x)
 }
