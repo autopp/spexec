@@ -26,7 +26,7 @@ var _ = Describe("Parser", func() {
 		statusMR.Add("eq", status.ParseEqMatcher)
 		streamMR := matcher.NewStreamMatcherRegistry()
 		streamMR.Add("eq", stream.ParseEqMatcher)
-		p = NewParser(statusMR, streamMR, true)
+		p = NewParser(statusMR, streamMR)
 		env = model.NewEnv(nil)
 	})
 

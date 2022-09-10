@@ -125,7 +125,7 @@ func (o *options) run() error {
 	statusMR := status.NewStatusMatcherRegistryWithBuiltins()
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 
-	p := spec.NewParser(statusMR, streamMR, o.isStrict)
+	p := spec.NewParser(statusMR, streamMR)
 	specs := []struct {
 		filename string
 		tests    []*model.Test
