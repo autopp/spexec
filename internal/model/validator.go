@@ -502,6 +502,27 @@ func (v *Validator) MustHaveCommand(m Map, key string) ([]StringExpr, bool) {
 	return c, exists && ok
 }
 
+func (v *Validator) MayHaveTemplatableString(m Map, key string) (*Templatable[string], bool, bool) {
+	x, ok := m[key]
+	if !ok {
+		return nil, false, true
+	}
+
+	if s, ok := x.(string); ok {
+		return NewTemplatableFromValue(s), true, true
+	}
+
+	if name, ok := v.MayBeVariable(x); ok {
+		return NewTemplatableFromVariable[string](name), true, true
+	}
+
+	v.InField(key, func() {
+		v.AddViolation("should be string or variable, but got %s", TypeNameOf(x))
+	})
+
+	return nil, false, false
+}
+
 func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
 	if !v.isStrict {
 		return true
