@@ -96,11 +96,6 @@ func (p *Parser) load(env *model.Env, v *model.Validator, filename string, b io.
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	// v, err := model.NewValidator(filename, p.isStrict)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	return p.loadSpec(env, v, x)
 }
 
