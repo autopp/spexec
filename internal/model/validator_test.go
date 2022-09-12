@@ -1067,6 +1067,13 @@ var _ = Describe("Validator", func() {
 			Expect(v.MustContainOnly(m, "foo", "bar")).To(BeFalse())
 			Expect(v.Error()).To(BeValidationError(Equal(`$: field .baz is not expected`)))
 		})
+
+		It("returns true and adds no error when isStrict is false", func() {
+			v, _ := NewValidator("", false)
+			m := Map{"foo": 1, "baz": "spexec"}
+			Expect(v.MustContainOnly(m, "foo", "bar")).To(BeTrue())
+			Expect(v.Error()).To(BeNil())
+		})
 	})
 
 	Describe("LastViolation()", func() {
