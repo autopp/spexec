@@ -134,7 +134,8 @@ func (o *options) run() error {
 	var err error
 	env := model.NewEnv(nil)
 	if o.isStdin {
-		v, err := model.NewValidator("", o.isStrict)
+		var v *model.Validator
+		v, err = model.NewValidator("", o.isStrict)
 		if err != nil {
 			return err
 		}
@@ -145,7 +146,8 @@ func (o *options) run() error {
 		}{"<stdin>", tests})
 	} else {
 		for _, filename := range o.filenames {
-			v, err := model.NewValidator(filename, o.isStrict)
+			var v *model.Validator
+			v, err = model.NewValidator(filename, o.isStrict)
 			if err != nil {
 				break
 			}
