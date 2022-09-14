@@ -5,7 +5,6 @@ import (
 
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -16,7 +15,7 @@ var _ = Describe("EqJSONMatcher", func() {
 	var m *EqJSONMatcher
 	JustBeforeEach(func() {
 		m = &EqJSONMatcher{
-			expected:       spec.Map{"code": json.Number("200"), "messages": spec.Seq{"hello"}},
+			expected:       model.Map{"code": json.Number("200"), "messages": model.Seq{"hello"}},
 			expectedString: `{"code":200,"messages":["hello"]}`,
 		}
 	})
@@ -35,31 +34,29 @@ var _ = Describe("EqJSONMatcher", func() {
 })
 
 var _ = Describe("ParseEqJSONMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
-	var env *model.Env
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("", true)
 		r = matcher.NewStreamMatcherRegistry()
-		env = model.NewEnv(nil)
 	})
 
 	Describe("with object", func() {
 		It("returns matcher", func() {
-			m := ParseEqJSONMatcher(env, v, r, spec.Map{"code": 200, "messages": spec.Seq{"hello"}})
+			m := ParseEqJSONMatcher(v, r, model.Map{"code": 200, "messages": model.Seq{"hello"}})
 
 			Expect(m).NotTo(BeNil())
 			Expect(v.Error()).To(BeNil())
 
 			var eq *EqJSONMatcher = m.(*EqJSONMatcher)
-			Expect(eq.expected).To(Equal(spec.Map{"code": json.Number("200"), "messages": spec.Seq{"hello"}}))
+			Expect(eq.expected).To(Equal(model.Map{"code": json.Number("200"), "messages": model.Seq{"hello"}}))
 		})
 	})
 
 	Describe("with json incompatible", func() {
 		It("adds violation and returns nil", func() {
-			m := ParseEqJSONMatcher(env, v, r, map[interface{}]interface{}{1: 42})
+			m := ParseEqJSONMatcher(v, r, map[any]any{1: 42})
 
 			Expect(m).To(BeNil())
 			Expect(v.Error()).To(MatchError(HavePrefix("$: parameter is not json value: ")))

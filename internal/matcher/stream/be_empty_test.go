@@ -3,7 +3,6 @@ package stream
 import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -26,19 +25,17 @@ var _ = Describe("BeEmptyMatcher", func() {
 })
 
 var _ = Describe("ParseBeEmptyMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
-	var env *model.Env
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("", true)
 		r = matcher.NewStreamMatcherRegistry()
-		env = model.NewEnv(nil)
 	})
 
 	Describe("with bool", func() {
 		It("returns matcher", func() {
-			m := ParseBeEmptyMatcher(env, v, r, true)
+			m := ParseBeEmptyMatcher(v, r, true)
 
 			Expect(m).NotTo(BeNil())
 			Expect(v.Error()).To(BeNil())
@@ -49,8 +46,8 @@ var _ = Describe("ParseBeEmptyMatcher", func() {
 	})
 
 	DescribeTable("failure cases",
-		func(given interface{}) {
-			m := ParseBeEmptyMatcher(env, v, r, given)
+		func(given any) {
+			m := ParseBeEmptyMatcher(v, r, given)
 
 			Expect(m).To(BeNil())
 			Expect(v.Error()).To(HaveOccurred())

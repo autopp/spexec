@@ -21,7 +21,7 @@ import (
 	"github.com/autopp/spexec/internal/errors"
 )
 
-func DecodeJSON(in io.Reader, out interface{}) error {
+func DecodeJSON(in io.Reader, out any) error {
 	d := json.NewDecoder(in)
 	d.UseNumber()
 	err := d.Decode(out)

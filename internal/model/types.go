@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spec
+package model
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+)
 
-type Map = map[string]interface{}
-type Seq = []interface{}
+type Map = map[string]any
+type Seq = []any
 
 type Type int
 
@@ -40,7 +43,32 @@ var typeNames = map[Type]string{
 	TypeMap:    "map",
 }
 
-func TypeNameOf(x interface{}) string {
+func TypeOf(x any) Type {
+	if x == nil {
+		return TypeNil
+	}
+
+	switch casted := x.(type) {
+	case int:
+		return TypeInt
+	case json.Number:
+		if _, err := casted.Int64(); err == nil {
+			return TypeInt
+		}
+	case bool:
+		return TypeBool
+	case string:
+		return TypeString
+	case Seq:
+		return TypeSeq
+	case Map:
+		return TypeMap
+	}
+
+	return TypeUnkown
+}
+
+func TypeNameOf(x any) string {
 	if name, ok := typeNames[TypeOf(x)]; ok {
 		return name
 	}

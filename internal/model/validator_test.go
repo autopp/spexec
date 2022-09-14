@@ -1,4 +1,4 @@
-package spec
+package model
 
 import (
 	"encoding/json"
@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -15,27 +14,27 @@ import (
 	"github.com/onsi/gomega/types"
 )
 
+var BeValidationError = func(message any) types.GomegaMatcher {
+	matcher, ok := message.(types.GomegaMatcher)
+	if !ok {
+		matcher = Equal(message)
+	}
+
+	return And(HaveOccurred(), WithTransform(func(err error) string { return err.Error() }, matcher))
+}
+
 type unmarshalableToYAML struct {
 }
 
-func (unmarshalableToYAML) MarshalYAML() (interface{}, error) {
+func (unmarshalableToYAML) MarshalYAML() (any, error) {
 	return nil, errors.New("cannot marshal to YAML")
 }
 
 var _ = Describe("Validator", func() {
 	var v *Validator
 
-	BeValidationError := func(message interface{}) types.GomegaMatcher {
-		matcher, ok := message.(types.GomegaMatcher)
-		if !ok {
-			matcher = Equal(message)
-		}
-
-		return And(HaveOccurred(), WithTransform(func(err error) string { return err.Error() }, matcher))
-	}
-
 	JustBeforeEach(func() {
-		v, _ = NewValidator("")
+		v, _ = NewValidator("", true)
 	})
 
 	Describe("Filename and GetDir()", func() {
@@ -49,7 +48,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		It("with filename, returns absolute path and directory of it", func() {
-			v, _ = NewValidator("validator_test.go")
+			v, _ = NewValidator("validator_test.go", true)
 			filename, _ := filepath.Abs("validator_test.go")
 			Expect(v.Filename).To(Equal(filename))
 			Expect(v.GetDir()).To(Equal(filepath.Dir(filename)))
@@ -216,13 +215,92 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeQualified", func() {
+		Context("with 1 element map", func() {
+			It("returns the qualifier, the value and true", func() {
+				given := Map{"$": "answer"}
+				q, v, b := v.MayBeQualified(given)
+				Expect(q).To(Equal("$"))
+				Expect(v).To(Equal("answer"))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with not map", func() {
+			It("returns empty values and false", func() {
+				given := "answer"
+				_, _, b := v.MayBeQualified(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with two or more elements map", func() {
+			It("returns empty values and false", func() {
+				given := Map{"$": "answer", "$$": 42}
+				_, _, b := v.MayBeQualified(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
+	Describe("MayBeVariable", func() {
+		Context("with 1 element map which contain '$' and the name", func() {
+			It("returns the name and true", func() {
+				given := Map{"$": "answer"}
+				name, b := v.MayBeVariable(given)
+				Expect(name).To(Equal("answer"))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with 1 elements map contain '$' and not string", func() {
+			It("returns something and false", func() {
+				given := Map{"$": 42}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with 1 elements map contain '$' and not variable name", func() {
+			It("returns something and false", func() {
+				given := Map{"$": "foo bar"}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with 1 element map without '$'", func() {
+			It("returns something and false", func() {
+				given := Map{"$$": "answer"}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with not map", func() {
+			It("returns something and false", func() {
+				given := "answer"
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with two or more elements map", func() {
+			It("returns something and false", func() {
+				given := Map{"$": "answer", "$$": 42}
+				_, b := v.MayBeVariable(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeStringExpr", func() {
 		Context("with a string", func() {
 			It("returns literalStringExpr and true", func() {
 				given := "hello"
 				actual, b := v.MustBeStringExpr(given)
 
-				Expect(actual).To(Equal(model.NewLiteralStringExpr(given)))
+				Expect(actual).To(Equal(NewLiteralStringExpr(given)))
 				Expect(b).To(BeTrue())
 			})
 		})
@@ -233,7 +311,7 @@ var _ = Describe("Validator", func() {
 					given := Map{"type": "env", "name": "MESSAGE"}
 					actual, b := v.MustBeStringExpr(given)
 
-					Expect(actual).To(Equal(model.NewEnvStringExpr("MESSAGE")))
+					Expect(actual).To(Equal(NewEnvStringExpr("MESSAGE")))
 					Expect(b).To(BeTrue())
 				})
 			})
@@ -255,7 +333,7 @@ var _ = Describe("Validator", func() {
 					given := Map{"type": "file", "value": "hello"}
 					actual, b := v.MustBeStringExpr(given)
 
-					Expect(actual).To(Equal(model.NewFileStringExpr("", "hello")))
+					Expect(actual).To(Equal(NewFileStringExpr("", "hello")))
 					Expect(b).To(BeTrue())
 				})
 			})
@@ -276,7 +354,7 @@ var _ = Describe("Validator", func() {
 						given := Map{"type": "file", "format": "yaml", "value": Map{"answer": 42}}
 						actual, b := v.MustBeStringExpr(given)
 
-						Expect(actual).To(Equal(model.NewFileStringExpr("*.yaml", "answer: 42\n")))
+						Expect(actual).To(Equal(NewFileStringExpr("*.yaml", "answer: 42\n")))
 						Expect(b).To(BeTrue())
 						Expect(v.Error()).NotTo(HaveOccurred())
 					})
@@ -429,7 +507,7 @@ var _ = Describe("Validator", func() {
 
 	Describe("MustBeDuration()", func() {
 		DescribeTable("with a duration string or positive integer (success)",
-			func(given interface{}, expected time.Duration) {
+			func(given any, expected time.Duration) {
 				d, b := v.MustBeDuration(given)
 
 				Expect(d).To(Equal(expected))
@@ -478,8 +556,8 @@ var _ = Describe("Validator", func() {
 		Context("when the given map has specified field", func() {
 			It("calls the callback with the value in patch of the field and return it and true", func() {
 				contained := Seq{42, "hello"}
-				var passed interface{}
-				x, exists := v.MayHave(Map{"field": contained}, "field", func(x interface{}) {
+				var passed any
+				x, exists := v.MayHave(Map{"field": contained}, "field", func(x any) {
 					passed = x
 					v.AddViolation("error")
 				})
@@ -493,7 +571,7 @@ var _ = Describe("Validator", func() {
 
 		Context("when the given map dose not have specified field", func() {
 			It("dose not call the callback and return something and false", func() {
-				_, exists := v.MayHave(make(Map), "field", func(x interface{}) {
+				_, exists := v.MayHave(make(Map), "field", func(x any) {
 					v.AddViolation("error")
 				})
 
@@ -631,7 +709,7 @@ var _ = Describe("Validator", func() {
 
 	Describe("ForInSeq()", func() {
 		It("calls callback with each index and element in path of it", func() {
-			v.ForInSeq(Seq{42, "hello"}, func(i int, x interface{}) bool {
+			v.ForInSeq(Seq{42, "hello"}, func(i int, x any) bool {
 				v.AddViolation("%d:%#v", i, x)
 				return true
 			})
@@ -641,7 +719,7 @@ var _ = Describe("Validator", func() {
 
 		It("stops calling callback when it returns false", func() {
 			calls := make([]int, 0)
-			v.ForInSeq(Seq{"a", "b", "c", "d"}, func(i int, x interface{}) bool {
+			v.ForInSeq(Seq{"a", "b", "c", "d"}, func(i int, x any) bool {
 				calls = append(calls, i)
 				return i < 2
 			})
@@ -834,7 +912,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		DescribeTable("adds vioration",
-			func(env interface{}, prefix string) {
+			func(env any, prefix string) {
 				e, _, ok := v.MayHaveEnvSeq(Map{"env": env}, "env")
 
 				Expect(e).To(BeNil())
@@ -862,6 +940,10 @@ var _ = Describe("Validator", func() {
 				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "a"}},
 				"$.env[1]:",
 			),
+			Entry("when the field contains not map",
+				Seq{Map{"name": "a", "value": "foo"}, "b"},
+				"$.env[1]:",
+			),
 		)
 	})
 
@@ -871,7 +953,7 @@ var _ = Describe("Validator", func() {
 				e, exists, ok := v.MayHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]model.StringExpr{model.NewLiteralStringExpr("sh"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr("true")}))
+				Expect(e).To(Equal([]StringExpr{NewLiteralStringExpr("sh"), NewLiteralStringExpr("-c"), NewLiteralStringExpr("true")}))
 				Expect(exists).To(BeTrue())
 				Expect(ok).To(BeTrue())
 			})
@@ -889,7 +971,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		DescribeTable("adds violation",
-			func(command interface{}, prefix string) {
+			func(command any, prefix string) {
 				e, _, ok := v.MayHaveCommand(Map{"command": command}, "command")
 
 				Expect(e).To(BeNil())
@@ -908,7 +990,7 @@ var _ = Describe("Validator", func() {
 				e, ok := v.MustHaveCommand(Map{"command": Seq{"sh", "-c", "true"}}, "command")
 
 				Expect(v.Error()).To(BeNil())
-				Expect(e).To(Equal([]model.StringExpr{model.NewLiteralStringExpr("sh"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr("true")}))
+				Expect(e).To(Equal([]StringExpr{NewLiteralStringExpr("sh"), NewLiteralStringExpr("-c"), NewLiteralStringExpr("true")}))
 				Expect(ok).To(BeTrue())
 			})
 		})
@@ -924,7 +1006,7 @@ var _ = Describe("Validator", func() {
 		})
 
 		DescribeTable("adds violation",
-			func(command interface{}, prefix string) {
+			func(command any, prefix string) {
 				e, ok := v.MustHaveCommand(Map{"command": command}, "command")
 
 				Expect(e).To(BeNil())
@@ -934,6 +1016,46 @@ var _ = Describe("Validator", func() {
 			Entry("when the filed is not seq", Map{}, "$.command:"),
 			Entry("when the field contains not string", Seq{"sh", 1}, "$.command[1]:"),
 			Entry("when the field is empty seq", Seq{}, "$.command"),
+		)
+	})
+
+	Describe("MayHaveTemplatableString", func() {
+		DescribeTable("returns Templatable[string]",
+			func(m Map, expected *Templatable[string]) {
+				actual, exists, ok := v.MayHaveTemplatableString(m, "field")
+
+				Expect(exists).To(BeTrue())
+				Expect(ok).To(BeTrue())
+				Expect(actual).To(Equal(expected))
+			},
+			Entry(
+				"when the specified field is a string",
+				Map{"field": "hello"},
+				NewTemplatableFromValue("hello"),
+			),
+			Entry(
+				"when the specified field is variable",
+				Map{"field": Map{"$": "x"}},
+				NewTemplatableFromVariable[string]("x"),
+			),
+		)
+
+		It("returns something and false when the given map dose not have specified field", func() {
+			_, exists, ok := v.MayHaveTemplatableString(Map{}, "field")
+
+			Expect(exists).To(BeFalse())
+			Expect(ok).To(BeTrue())
+		})
+
+		DescribeTable("add violation",
+			func(m Map, expected any) {
+				_, _, ok := v.MayHaveTemplatableString(m, "field")
+
+				Expect(ok).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(expected))
+			},
+			Entry("when the specified field is not a string value", Map{"field": 42}, "$.field: should be string or variable, but got int"),
+			Entry("when the specified field is not a variable map", Map{"field": Map{"$": "x", "$$": "y"}}, "$.field: should be string or variable, but got map"),
 		)
 	})
 
@@ -949,33 +1071,24 @@ var _ = Describe("Validator", func() {
 			Expect(v.MustContainOnly(m, "foo", "bar")).To(BeFalse())
 			Expect(v.Error()).To(BeValidationError(Equal(`$: field .baz is not expected`)))
 		})
+
+		It("returns true and adds no error when isStrict is false", func() {
+			v, _ := NewValidator("", false)
+			m := Map{"foo": 1, "baz": "spexec"}
+			Expect(v.MustContainOnly(m, "foo", "bar")).To(BeTrue())
+			Expect(v.Error()).To(BeNil())
+		})
+	})
+
+	Describe("LastViolation()", func() {
+		It("returns last violation message", func() {
+			v.AddViolation("first violation")
+			v.AddViolation("second violation")
+			Expect(v.LastViolation()).To(Equal("$: second violation"))
+		})
+
+		It("returns empty when violation is not add", func() {
+			Expect(v.LastViolation()).To(Equal(""))
+		})
 	})
 })
-
-var _ = DescribeTable("TypeOf()",
-	func(x interface{}, expected Type) {
-		Expect(TypeOf(x)).To(Equal(expected))
-	},
-	Entry(`when 42 given, returns TypeInt`, 42, TypeInt),
-	Entry(`when json.Number("42") given, returns TypeInt`, json.Number("42"), TypeInt),
-	Entry(`when true given, returns TypeBool`, true, TypeBool),
-	Entry(`when "hello" given, returns TypeString`, "hello", TypeString),
-	Entry(`when slice given, returns TypeSeq`, Seq{42, true, "hello"}, TypeSeq),
-	Entry(`when string key map given, returns TypeMap`, Map{"message": "hello"}, TypeMap),
-	Entry(`when nil given, returns TypeNil`, nil, TypeNil),
-	Entry(`when other given, returns TypeUnknown`, make(chan int), TypeUnkown),
-)
-
-var _ = DescribeTable("TypeNameOf()",
-	func(x interface{}, expected string) {
-		Expect(TypeNameOf(x)).To(Equal(expected))
-	},
-	Entry(`when 42 given, returns "int"`, 42, "int"),
-	Entry(`when json.Number("42") given, returns "int"`, json.Number("42"), "int"),
-	Entry(`when true given, returns "bool"`, true, "bool"),
-	Entry(`when "hello" given, returns "string"`, "hello", "string"),
-	Entry(`when slice given, returns "seq"`, Seq{42, true, "hello"}, "seq"),
-	Entry(`when string key map given, returns "map"`, Map{"message": "hello"}, "map"),
-	Entry(`when nil given, returns "nil"`, nil, "nil"),
-	Entry(`when other given, returns type name`, make(chan int), "chan int"),
-)

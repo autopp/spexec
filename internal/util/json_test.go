@@ -10,18 +10,18 @@ import (
 
 var _ = Describe("UnmarshalJSON", func() {
 	DescribeTable("succeess cases",
-		func(given string, expected interface{}) {
-			var actual interface{}
+		func(given string, expected any) {
+			var actual any
 			Expect(DecodeJSON(strings.NewReader(given), &actual)).NotTo(HaveOccurred())
 			Expect(actual).To(Equal(expected))
 		},
 		Entry(
-			`with object, stores map[string]interface{}`,
-			`{"message": "hello"}`, map[string]interface{}{"message": "hello"},
+			`with object, stores map[string]any`,
+			`{"message": "hello"}`, map[string]any{"message": "hello"},
 		),
 		Entry(
-			`with array, stores []interface{}`,
-			`[true, false]`, []interface{}{true, false},
+			`with array, stores []any`,
+			`[true, false]`, []any{true, false},
 		),
 		Entry(
 			`with number, stores json.Number`,
@@ -31,7 +31,7 @@ var _ = Describe("UnmarshalJSON", func() {
 
 	DescribeTable("failure cases",
 		func(given string) {
-			var actual interface{}
+			var actual any
 			Expect(DecodeJSON(strings.NewReader(given), &actual)).To(HaveOccurred())
 		},
 		Entry("with invalid format, returns err", `{message: "hello"}`),

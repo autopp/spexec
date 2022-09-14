@@ -17,7 +17,6 @@ package stream
 import (
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 )
 
 type NotMatcher struct {
@@ -30,8 +29,8 @@ func (m *NotMatcher) Match(actual []byte) (bool, string, error) {
 	return !matched, message, err
 }
 
-func ParseNotMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
-	m := r.ParseMatcher(env, v, x)
+func ParseNotMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
+	m := r.ParseMatcher(v, x)
 	if m == nil {
 		return nil
 	}

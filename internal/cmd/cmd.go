@@ -25,7 +25,7 @@ import (
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
-	"github.com/autopp/spexec/internal/spec/parser"
+	"github.com/autopp/spexec/internal/spec"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
 )
@@ -125,7 +125,7 @@ func (o *options) run() error {
 	statusMR := status.NewStatusMatcherRegistryWithBuiltins()
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 
-	p := parser.New(statusMR, streamMR, o.isStrict)
+	p := spec.NewParser(statusMR, streamMR)
 	specs := []struct {
 		filename string
 		tests    []*model.Test
@@ -134,14 +134,24 @@ func (o *options) run() error {
 	var err error
 	env := model.NewEnv(nil)
 	if o.isStdin {
-		tests, err = p.ParseStdin(env)
+		var v *model.Validator
+		v, err = model.NewValidator("", o.isStrict)
+		if err != nil {
+			return err
+		}
+		tests, err = p.ParseStdin(env, v)
 		specs = append(specs, struct {
 			filename string
 			tests    []*model.Test
 		}{"<stdin>", tests})
 	} else {
 		for _, filename := range o.filenames {
-			tests, err = p.ParseFile(env, filename)
+			var v *model.Validator
+			v, err = model.NewValidator(filename, o.isStrict)
+			if err != nil {
+				break
+			}
+			tests, err = p.ParseFile(env, v, filename)
 			if err != nil {
 				break
 			}
@@ -199,7 +209,7 @@ func (o *options) run() error {
 
 	var results []*model.TestResult
 	for _, spec := range specs {
-		results = append(results, runner.RunTests(env, spec.filename, spec.tests, reporter)...)
+		results = append(results, runner.RunTests(spec.filename, spec.tests, reporter)...)
 	}
 
 	allGreen := true

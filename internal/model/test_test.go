@@ -1,39 +1,27 @@
-package model
+package model_test
 
 import (
 	"time"
 
+	"github.com/autopp/spexec/internal/matcher/testutil"
+	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var matcherMessage = "failed"
-
-type testStatusMatcher bool
-
-func (m testStatusMatcher) Match(int) (bool, string, error) {
-	return bool(m), matcherMessage, nil
-}
-
-type testStreamMatcher bool
-
-func (m testStreamMatcher) Match([]byte) (bool, string, error) {
-	return bool(m), matcherMessage, nil
-}
-
 var _ = Describe("Test", func() {
 	DescribeTable("GetName()",
-		func(test *Test, expected string) {
+		func(test *model.Test, expected string) {
 			Expect(test.GetName()).To(Equal(expected))
 		},
-		Entry("Name is not empty", &Test{Name: "test of echo", Command: []StringExpr{NewLiteralStringExpr("echo"), NewLiteralStringExpr("hello")}}, "test of echo"),
-		Entry("Name is empty", &Test{Name: "", Command: []StringExpr{NewLiteralStringExpr("echo"), NewLiteralStringExpr("hello")}},
+		Entry("Name is not empty", &model.Test{Name: "test of echo", Command: []model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("hello")}}, "test of echo"),
+		Entry("Name is empty", &model.Test{Name: "", Command: []model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("hello")}},
 			"echo hello"),
-		Entry("Name is empty and Env is given", &Test{
+		Entry("Name is empty and Env is given", &model.Test{
 			Name:    "",
-			Command: []StringExpr{NewLiteralStringExpr("make"), NewLiteralStringExpr("build")},
+			Command: []model.StringExpr{model.NewLiteralStringExpr("make"), model.NewLiteralStringExpr("build")},
 			Env: []util.StringVar{
 				{Name: "GOOS", Value: "linux"},
 				{Name: "GOARCH", Value: "amd64"},
@@ -42,78 +30,79 @@ var _ = Describe("Test", func() {
 	)
 
 	Describe("Run()", func() {
-		var env *Env
-		BeforeEach(func() {
-			env = NewEnv(nil)
-		})
+		successStatusMatcher := testutil.NewExampleStatusMatcher(true, "status", nil)
+		failureStatusMatcher := testutil.NewExampleStatusMatcher(false, "status", nil)
+		successStdoutMatcher := testutil.NewExampleStreamMatcher(true, "stdout", nil)
+		failureStdoutMatcher := testutil.NewExampleStreamMatcher(false, "stdout", nil)
+		successStderrMatcher := testutil.NewExampleStreamMatcher(true, "stderr", nil)
+		failureStderrMatcher := testutil.NewExampleStreamMatcher(false, "stderr", nil)
 
 		DescribeTable("succeeded cases",
-			func(test *Test, expectedMessages []*AssertionMessage, expectedIsSuccess bool) {
-				tr, err := test.Run(env)
+			func(test *model.Test, expectedMessages []*model.AssertionMessage, expectedIsSuccess bool) {
+				tr, err := test.Run()
 				Expect(err).NotTo(HaveOccurred())
-				Expect(tr).To(Equal(&TestResult{Name: test.GetName(), Messages: expectedMessages, IsSuccess: expectedIsSuccess}))
+				Expect(tr).To(Equal(&model.TestResult{Name: test.GetName(), Messages: expectedMessages, IsSuccess: expectedIsSuccess}))
 			},
-			Entry("no matchers", &Test{
+			Entry("no matchers", &model.Test{
 				Name:    "no matchers case",
-				Command: []StringExpr{NewLiteralStringExpr("echo")},
-			}, []*AssertionMessage{}, true),
-			Entry("matchers are passed", &Test{
+				Command: []model.StringExpr{model.NewLiteralStringExpr("echo")},
+			}, []*model.AssertionMessage{}, true),
+			Entry("matchers are passed", &model.Test{
 				Name:          "matchers are passed",
-				Command:       []StringExpr{NewLiteralStringExpr("echo")},
-				StatusMatcher: testStatusMatcher(true),
-				StdoutMatcher: testStreamMatcher(true),
-				StderrMatcher: testStreamMatcher(true),
-			}, []*AssertionMessage{}, true),
-			Entry("status matcher is failed", &Test{
+				Command:       []model.StringExpr{model.NewLiteralStringExpr("echo")},
+				StatusMatcher: successStatusMatcher,
+				StdoutMatcher: successStdoutMatcher,
+				StderrMatcher: successStderrMatcher,
+			}, []*model.AssertionMessage{}, true),
+			Entry("status matcher is failed", &model.Test{
 				Name:          "status matcher is failed",
-				Command:       []StringExpr{NewLiteralStringExpr("echo")},
-				StatusMatcher: testStatusMatcher(false),
-				StdoutMatcher: testStreamMatcher(true),
-				StderrMatcher: testStreamMatcher(true),
-			}, []*AssertionMessage{{Name: "status", Message: matcherMessage}}, false),
-			Entry("stdout matcher is failed", &Test{
+				Command:       []model.StringExpr{model.NewLiteralStringExpr("echo")},
+				StatusMatcher: failureStatusMatcher,
+				StdoutMatcher: successStdoutMatcher,
+				StderrMatcher: successStderrMatcher,
+			}, []*model.AssertionMessage{{Name: "status", Message: failureStatusMatcher.FailureMessage()}}, false),
+			Entry("stdout matcher is failed", &model.Test{
 				Name:          "stdout matcher is failed",
-				Command:       []StringExpr{NewLiteralStringExpr("echo")},
-				StatusMatcher: testStatusMatcher(true),
-				StdoutMatcher: testStreamMatcher(false),
-				StderrMatcher: testStreamMatcher(true),
-			}, []*AssertionMessage{{Name: "stdout", Message: matcherMessage}}, false),
-			Entry("stderr matcher is failed", &Test{
+				Command:       []model.StringExpr{model.NewLiteralStringExpr("echo")},
+				StatusMatcher: successStatusMatcher,
+				StdoutMatcher: failureStdoutMatcher,
+				StderrMatcher: successStderrMatcher,
+			}, []*model.AssertionMessage{{Name: "stdout", Message: failureStdoutMatcher.FailureMessage()}}, false),
+			Entry("stderr matcher is failed", &model.Test{
 				Name:          "stderr matcher is failed",
-				Command:       []StringExpr{NewLiteralStringExpr("echo")},
-				StatusMatcher: testStatusMatcher(true),
-				StdoutMatcher: testStreamMatcher(true),
-				StderrMatcher: testStreamMatcher(false),
-			}, []*AssertionMessage{{Name: "stderr", Message: matcherMessage}}, false),
-			Entry("all matchers are failed", &Test{
+				Command:       []model.StringExpr{model.NewLiteralStringExpr("echo")},
+				StatusMatcher: successStatusMatcher,
+				StdoutMatcher: successStdoutMatcher,
+				StderrMatcher: failureStderrMatcher,
+			}, []*model.AssertionMessage{{Name: "stderr", Message: failureStderrMatcher.FailureMessage()}}, false),
+			Entry("all matchers are failed", &model.Test{
 				Name:          "all matchers are failed",
-				Command:       []StringExpr{NewLiteralStringExpr("echo")},
-				StatusMatcher: testStatusMatcher(false),
-				StdoutMatcher: testStreamMatcher(false),
-				StderrMatcher: testStreamMatcher(false),
-			}, []*AssertionMessage{{Name: "status", Message: matcherMessage}, {Name: "stdout", Message: matcherMessage}, {Name: "stderr", Message: matcherMessage}}, false),
-			Entry("process is timeout", &Test{
+				Command:       []model.StringExpr{model.NewLiteralStringExpr("echo")},
+				StatusMatcher: failureStatusMatcher,
+				StdoutMatcher: failureStdoutMatcher,
+				StderrMatcher: failureStderrMatcher,
+			}, []*model.AssertionMessage{{Name: "status", Message: failureStatusMatcher.FailureMessage()}, {Name: "stdout", Message: failureStdoutMatcher.FailureMessage()}, {Name: "stderr", Message: failureStderrMatcher.FailureMessage()}}, false),
+			Entry("process is timeout", &model.Test{
 				Name:    "process is timeout",
-				Command: []StringExpr{NewLiteralStringExpr("sleep"), NewLiteralStringExpr("1")},
+				Command: []model.StringExpr{model.NewLiteralStringExpr("sleep"), model.NewLiteralStringExpr("1")},
 				Timeout: 1 * time.Millisecond,
-			}, []*AssertionMessage{{Name: "status", Message: "process was timeout"}}, false),
-			Entry("process is signaled", &Test{
+			}, []*model.AssertionMessage{{Name: "status", Message: "process was timeout"}}, false),
+			Entry("process is signaled", &model.Test{
 				Name:    "process is signaled",
-				Command: []StringExpr{NewLiteralStringExpr("bash"), NewLiteralStringExpr("-c"), NewLiteralStringExpr("kill -TERM $$")},
-			}, []*AssertionMessage{{Name: "status", Message: "process was signaled (terminated)"}}, false),
+				Command: []model.StringExpr{model.NewLiteralStringExpr("bash"), model.NewLiteralStringExpr("-c"), model.NewLiteralStringExpr("kill -TERM $$")},
+			}, []*model.AssertionMessage{{Name: "status", Message: "process was signaled (terminated)"}}, false),
 		)
 
 		DescribeTable("failed cases",
-			func(test *Test, expectedErr string) {
-				tr, err := test.Run(env)
+			func(test *model.Test, expectedErr string) {
+				tr, err := test.Run()
 				Expect(tr).To(BeNil())
 				Expect(err).To(MatchError(expectedErr))
 			},
-			Entry("command evaluating is failed", &Test{
+			Entry("command evaluating is failed", &model.Test{
 				Name:    "command evaluating is failed",
-				Command: []StringExpr{NewEnvStringExpr("undefined")},
+				Command: []model.StringExpr{model.NewEnvStringExpr("undefined")},
 			}, "environment variable $undefined is not defined"),
 		)
 	})
-
 })

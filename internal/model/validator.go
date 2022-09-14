@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package spec
+package model
 
 import (
 	"encoding/json"
@@ -24,7 +24,6 @@ import (
 	"time"
 
 	"github.com/autopp/spexec/internal/errors"
-	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
 )
@@ -41,9 +40,10 @@ type Validator struct {
 	dir        string
 	paths      []string
 	violations []violation
+	isStrict   bool
 }
 
-func NewValidator(filename string) (*Validator, error) {
+func NewValidator(filename string, isStrict bool) (*Validator, error) {
 	var dir string
 	if len(filename) == 0 {
 		var err error
@@ -65,6 +65,7 @@ func NewValidator(filename string) (*Validator, error) {
 		dir:        dir,
 		paths:      []string{"$"},
 		violations: make([]violation, 0),
+		isStrict:   isStrict,
 	}, nil
 }
 
@@ -97,17 +98,17 @@ func (v *Validator) InIndex(index int, f func()) {
 	v.InPath(fmt.Sprintf("[%d]", index), f)
 }
 
-func (v *Validator) AddViolation(format string, args ...interface{}) {
+func (v *Validator) AddViolation(format string, args ...any) {
 	message := fmt.Sprintf(format, args...)
 	v.violations = append(v.violations, violation{path: strings.Join(v.paths, ""), message: message})
 }
 
-func (v *Validator) MayBeMap(x interface{}) (Map, bool) {
+func (v *Validator) MayBeMap(x any) (Map, bool) {
 	m, ok := x.(Map)
 	return m, ok
 }
 
-func (v *Validator) MustBeMap(x interface{}) (Map, bool) {
+func (v *Validator) MustBeMap(x any) (Map, bool) {
 	if m, ok := v.MayBeMap(x); ok {
 		return m, true
 	}
@@ -115,7 +116,7 @@ func (v *Validator) MustBeMap(x interface{}) (Map, bool) {
 	return nil, false
 }
 
-func (v *Validator) MustBeSeq(x interface{}) (Seq, bool) {
+func (v *Validator) MustBeSeq(x any) (Seq, bool) {
 	if s, ok := x.(Seq); ok {
 		return s, true
 	}
@@ -123,12 +124,12 @@ func (v *Validator) MustBeSeq(x interface{}) (Seq, bool) {
 	return nil, false
 }
 
-func (v *Validator) MayBeString(x interface{}) (string, bool) {
+func (v *Validator) MayBeString(x any) (string, bool) {
 	s, ok := x.(string)
 	return s, ok
 }
 
-func (v *Validator) MustBeString(x interface{}) (string, bool) {
+func (v *Validator) MustBeString(x any) (string, bool) {
 	s, ok := v.MayBeString(x)
 	if !ok {
 		v.AddViolation("should be string, but is %s", TypeNameOf(x))
@@ -137,9 +138,42 @@ func (v *Validator) MustBeString(x interface{}) (string, bool) {
 	return s, ok
 }
 
-func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
+func (v *Validator) MayBeQualified(x any) (string, any, bool) {
+	qv, ok := v.MayBeMap(x)
+	if !ok {
+		return "", nil, false
+	}
+
+	if len(qv) != 1 {
+		return "", nil, false
+	}
+
+	for q, v := range qv {
+		return q, v, true
+	}
+
+	panic("UNREACHABLE CODE")
+}
+
+var variablePattern = regexp.MustCompile(`^[_a-zA-Z]\w*$`)
+
+func (v *Validator) MayBeVariable(x any) (string, bool) {
+	q, value, ok := v.MayBeQualified(x)
+	if !ok || q != "$" {
+		return "", false
+	}
+
+	name, ok := v.MayBeString(value)
+	if !ok || !variablePattern.MatchString(name) {
+		return "", false
+	}
+
+	return name, true
+}
+
+func (v *Validator) MustBeStringExpr(x any) (StringExpr, bool) {
 	if s, ok := v.MayBeString(x); ok {
-		return model.NewLiteralStringExpr(s), true
+		return NewLiteralStringExpr(s), true
 	}
 
 	m, ok := v.MayBeMap(x)
@@ -159,7 +193,7 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 		if !ok {
 			return nil, false
 		}
-		return model.NewEnvStringExpr(name), true
+		return NewEnvStringExpr(name), true
 	case "file":
 		format, exists, ok := v.MayHaveString(m, "format")
 		if !ok {
@@ -175,7 +209,7 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 			if !ok {
 				return nil, false
 			}
-			return model.NewFileStringExpr("", value), true
+			return NewFileStringExpr("", value), true
 		case "yaml":
 			value, ok := v.MustHave(m, "value")
 			if !ok {
@@ -189,7 +223,7 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 				return nil, false
 			}
 
-			return model.NewFileStringExpr("*.yaml", string(marshaled)), true
+			return NewFileStringExpr("*.yaml", string(marshaled)), true
 		default:
 			v.InField("format", func() {
 				v.AddViolation(`should be a "raw" or "yaml", but is %q`, format)
@@ -205,7 +239,7 @@ func (v *Validator) MustBeStringExpr(x interface{}) (model.StringExpr, bool) {
 	}
 }
 
-func (v *Validator) MustBeInt(x interface{}) (int, bool) {
+func (v *Validator) MustBeInt(x any) (int, bool) {
 	switch n := x.(type) {
 	case int:
 		return n, true
@@ -221,7 +255,7 @@ func (v *Validator) MustBeInt(x interface{}) (int, bool) {
 	}
 }
 
-func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
+func (v *Validator) MustBeBool(x any) (bool, bool) {
 	b, ok := x.(bool)
 	if !ok {
 		v.AddViolation("should be bool, but is %s", TypeNameOf(x))
@@ -230,7 +264,7 @@ func (v *Validator) MustBeBool(x interface{}) (bool, bool) {
 	return b, ok
 }
 
-func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
+func (v *Validator) MustBeDuration(x any) (time.Duration, bool) {
 	n, ok := toInt(x)
 	if ok {
 		return time.Duration(n) * time.Second, true
@@ -250,7 +284,7 @@ func (v *Validator) MustBeDuration(x interface{}) (time.Duration, bool) {
 	return d, true
 }
 
-func (v *Validator) MustHave(m Map, key string) (interface{}, bool) {
+func (v *Validator) MustHave(m Map, key string) (any, bool) {
 	x, ok := m[key]
 	if !ok {
 		v.AddViolation("should have .%s", key)
@@ -258,7 +292,7 @@ func (v *Validator) MustHave(m Map, key string) (interface{}, bool) {
 	return x, ok
 }
 
-func (v *Validator) MayHave(m Map, key string, f func(interface{})) (interface{}, bool) {
+func (v *Validator) MayHave(m Map, key string, f func(any)) (any, bool) {
 	x, ok := m[key]
 	if !ok {
 		return nil, false
@@ -315,7 +349,7 @@ func (v *Validator) MustHaveSeq(m Map, key string, f func(Seq)) (Seq, bool) {
 	return s, exists && ok
 }
 
-func (v *Validator) ForInSeq(s Seq, f func(i int, x interface{}) bool) bool {
+func (v *Validator) ForInSeq(s Seq, f func(i int, x any) bool) bool {
 	ok := true
 	for i, x := range s {
 		v.InIndex(i, func() {
@@ -401,7 +435,7 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	ok := true
 	_, _, isSeq := v.MayHaveSeq(m, "env", func(env Seq) {
 		ret = []util.StringVar{}
-		v.ForInSeq(env, func(i int, x interface{}) bool {
+		v.ForInSeq(env, func(i int, x any) bool {
 			var envVar Map
 			envVar, ok = v.MustBeMap(x)
 			if !ok {
@@ -433,13 +467,13 @@ func (v *Validator) MayHaveEnvSeq(m Map, key string) ([]util.StringVar, bool, bo
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool, bool) {
-	var ret []model.StringExpr
+func (v *Validator) MayHaveCommand(m Map, key string) ([]StringExpr, bool, bool) {
+	var ret []StringExpr
 	ok := true
 	_, _, isSeq := v.MayHaveSeq(m, key, func(command Seq) {
-		ret = make([]model.StringExpr, len(command))
-		v.ForInSeq(command, func(i int, x interface{}) bool {
-			var c model.StringExpr
+		ret = make([]StringExpr, len(command))
+		v.ForInSeq(command, func(i int, x any) bool {
+			var c StringExpr
 			c, ok = v.MustBeStringExpr(x)
 			ret[i] = c
 			return ok
@@ -458,7 +492,7 @@ func (v *Validator) MayHaveCommand(m Map, key string) ([]model.StringExpr, bool,
 	return ret, ret != nil, ok
 }
 
-func (v *Validator) MustHaveCommand(m Map, key string) ([]model.StringExpr, bool) {
+func (v *Validator) MustHaveCommand(m Map, key string) ([]StringExpr, bool) {
 	c, exists, ok := v.MayHaveCommand(m, key)
 
 	if !exists && ok {
@@ -468,7 +502,32 @@ func (v *Validator) MustHaveCommand(m Map, key string) ([]model.StringExpr, bool
 	return c, exists && ok
 }
 
+func (v *Validator) MayHaveTemplatableString(m Map, key string) (*Templatable[string], bool, bool) {
+	x, ok := m[key]
+	if !ok {
+		return nil, false, true
+	}
+
+	if s, ok := x.(string); ok {
+		return NewTemplatableFromValue(s), true, true
+	}
+
+	if name, ok := v.MayBeVariable(x); ok {
+		return NewTemplatableFromVariable[string](name), true, true
+	}
+
+	v.InField(key, func() {
+		v.AddViolation("should be string or variable, but got %s", TypeNameOf(x))
+	})
+
+	return nil, false, false
+}
+
 func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
+	if !v.isStrict {
+		return true
+	}
+
 	dict := map[string]struct{}{}
 	for _, key := range keys {
 		dict[key] = struct{}{}
@@ -485,6 +544,17 @@ func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
 	return ok
 }
 
+func (v *Validator) LastViolation() string {
+	n := len(v.violations)
+	if n == 0 {
+		return ""
+	}
+
+	violation := v.violations[n-1]
+
+	return violation.path + ": " + violation.message
+}
+
 func (v *Validator) Error() error {
 	if len(v.violations) == 0 {
 		return nil
@@ -498,41 +568,7 @@ func (v *Validator) Error() error {
 	return errors.New(errors.ErrInvalidSpec, strings.Join(messages, "\n"))
 }
 
-func TypeOf(x interface{}) Type {
-	if x == nil {
-		return TypeNil
-	}
-
-	if _, ok := x.(int); ok {
-		return TypeInt
-	}
-
-	if i, ok := x.(json.Number); ok {
-		if _, err := i.Int64(); err == nil {
-			return TypeInt
-		}
-	}
-
-	if _, ok := x.(bool); ok {
-		return TypeBool
-	}
-
-	if _, ok := x.(string); ok {
-		return TypeString
-	}
-
-	if _, ok := x.(Seq); ok {
-		return TypeSeq
-	}
-
-	if _, ok := x.(Map); ok {
-		return TypeMap
-	}
-
-	return TypeUnkown
-}
-
-func toInt(x interface{}) (int, bool) {
+func toInt(x any) (int, bool) {
 	switch n := x.(type) {
 	case int:
 		return n, true

@@ -10,12 +10,7 @@ import (
 )
 
 var _ = Describe("literalStringExpr", func() {
-	var env *Env
 	literal := NewLiteralStringExpr("hello")
-
-	BeforeEach(func() {
-		env = NewEnv(nil)
-	})
 
 	Describe("String()", func() {
 		It("returns itself", func() {
@@ -25,7 +20,7 @@ var _ = Describe("literalStringExpr", func() {
 
 	Describe("Eval()", func() {
 		It("returns itself", func() {
-			v, cleanup, err := literal.Eval(env)
+			v, cleanup, err := literal.Eval()
 			Expect(v).To(Equal("hello"))
 			Expect(cleanup).To(BeNil())
 			Expect(err).NotTo(HaveOccurred())
@@ -38,11 +33,6 @@ var _ = Describe("envStringExpr", func() {
 	value := "hello"
 
 	e := NewEnvStringExpr(name)
-	var env *Env
-
-	BeforeEach(func() {
-		env = NewEnv(nil)
-	})
 
 	BeforeEach(func() {
 		oldValue, setAlready := os.LookupEnv(name)
@@ -65,14 +55,14 @@ var _ = Describe("envStringExpr", func() {
 
 	Describe("Eval()", func() {
 		It("returns value of the environment variable", func() {
-			v, cleanup, err := e.Eval(env)
+			v, cleanup, err := e.Eval()
 			Expect(v).To(Equal(value))
 			Expect(cleanup).To(BeNil())
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("returns error when given name is not defined", func() {
-			_, _, err := NewEnvStringExpr("SPEXEC_UNDEFINED").Eval(env)
+			_, _, err := NewEnvStringExpr("SPEXEC_UNDEFINED").Eval()
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -83,11 +73,8 @@ var _ = Describe("fileStringExpr", func() {
 	contents := "hello"
 
 	var file StringExpr
-	var env *Env
-
 	JustBeforeEach(func() {
 		file = NewFileStringExpr(pattern, contents)
-		env = NewEnv(nil)
 	})
 
 	Describe("String()", func() {
@@ -98,7 +85,7 @@ var _ = Describe("fileStringExpr", func() {
 
 	Describe("Eval()", func() {
 		It("returns the file name contains the given contents and function for remove the file", func() {
-			v, cleanup, err := file.Eval(env)
+			v, cleanup, err := file.Eval()
 			Expect(v).NotTo(BeEmpty())
 			Expect(cleanup).NotTo(BeNil())
 			Expect(err).NotTo(HaveOccurred())
@@ -120,7 +107,7 @@ type testStringExpr struct {
 	successCleanup bool
 }
 
-func (e *testStringExpr) Eval(*Env) (string, func() error, error) {
+func (e *testStringExpr) Eval() (string, func() error, error) {
 	e.isEvaled = true
 	if !e.successEval {
 		return "", e.getCleanup(), errors.New(e.v)
@@ -156,12 +143,6 @@ func extractBools(exprs []StringExpr, f func(e *testStringExpr) bool) []bool {
 func (e *testStringExpr) stringExpr() {}
 
 var _ = Describe("EvalStringExprs()", func() {
-	var env *Env
-
-	BeforeEach(func() {
-		env = NewEnv(nil)
-	})
-
 	DescribeTable("returns results, aggregated cleanup function, and errors",
 		func(successEvalAndCleanups [][2]bool, expectedValues []string, expectedEvaled []bool, expectedCleanuped []bool, expectedErr string, expectedErrIndex int, expectedCleanupErrs []string) {
 			exprs := make([]StringExpr, len(successEvalAndCleanups))
@@ -170,7 +151,7 @@ var _ = Describe("EvalStringExprs()", func() {
 				exprs[i] = expr
 			}
 
-			values, cleanup, err, i := EvalStringExprs(exprs, env)
+			values, cleanup, err, i := EvalStringExprs(exprs)
 
 			if expectedErr == "" {
 				Expect(err).NotTo(HaveOccurred())

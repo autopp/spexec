@@ -20,7 +20,6 @@ import (
 	"github.com/autopp/spexec/internal/exec"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 )
 
@@ -48,7 +47,7 @@ func (m *SatisfyMatcher) Match(actual []byte) (bool, string, error) {
 	return true, "should make the given command fail", nil
 }
 
-func ParseSatisfyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
+func ParseSatisfyMatcher(v *model.Validator, r *matcher.StreamMatcherRegistry, x any) model.StreamMatcher {
 	p, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
@@ -60,7 +59,7 @@ func ParseSatisfyMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMat
 		return nil
 	}
 
-	evaled, cleanup, err, _ := model.EvalStringExprs(command, env)
+	evaled, cleanup, err, _ := model.EvalStringExprs(command)
 	if err != nil {
 		v.InField("command", func() {
 			v.AddViolation("error occured at parsing command: %s", err)

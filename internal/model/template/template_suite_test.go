@@ -1,4 +1,4 @@
-package parser
+package template
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestParser(t *testing.T) {
+func TestTemplatePkg(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "Parser Suite")
+	RunSpecs(t, "Template Suite")
 }

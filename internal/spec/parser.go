@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package parser
+package spec
 
 import (
 	"io"
@@ -23,7 +23,6 @@ import (
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
 )
@@ -52,18 +51,17 @@ var evnVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
 type Parser struct {
 	statusMR *matcher.StatusMatcherRegistry
 	streamMR *matcher.StreamMatcherRegistry
-	isStrict bool
 }
 
-func New(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry, isStrict bool) *Parser {
-	return &Parser{statusMR, streamMR, isStrict}
+func NewParser(statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) *Parser {
+	return &Parser{statusMR, streamMR}
 }
 
-func (p *Parser) ParseStdin(env *model.Env) ([]*model.Test, error) {
-	return p.parseYAML(env, "", os.Stdin)
+func (p *Parser) ParseStdin(env *model.Env, v *model.Validator) ([]*model.Test, error) {
+	return p.parseYAML(env, v, "", os.Stdin)
 }
 
-func (p *Parser) ParseFile(env *model.Env, filename string) ([]*model.Test, error) {
+func (p *Parser) ParseFile(env *model.Env, v *model.Validator, filename string) ([]*model.Test, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
@@ -73,40 +71,35 @@ func (p *Parser) ParseFile(env *model.Env, filename string) ([]*model.Test, erro
 	var tests []*model.Test
 	ext := filepath.Ext(filename)
 	if ext == ".yml" || ext == ".yaml" {
-		tests, err = p.parseYAML(env, filename, f)
+		tests, err = p.parseYAML(env, v, filename, f)
 	} else {
-		tests, err = p.parseJSON(env, filename, f)
+		tests, err = p.parseJSON(env, v, filename, f)
 	}
 
 	return tests, err
 }
 
-func (p *Parser) parseYAML(env *model.Env, filename string, in io.Reader) ([]*model.Test, error) {
-	return p.load(env, filename, in, func(in io.Reader, out interface{}) error {
+func (p *Parser) parseYAML(env *model.Env, v *model.Validator, filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(env, v, filename, in, func(in io.Reader, out any) error {
 		return yaml.NewDecoder(in).Decode(out)
 	})
 }
 
-func (p *Parser) parseJSON(env *model.Env, filename string, in io.Reader) ([]*model.Test, error) {
-	return p.load(env, filename, in, util.DecodeJSON)
+func (p *Parser) parseJSON(env *model.Env, v *model.Validator, filename string, in io.Reader) ([]*model.Test, error) {
+	return p.load(env, v, filename, in, util.DecodeJSON)
 }
 
-func (p *Parser) load(env *model.Env, filename string, b io.Reader, unmarshal func(in io.Reader, out interface{}) error) ([]*model.Test, error) {
-	var x interface{}
+func (p *Parser) load(env *model.Env, v *model.Validator, filename string, b io.Reader, unmarshal func(in io.Reader, out any) error) ([]*model.Test, error) {
+	var x any
 	err := unmarshal(b, &x)
 	if err != nil {
 		return nil, errors.Wrap(errors.ErrInvalidSpec, err)
 	}
 
-	v, err := spec.NewValidator(filename)
-	if err != nil {
-		return nil, err
-	}
-
 	return p.loadSpec(env, v, x)
 }
 
-func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c interface{}) ([]*model.Test, error) {
+func (p *Parser) loadSpec(env *model.Env, v *model.Validator, c any) ([]*model.Test, error) {
 	cmap, ok := v.MustBeMap(c)
 	if !ok {
 		return nil, v.Error()
@@ -114,9 +107,7 @@ func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c interface{}) ([]*
 
 	ts := make([]*model.Test, 0)
 
-	if p.isStrict {
-		v.MustContainOnly(cmap, "spexec", "tests")
-	}
+	v.MustContainOnly(cmap, "spexec", "tests")
 
 	version, exists, ok := v.MayHaveString(cmap, "spexec")
 	if ok && exists {
@@ -127,8 +118,8 @@ func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c interface{}) ([]*
 		}
 	}
 
-	v.MustHaveSeq(cmap, "tests", func(tcs spec.Seq) {
-		v.ForInSeq(tcs, func(i int, tc interface{}) bool {
+	v.MustHaveSeq(cmap, "tests", func(tcs model.Seq) {
+		v.ForInSeq(tcs, func(i int, tc any) bool {
 			t := p.loadTest(env, v, tc)
 			ts = append(ts, t)
 			return t != nil
@@ -138,15 +129,13 @@ func (p *Parser) loadSpec(env *model.Env, v *spec.Validator, c interface{}) ([]*
 	return ts, v.Error()
 }
 
-func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x interface{}) *model.Test {
+func (p *Parser) loadTest(env *model.Env, v *model.Validator, x any) *model.Test {
 	tc, ok := v.MustBeMap(x)
 	if !ok {
 		return nil
 	}
 
-	if p.isStrict {
-		v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout", "teeStdout", "teeStderr")
-	}
+	v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout", "teeStdout", "teeStderr")
 
 	t := new(model.Test)
 	t.SpecFilename = v.Filename
@@ -157,7 +146,7 @@ func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x interface{}) *mod
 
 	t.Command, _ = v.MustHaveCommand(tc, "command")
 
-	v.MayHave(tc, "stdin", func(stdin interface{}) {
+	v.MayHave(tc, "stdin", func(stdin any) {
 		t.Stdin = p.loadCommandStdin(v, stdin)
 	})
 
@@ -167,7 +156,7 @@ func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x interface{}) *mod
 		t.Timeout = timeout
 	}
 
-	v.MayHaveMap(tc, "expect", func(expect spec.Map) {
+	v.MayHaveMap(tc, "expect", func(expect model.Map) {
 		t.StatusMatcher, t.StdoutMatcher, t.StderrMatcher = p.loadCommandExpect(env, v, expect)
 	})
 
@@ -184,11 +173,11 @@ func (p *Parser) loadTest(env *model.Env, v *spec.Validator, x interface{}) *mod
 	return t
 }
 
-func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
+func (p *Parser) loadCommandStdin(v *model.Validator, stdin any) []byte {
 	if stdinString, ok := v.MayBeString(stdin); ok {
 		return []byte(stdinString)
 	} else if stdinMap, ok := v.MayBeMap(stdin); ok {
-		if p.isStrict && !v.MustContainOnly(stdinMap, "format", "value") {
+		if !v.MustContainOnly(stdinMap, "format", "value") {
 			return nil
 		}
 
@@ -215,28 +204,26 @@ func (p *Parser) loadCommandStdin(v *spec.Validator, stdin interface{}) []byte {
 			return nil
 		}
 	} else {
-		v.AddViolation("should be a string or map, but is %s", spec.TypeNameOf(stdin))
+		v.AddViolation("should be a string or map, but is %s", model.TypeNameOf(stdin))
 		return nil
 	}
 }
 
-func (p *Parser) loadCommandExpect(env *model.Env, v *spec.Validator, expect spec.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
+func (p *Parser) loadCommandExpect(env *model.Env, v *model.Validator, expect model.Map) (model.StatusMatcher, model.StreamMatcher, model.StreamMatcher) {
 	var statusMatcher model.StatusMatcher
 	var stdoutMatcher, stderrMatcher model.StreamMatcher
-	if p.isStrict {
-		v.MustContainOnly(expect, "status", "stdout", "stderr")
-	}
+	v.MustContainOnly(expect, "status", "stdout", "stderr")
 
-	v.MayHave(expect, "status", func(status interface{}) {
-		statusMatcher = p.statusMR.ParseMatcher(env, v, status)
+	v.MayHave(expect, "status", func(status any) {
+		statusMatcher = p.statusMR.ParseMatcher(v, status)
 	})
 
-	v.MayHave(expect, "stdout", func(stdout interface{}) {
-		stdoutMatcher = p.streamMR.ParseMatcher(env, v, stdout)
+	v.MayHave(expect, "stdout", func(stdout any) {
+		stdoutMatcher = p.streamMR.ParseMatcher(v, stdout)
 	})
 
-	v.MayHave(expect, "stderr", func(stderr interface{}) {
-		stderrMatcher = p.streamMR.ParseMatcher(env, v, stderr)
+	v.MayHave(expect, "stderr", func(stderr any) {
+		stderrMatcher = p.streamMR.ParseMatcher(v, stderr)
 	})
 
 	return statusMatcher, stdoutMatcher, stderrMatcher

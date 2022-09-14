@@ -1,87 +1,59 @@
 package stream
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/autopp/spexec/internal/matcher"
+	"github.com/autopp/spexec/internal/matcher/testutil"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/spec"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-type prefixMatcher struct {
-	prefix string
-}
-
-func (m *prefixMatcher) Match(actual []byte) (bool, string, error) {
-	if strings.HasPrefix(string(actual), m.prefix) {
-		return true, fmt.Sprintf("should not start with %q", m.prefix), nil
-	}
-
-	return false, fmt.Sprintf("should start with %q", m.prefix), nil
-}
-
-func parsePrefixMatcher(env *model.Env, v *spec.Validator, r *matcher.StreamMatcherRegistry, x interface{}) model.StreamMatcher {
-	switch prefix := x.(type) {
-	case string:
-		return &prefixMatcher{prefix: prefix}
-	default:
-		v.AddViolation("parameter should be string")
-		return nil
-	}
-}
-
 var _ = Describe("AnyMatcher", func() {
-	var m *AnyMatcher
-	JustBeforeEach(func() {
-		m = &AnyMatcher{matchers: []model.StreamMatcher{&prefixMatcher{prefix: "ab"}, &prefixMatcher{prefix: "xy"}}}
-	})
+	successExampleMatcher := testutil.NewExampleStreamMatcher(true, "successExampleMatcher message", nil)
+	failureExampleMatcher := testutil.NewExampleStreamMatcher(false, "failureExampleMatcher message", nil)
 
 	DescribeTable("Match",
-		func(given string, expectedMatched bool, expectedMessage string) {
-			matched, message, err := m.Match([]byte(given))
+		func(innerMatchers []model.StreamMatcher, expectedMatched bool, expectedMessage string) {
+			m := &AnyMatcher{matchers: innerMatchers}
+			matched, message, err := m.Match([]byte("given"))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(matched).To(Equal(expectedMatched))
 			Expect(message).To(Equal(expectedMessage))
 		},
-		Entry("when actual is matched to any inner matcher, returns true", "xyz", true, `should not start with "xy"`),
-		Entry("when actual is not matched to all of inner matchers, returns false", "def", false, `should satisfy any of [should start with "ab"], [should start with "xy"]`),
+		Entry("when actual is matched to any inner matcher, returns true", []model.StreamMatcher{failureExampleMatcher, successExampleMatcher}, true, successExampleMatcher.SuccessMessage()),
+		Entry("when actual is not matched to all of inner matchers, returns false", []model.StreamMatcher{failureExampleMatcher, failureExampleMatcher}, false, `should satisfy any of [`+failureExampleMatcher.FailureMessage()+`], [`+failureExampleMatcher.FailureMessage()+`]`),
 	)
 })
 
 var _ = Describe("ParseAnyMatcher", func() {
-	var v *spec.Validator
+	var v *model.Validator
 	var r *matcher.StreamMatcherRegistry
-	var env *model.Env
+	var parseExampleMatcher matcher.StreamMatcherParser
+	var parserCalls *testutil.ParserCalls
 
 	JustBeforeEach(func() {
-		v, _ = spec.NewValidator("")
+		v, _ = model.NewValidator("", true)
 		r = matcher.NewStreamMatcherRegistry()
-		r.Add("prefix", parsePrefixMatcher)
-		env = model.NewEnv(nil)
+		parseExampleMatcher, parserCalls = testutil.GenParseExampleStreamMatcher(true, "message", nil)
+		r.Add("example", parseExampleMatcher)
+		r.Add("failure", testutil.GenFailedParseStreamMatcher("parse error"))
 	})
 
 	Describe("with defined matchers", func() {
 		It("returns matcher", func() {
-			m := ParseAnyMatcher(env, v, r, spec.Seq{spec.Map{"prefix": "hello"}, spec.Map{"prefix": "hello"}})
+			m := ParseAnyMatcher(v, r, model.Seq{model.Map{"example": "hello"}, model.Map{"example": "hi"}})
 
 			Expect(v.Error()).To(BeNil())
 			Expect(m).NotTo(BeNil())
 
-			var any *AnyMatcher = m.(*AnyMatcher)
-			var prefix *prefixMatcher
-			Expect(any.matchers).To(HaveLen(2))
-			Expect(any.matchers[0]).To(BeAssignableToTypeOf(prefix))
-			Expect(any.matchers[1]).To(BeAssignableToTypeOf(prefix))
+			Expect(parserCalls.Calls).To(Equal([]any{"hello", "hi"}))
 		})
 	})
 
 	DescribeTable("failure cases",
-		func(given interface{}, prefix string) {
-			m := ParseAnyMatcher(env, v, r, given)
+		func(given any, prefix string) {
+			m := ParseAnyMatcher(v, r, given)
 
 			Expect(m).To(BeNil())
 			err := v.Error()
@@ -89,7 +61,7 @@ var _ = Describe("ParseAnyMatcher", func() {
 			Expect(err.Error()).To(HavePrefix(prefix))
 		},
 		Entry("with not seq", 42, "$: "),
-		Entry("with undefined matcher", spec.Seq{spec.Map{"foo": 42}}, "$[0]: "),
-		Entry("with invalid inner matcher parameter", spec.Seq{spec.Map{"prefix": 42}}, "$[0].prefix: "),
+		Entry("with undefined matcher", model.Seq{model.Map{"foo": 42}}, "$[0]: "),
+		Entry("with invalid inner matcher parameter", model.Seq{model.Map{"failure": 42}}, "$[0].failure: "),
 	)
 })

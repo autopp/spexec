@@ -40,7 +40,7 @@ func (e *Error) Unwrap() error {
 	return e.err
 }
 
-func Errorf(code Code, format string, a ...interface{}) error {
+func Errorf(code Code, format string, a ...any) error {
 	return Wrap(code, fmt.Errorf(format, a...))
 }
 
