@@ -940,6 +940,10 @@ var _ = Describe("Validator", func() {
 				Seq{Map{"name": "a", "value": "foo"}, Map{"name": "a"}},
 				"$.env[1]:",
 			),
+			Entry("when the field contains not map",
+				Seq{Map{"name": "a", "value": "foo"}, "b"},
+				"$.env[1]:",
+			),
 		)
 	})
 
