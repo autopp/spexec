@@ -35,10 +35,10 @@ type Config struct {
 
 // ReportFormatter is the interface implemented by report formatter
 type ReportFormatter interface {
-	OnRunStart(w *Writer)
-	OnTestStart(w *Writer, t *model.Test)
-	OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult)
-	OnRunComplete(w *Writer, sr *model.SpecResult)
+	OnRunStart(w *Writer) error
+	OnTestStart(w *Writer, t *model.Test) error
+	OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) error
+	OnRunComplete(w *Writer, sr *model.SpecResult) error
 }
 
 // Option is functional option of New
