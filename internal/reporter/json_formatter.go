@@ -78,9 +78,8 @@ func (f *JSONFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestR
 func (f *JSONFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) error {
 	output, err := json.Marshal(sr)
 
-	// TODO: error handling
 	if err != nil {
-		return nil
+		return err
 	}
 
 	_, err = fmt.Fprint(w, string(output))
