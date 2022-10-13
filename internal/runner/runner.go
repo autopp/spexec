@@ -25,23 +25,31 @@ func NewRunner() *Runner {
 	return &Runner{}
 }
 
-func (r *Runner) RunTests(name string, tests []*model.Test, reporter *reporter.Reporter) []*model.TestResult {
+func (r *Runner) RunTests(name string, tests []*model.Test, reporter *reporter.Reporter) ([]*model.TestResult, error) {
 	results := make([]*model.TestResult, 0, len(tests))
 
-	reporter.OnRunStart()
+	if err := reporter.OnRunStart(); err != nil {
+		return nil, err
+	}
 	for _, t := range tests {
-		reporter.OnTestStart(t)
+		if err := reporter.OnTestStart(t); err != nil {
+			return nil, err
+		}
 
 		tr, err := t.Run()
 		if err != nil {
-			panic(err)
+			return nil, err
 		}
 
-		reporter.OnTestComplete(t, tr)
+		if err := reporter.OnTestComplete(t, tr); err != nil {
+			return nil, err
+		}
 		results = append(results, tr)
 	}
 	sr := model.NewSpecResult(name, results)
-	reporter.OnRunComplete(sr)
+	if err := reporter.OnRunComplete(sr); err != nil {
+		return nil, err
+	}
 
-	return results
+	return results, nil
 }
