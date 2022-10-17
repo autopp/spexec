@@ -60,25 +60,29 @@ type jsonOutput struct {
 }
 
 // OnRunStart is part of Reporter
-func (f *JSONFormatter) OnRunStart(w *Writer) {
+func (f *JSONFormatter) OnRunStart(w *Writer) error {
+	return nil
 }
 
 // OnTestStart is part of Reporter
-func (f *JSONFormatter) OnTestStart(w *Writer, t *model.Test) {
+func (f *JSONFormatter) OnTestStart(w *Writer, t *model.Test) error {
+	return nil
 }
 
 // OnTestComplete is part of Reporter
-func (f *JSONFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
+func (f *JSONFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) error {
+	return nil
 }
 
 // OnRunComplete is part of Reporter
-func (f *JSONFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
+func (f *JSONFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) error {
 	output, err := json.Marshal(sr)
 
-	// TODO: error handling
 	if err != nil {
-		panic(err)
+		return err
 	}
 
-	fmt.Fprint(w, string(output))
+	_, err = fmt.Fprint(w, string(output))
+
+	return err
 }

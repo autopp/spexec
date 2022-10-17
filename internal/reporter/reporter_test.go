@@ -15,20 +15,24 @@ type testReportFormatter struct {
 	OnRunCompleteCalled  int
 }
 
-func (rf *testReportFormatter) OnRunStart(w *Writer) {
+func (rf *testReportFormatter) OnRunStart(w *Writer) error {
 	rf.OnRunStartCalled++
+	return nil
 }
 
-func (rf *testReportFormatter) OnTestStart(w *Writer, t *model.Test) {
+func (rf *testReportFormatter) OnTestStart(w *Writer, t *model.Test) error {
 	rf.OnTestStartCalled++
+	return nil
 }
 
-func (rf *testReportFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
+func (rf *testReportFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) error {
 	rf.OnTestCompleteCalled++
+	return nil
 }
 
-func (rf *testReportFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
+func (rf *testReportFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) error {
 	rf.OnRunCompleteCalled++
+	return nil
 }
 
 var _ = g.Describe("Rerporter", func() {

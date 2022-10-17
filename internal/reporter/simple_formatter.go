@@ -31,15 +31,17 @@ Example of output:
 type SimpleFormatter struct{}
 
 // OnRunStart is part of Reporter
-func (f *SimpleFormatter) OnRunStart(w *Writer) {
+func (f *SimpleFormatter) OnRunStart(w *Writer) error {
+	return nil
 }
 
 // OnTestStart is part of Reporter
-func (f *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) {
+func (f *SimpleFormatter) OnTestStart(w *Writer, t *model.Test) error {
+	return nil
 }
 
 // OnTestComplete is part of Reporter
-func (f *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) {
+func (f *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) error {
 	if tr.IsSuccess {
 		w.UseColor(Green, func() {
 			fmt.Fprint(w, ".")
@@ -49,10 +51,12 @@ func (f *SimpleFormatter) OnTestComplete(w *Writer, t *model.Test, tr *model.Tes
 			fmt.Fprint(w, "F")
 		})
 	}
+	return nil
 }
 
 // OnRunComplete is part of Reporter
-func (f *SimpleFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) {
+func (f *SimpleFormatter) OnRunComplete(w *Writer, sr *model.SpecResult) error {
 	printFailures(w, sr.GetFailedTestResults())
 	fmt.Fprintf(w, "\n%d examples, %d failures\n", sr.Summary.NumberOfTests, sr.Summary.NumberOfFailed)
+	return nil
 }

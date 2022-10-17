@@ -35,10 +35,10 @@ type Config struct {
 
 // ReportFormatter is the interface implemented by report formatter
 type ReportFormatter interface {
-	OnRunStart(w *Writer)
-	OnTestStart(w *Writer, t *model.Test)
-	OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult)
-	OnRunComplete(w *Writer, sr *model.SpecResult)
+	OnRunStart(w *Writer) error
+	OnTestStart(w *Writer, t *model.Test) error
+	OnTestComplete(w *Writer, t *model.Test, tr *model.TestResult) error
+	OnRunComplete(w *Writer, sr *model.SpecResult) error
 }
 
 // Option is functional option of New
@@ -87,21 +87,21 @@ func New(opts ...Option) (*Reporter, error) {
 }
 
 // OnRunStart should be called before all test execution
-func (r *Reporter) OnRunStart() {
-	r.rf.OnRunStart(r.w)
+func (r *Reporter) OnRunStart() error {
+	return r.rf.OnRunStart(r.w)
 }
 
 // OnTestStart should be called before each test execution
-func (r *Reporter) OnTestStart(t *model.Test) {
-	r.rf.OnTestStart(r.w, t)
+func (r *Reporter) OnTestStart(t *model.Test) error {
+	return r.rf.OnTestStart(r.w, t)
 }
 
 // OnTestComplete should be called after each test execution
-func (r *Reporter) OnTestComplete(t *model.Test, tr *model.TestResult) {
-	r.rf.OnTestComplete(r.w, t, tr)
+func (r *Reporter) OnTestComplete(t *model.Test, tr *model.TestResult) error {
+	return r.rf.OnTestComplete(r.w, t, tr)
 }
 
 // OnRunComplete should be called afterall test execution
-func (r *Reporter) OnRunComplete(sr *model.SpecResult) {
-	r.rf.OnRunComplete(r.w, sr)
+func (r *Reporter) OnRunComplete(sr *model.SpecResult) error {
+	return r.rf.OnRunComplete(r.w, sr)
 }
