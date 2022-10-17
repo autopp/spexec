@@ -284,6 +284,10 @@ func (v *Validator) MustBeDuration(x any) (time.Duration, bool) {
 	return d, true
 }
 
+func (v *Validator) MustBeTemplatable(x any) (*Templatable[any], bool) {
+	return NewTemplatableFromValue(x), true
+}
+
 func (v *Validator) MustHave(m Map, key string) (any, bool) {
 	x, ok := m[key]
 	if !ok {

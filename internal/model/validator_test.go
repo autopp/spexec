@@ -531,6 +531,21 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MustBeTemplatable", func() {
+		DescribeTable("success cases",
+			func(given any, expected *Templatable[any]) {
+				actual, ok := v.MustBeTemplatable(given)
+
+				Expect(ok).To(BeTrue())
+				Expect(actual).To(Equal(expected))
+				Expect(v.Error()).NotTo(HaveOccurred())
+			},
+			Entry(`with bool literal`, true, NewTemplatableFromValue[any](true)),
+			Entry(`with number literal`, 42, NewTemplatableFromValue[any](42)),
+			Entry(`with string literal`, "hello", NewTemplatableFromValue[any]("hello")),
+		)
+	})
+
 	Describe("MustHave()", func() {
 		Context("when the given map has specified field", func() {
 			It("returns value of the field and true", func() {
