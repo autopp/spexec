@@ -285,7 +285,33 @@ func (v *Validator) MustBeDuration(x any) (time.Duration, bool) {
 }
 
 func (v *Validator) MustBeTemplatable(x any) (*Templatable[any], bool) {
-	return NewTemplatableFromValue(x), true
+	type objectPathType = int
+
+	const (
+		fieldPath objectPathType = iota
+		indexPath
+	)
+
+	type objectPath struct {
+		kind  objectPathType
+		field string
+		index int
+	}
+
+	refs := make([]TemplateRef, 0)
+	var parseTemplatabe func(x any, paths []*objectPath)
+	parseTemplatabe = func(x any, paths []*objectPath) {
+		if m, ok := v.MayBeMap(x); ok {
+			for k, v := range m {
+				newPaths := append([]*objectPath{}, paths...)
+				parseTemplatabe(v, append(newPaths, &objectPath{kind: fieldPath, field: k}))
+			}
+		}
+	}
+
+	parseTemplatabe(x, make([]*objectPath, 0))
+
+	return NewTemplatableFromTemplateValue[any](NewTemplateValue(x, refs)), true
 }
 
 func (v *Validator) MustHave(m Map, key string) (any, bool) {

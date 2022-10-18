@@ -540,9 +540,19 @@ var _ = Describe("Validator", func() {
 				Expect(actual).To(Equal(expected))
 				Expect(v.Error()).NotTo(HaveOccurred())
 			},
-			Entry(`with bool literal`, true, NewTemplatableFromValue[any](true)),
-			Entry(`with number literal`, 42, NewTemplatableFromValue[any](42)),
-			Entry(`with string literal`, "hello", NewTemplatableFromValue[any]("hello")),
+			Entry(`with bool literal`,
+				true,
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(true, []TemplateRef{}))),
+			Entry(`with number literal`,
+				42,
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(42, []TemplateRef{}))),
+			Entry(`with string literal`,
+				"hello",
+				NewTemplatableFromTemplateValue[any](NewTemplateValue("hello", []TemplateRef{}))),
+			Entry(`with map contains simple values`,
+				Map{"message": "hello"},
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(Map{"message": "hello"}, []TemplateRef{})),
+			),
 		)
 	})
 
