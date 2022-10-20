@@ -301,6 +301,20 @@ func (v *Validator) MustBeTemplatable(x any) (*Templatable[any], bool) {
 	refs := make([]TemplateRef, 0)
 	var parseTemplatabe func(x any, paths []*objectPath)
 	parseTemplatabe = func(x any, paths []*objectPath) {
+		if name, ok := v.MayBeVariable(x); ok {
+			var ref TemplateRef = NewTemplateVar(name)
+			for i := len(paths) - 1; i >= 0; i-- {
+				path := paths[i]
+				if path.kind == fieldPath {
+					ref = NewTemplateFieldRef(path.field, ref)
+				} else if path.kind == indexPath {
+					ref = NewTemplateIndexRef(path.index, ref)
+				}
+			}
+
+			refs = append(refs, ref)
+		}
+
 		if m, ok := v.MayBeMap(x); ok {
 			for k, v := range m {
 				newPaths := append([]*objectPath{}, paths...)

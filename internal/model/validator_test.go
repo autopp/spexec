@@ -553,6 +553,10 @@ var _ = Describe("Validator", func() {
 				Map{"message": "hello"},
 				NewTemplatableFromTemplateValue[any](NewTemplateValue(Map{"message": "hello"}, []TemplateRef{})),
 			),
+			Entry(`with variable map contains`,
+				Map{"$": "x"},
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(Map{"$": "x"}, []TemplateRef{NewTemplateVar("x")})),
+			),
 		)
 	})
 
