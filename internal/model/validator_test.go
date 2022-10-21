@@ -557,6 +557,18 @@ var _ = Describe("Validator", func() {
 				Map{"$": "x"},
 				NewTemplatableFromTemplateValue[any](NewTemplateValue(Map{"$": "x"}, []TemplateRef{NewTemplateVar("x")})),
 			),
+			Entry(`with map contains variable`,
+				Map{"foo": Map{"$": "x"}, "bar": Map{"baz": Map{"$": "y"}}},
+				NewTemplatableFromTemplateValue[any](
+					NewTemplateValue(
+						Map{"foo": Map{"$": "x"}, "bar": Map{"baz": Map{"$": "y"}}},
+						[]TemplateRef{
+							NewTemplateFieldRef("foo", NewTemplateVar("x")),
+							NewTemplateFieldRef("bar", NewTemplateFieldRef("baz", NewTemplateVar("y"))),
+						},
+					),
+				),
+			),
 		)
 	})
 
