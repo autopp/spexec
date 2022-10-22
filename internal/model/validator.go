@@ -313,6 +313,7 @@ func (v *Validator) MustBeTemplatable(x any) (*Templatable[any], bool) {
 			}
 
 			refs = append(refs, ref)
+			return
 		}
 
 		if m, ok := v.MayBeMap(x); ok {
