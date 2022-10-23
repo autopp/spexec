@@ -153,6 +153,26 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeSeq()", func() {
+		Context("with a Seq", func() {
+			It("returns the given Seq and true", func() {
+				given := make(Seq, 0)
+				m, b := v.MayBeSeq(given)
+
+				Expect(m).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a not Seq", func() {
+			It("returns something and false", func() {
+				_, b := v.MayBeSeq(42)
+
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeSeq()", func() {
 		Context("with a Seq", func() {
 			It("returns the given Seq and true", func() {

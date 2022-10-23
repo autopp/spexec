@@ -116,8 +116,13 @@ func (v *Validator) MustBeMap(x any) (Map, bool) {
 	return nil, false
 }
 
+func (v *Validator) MayBeSeq(x any) (Seq, bool) {
+	s, ok := x.(Seq)
+	return s, ok
+}
+
 func (v *Validator) MustBeSeq(x any) (Seq, bool) {
-	if s, ok := x.(Seq); ok {
+	if s, ok := v.MayBeSeq(x); ok {
 		return s, true
 	}
 	v.AddViolation("should be seq, but is %s", TypeNameOf(x))
