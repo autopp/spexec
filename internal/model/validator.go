@@ -326,6 +326,15 @@ func (v *Validator) MustBeTemplatable(x any) (*Templatable[any], bool) {
 				newPaths := append([]*objectPath{}, paths...)
 				parseTemplatabe(v, append(newPaths, &objectPath{kind: fieldPath, field: k}))
 			}
+
+			return
+		}
+
+		if s, ok := v.MayBeSeq(x); ok {
+			for i, v := range s {
+				newPaths := append([]*objectPath{}, paths...)
+				parseTemplatabe(v, append(newPaths, &objectPath{kind: indexPath, index: i}))
+			}
 		}
 	}
 
