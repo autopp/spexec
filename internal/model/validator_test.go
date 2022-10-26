@@ -600,6 +600,17 @@ var _ = Describe("Validator", func() {
 						[]TemplateRef{NewTemplateIndexRef(1, NewTemplateVar("x"))}),
 				),
 			),
+			Entry(`with seq contains map contains variable and seq`,
+				Seq{"message", Map{"hello": Map{"$": "x"}, "world": Seq{0, 1, Map{"$": "y"}}}},
+				NewTemplatableFromTemplateValue[any](
+					NewTemplateValue(Seq{"message", Map{"hello": Map{"$": "x"}, "world": Seq{0, 1, Map{"$": "y"}}}},
+						[]TemplateRef{
+							NewTemplateIndexRef(1, NewTemplateFieldRef("hello", NewTemplateVar("x"))),
+							NewTemplateIndexRef(1, NewTemplateFieldRef("world", NewTemplateIndexRef(2, NewTemplateVar("y")))),
+						},
+					),
+				),
+			),
 		)
 	})
 
