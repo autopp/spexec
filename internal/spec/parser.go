@@ -27,25 +27,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// xxxSchema are structs for documentation, not used
-type specSchema struct {
-	spexec string
-	tests  []testSchema
-}
-
-type testSchema struct {
-	name    string
-	command []string
-	stdin   string
-	env     []util.StringVar
-	expect  *struct {
-		status model.StatusMatcher
-		stdout model.StreamMatcher
-		stderr model.StreamMatcher
-	}
-	timeout string
-}
-
 var evnVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
 
 type Parser struct {
