@@ -582,6 +582,15 @@ func (v *Validator) MayHaveTemplatableString(m Map, key string) (*Templatable[st
 	return nil, false, false
 }
 
+func (v *Validator) MustHaveTemplatableString(m Map, key string) (*Templatable[string], bool) {
+	s, exists, ok := v.MayHaveTemplatableString(m, key)
+	if !exists && ok {
+		v.AddViolation("should have .%s as templatable string", key)
+	}
+
+	return s, exists && ok
+}
+
 func (v *Validator) MustContainOnly(m Map, keys ...string) bool {
 	if !v.isStrict {
 		return true

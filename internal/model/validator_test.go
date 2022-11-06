@@ -1142,6 +1142,39 @@ var _ = Describe("Validator", func() {
 		)
 	})
 
+	Describe("MustHaveTemplatableString", func() {
+		DescribeTable("returns Templatable[string]",
+			func(m Map, expected *Templatable[string]) {
+				actual, ok := v.MustHaveTemplatableString(m, "field")
+
+				Expect(ok).To(BeTrue())
+				Expect(actual).To(Equal(expected))
+			},
+			Entry(
+				"when the specified field is a string",
+				Map{"field": "hello"},
+				NewTemplatableFromValue("hello"),
+			),
+			Entry(
+				"when the specified field is variable",
+				Map{"field": Map{"$": "x"}},
+				NewTemplatableFromVariable[string]("x"),
+			),
+		)
+
+		DescribeTable("add violation",
+			func(m Map, expected any) {
+				_, ok := v.MustHaveTemplatableString(m, "field")
+
+				Expect(ok).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(expected))
+			},
+			Entry("when the given map dose not have specified field", Map{}, "$: should have .field as templatable string"),
+			Entry("when the specified field is not a string value", Map{"field": 42}, "$.field: should be string or variable, but got int"),
+			Entry("when the specified field is not a variable map", Map{"field": Map{"$": "x", "$$": "y"}}, "$.field: should be string or variable, but got map"),
+		)
+	})
+
 	Describe("MustContainOnly()", func() {
 		It("returns true and adds no error when the given map contains only specified", func() {
 			m := Map{"foo": 1, "baz": "spexec"}
