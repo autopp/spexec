@@ -1,6 +1,7 @@
 package spec
 
 import (
+	"encoding/json"
 	"path/filepath"
 	"time"
 
@@ -8,7 +9,7 @@ import (
 	"github.com/autopp/spexec/internal/matcher/status"
 	"github.com/autopp/spexec/internal/matcher/stream"
 	"github.com/autopp/spexec/internal/model"
-	"github.com/autopp/spexec/internal/util"
+	"github.com/autopp/spexec/internal/model/template"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -16,8 +17,6 @@ import (
 )
 
 var _ = Describe("Parser", func() {
-	var statusEqMatcher *status.EqMatcher
-	var streamEqMatcher *stream.EqMatcher
 	var p *Parser
 	var env *model.Env
 
@@ -42,17 +41,20 @@ var _ = Describe("Parser", func() {
 
 			Entry("testdata/test.yaml", "test.yaml", Elements{
 				"0": PointTo(MatchAllFields(Fields{
-					"Name":         Equal("test_answer"),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
 					"SpecFilename": HaveSuffix("testdata/test.yaml"),
-					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
-					"Dir":          HaveSuffix("/testdata"),
-					"Stdin":        Equal([]byte("hello")),
-					"Env": Equal([]util.StringVar{
-						{Name: "ANSWER", Value: "42"},
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
+					"Dir":   HaveSuffix("/testdata"),
+					"Stdin": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("hello", []model.TemplateRef{}))),
+					"Env": Equal([]*template.TemplatableStringVar{
+						{Name: "ANSWER", Value: model.NewTemplatableFromValue("42")},
 					}),
 					"Timeout":       Equal(3 * time.Second),
-					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
-					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
+					"StatusMatcher": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"eq": 0}, []model.TemplateRef{}))),
+					"StdoutMatcher": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"eq": "42\n"}, []model.TemplateRef{}))),
 					"StderrMatcher": BeNil(),
 					"TeeStdout":     BeFalse(),
 					"TeeStderr":     BeFalse(),
@@ -60,17 +62,20 @@ var _ = Describe("Parser", func() {
 			}),
 			Entry("testdata/test.json", "test.json", Elements{
 				"0": PointTo(MatchAllFields(Fields{
-					"Name":         Equal("test_answer"),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
 					"SpecFilename": HaveSuffix("testdata/test.json"),
-					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
-					"Dir":          HaveSuffix("/testdata"),
-					"Stdin":        Equal([]byte("hello")),
-					"Env": Equal([]util.StringVar{
-						{Name: "ANSWER", Value: "42"},
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
+					"Dir":   HaveSuffix("/testdata"),
+					"Stdin": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("hello", []model.TemplateRef{}))),
+					"Env": Equal([]*template.TemplatableStringVar{
+						{Name: "ANSWER", Value: model.NewTemplatableFromValue("42")},
 					}),
 					"Timeout":       Equal(3 * time.Second),
-					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
-					"StdoutMatcher": BeAssignableToTypeOf(streamEqMatcher),
+					"StatusMatcher": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"eq": json.Number("0")}, []model.TemplateRef{}))),
+					"StdoutMatcher": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"eq": "42\n"}, []model.TemplateRef{}))),
 					"StderrMatcher": BeNil(),
 					"TeeStdout":     BeFalse(),
 					"TeeStderr":     BeFalse(),
@@ -110,13 +115,16 @@ var _ = Describe("Parser", func() {
 					},
 				},
 				Fields{
-					"Name":         Equal("test_answer"),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
 					"SpecFilename": HaveSuffix("/testdata/spec.yaml"),
-					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
-					"Dir":          HaveSuffix("/testdata"),
-					"Stdin":        Equal([]byte("hello")),
-					"Env": Equal([]util.StringVar{
-						{Name: "ANSWER", Value: "42"},
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
+					"Dir":   HaveSuffix("/testdata"),
+					"Stdin": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("hello", []model.TemplateRef{}))),
+					"Env": Equal([]*template.TemplatableStringVar{
+						{Name: "ANSWER", Value: model.NewTemplatableFromValue("42")},
 					}),
 					"Timeout":       Equal(3 * time.Second),
 					"StatusMatcher": BeNil(),
@@ -140,13 +148,16 @@ var _ = Describe("Parser", func() {
 					},
 				},
 				Fields{
-					"Name":         Equal("test_answer"),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
 					"SpecFilename": HaveSuffix("/testdata/spec.yaml"),
-					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
-					"Dir":          HaveSuffix("/testdata"),
-					"Stdin":        Equal([]byte("hello")),
-					"Env": Equal([]util.StringVar{
-						{Name: "ANSWER", Value: "42"},
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
+					"Dir":   HaveSuffix("/testdata"),
+					"Stdin": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("hello", []model.TemplateRef{}))),
+					"Env": Equal([]*template.TemplatableStringVar{
+						{Name: "ANSWER", Value: model.NewTemplatableFromValue("42")},
 					}),
 					"Timeout":       Equal(3 * time.Second),
 					"StatusMatcher": BeNil(),
@@ -243,13 +254,16 @@ var _ = Describe("Parser", func() {
 					"timeout": 3,
 				},
 				Fields{
-					"Name":         Equal("test_answer"),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
 					"SpecFilename": HaveSuffix("/testdata/spec.yaml"),
-					"Command":      Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
-					"Dir":          HaveSuffix("/testdata"),
-					"Stdin":        Equal([]byte("hello")),
-					"Env": Equal([]util.StringVar{
-						{Name: "ANSWER", Value: "42"},
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
+					"Dir":   HaveSuffix("/testdata"),
+					"Stdin": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("hello", []model.TemplateRef{}))),
+					"Env": Equal([]*template.TemplatableStringVar{
+						{Name: "ANSWER", Value: model.NewTemplatableFromValue("42")},
 					}),
 					"Timeout":       Equal(3 * time.Second),
 					"StatusMatcher": BeNil(),
@@ -267,14 +281,17 @@ var _ = Describe("Parser", func() {
 					"timeout": 3,
 				},
 				Fields{
-					"Name":          Equal("test_answer"),
-					"SpecFilename":  HaveSuffix("/testdata/spec.yaml"),
-					"Command":       Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
+					"SpecFilename": HaveSuffix("/testdata/spec.yaml"),
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
 					"Dir":           HaveSuffix("/testdata"),
 					"Stdin":         BeNil(),
 					"Env":           BeEmpty(),
 					"Timeout":       Equal(3 * time.Second),
-					"StatusMatcher": BeAssignableToTypeOf(statusEqMatcher),
+					"StatusMatcher": Equal(model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue(model.Map{"eq": 0}, []model.TemplateRef{}))),
 					"StdoutMatcher": BeNil(),
 					"StderrMatcher": BeNil(),
 					"TeeStdout":     BeFalse(),
@@ -289,9 +306,12 @@ var _ = Describe("Parser", func() {
 					"teeStdout": true,
 				},
 				Fields{
-					"Name":          Equal("test_answer"),
-					"SpecFilename":  HaveSuffix("/testdata/spec.yaml"),
-					"Command":       Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
+					"SpecFilename": HaveSuffix("/testdata/spec.yaml"),
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
 					"Dir":           HaveSuffix("/testdata"),
 					"Stdin":         BeNil(),
 					"Env":           BeEmpty(),
@@ -311,9 +331,12 @@ var _ = Describe("Parser", func() {
 					"teeStderr": true,
 				},
 				Fields{
-					"Name":          Equal("test_answer"),
-					"SpecFilename":  HaveSuffix("/testdata/spec.yaml"),
-					"Command":       Equal([]model.StringExpr{model.NewLiteralStringExpr("echo"), model.NewLiteralStringExpr("42")}),
+					"Name":         Equal(model.NewTemplatableFromValue("test_answer")),
+					"SpecFilename": HaveSuffix("/testdata/spec.yaml"),
+					"Command": Equal([]*model.Templatable[any]{
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("echo", []model.TemplateRef{})),
+						model.NewTemplatableFromTemplateValue[any](model.NewTemplateValue("42", []model.TemplateRef{}))},
+					),
 					"Dir":           HaveSuffix("/testdata"),
 					"Stdin":         BeNil(),
 					"Env":           BeEmpty(),
@@ -378,33 +401,6 @@ var _ = Describe("Parser", func() {
 		)
 	})
 
-	Describe("loadCommandStdin", func() {
-		DescribeTable("success cases",
-			func(stdin any, expected string) {
-				v, _ := model.NewValidator("", true)
-				actual := p.loadCommandStdin(v, stdin)
-				Expect(v.Error()).NotTo(HaveOccurred())
-				Expect(string(actual)).To(Equal(expected))
-			},
-			Entry("with simple string", "hello", "hello"),
-			Entry("with yaml format", model.Map{"format": "yaml", "value": model.Seq{"hello", "world"}}, "- hello\n- world\n"),
-		)
-
-		DescribeTable("failure cases",
-			func(stdin any, expectedErr string) {
-				v, _ := model.NewValidator("", true)
-				Expect(p.loadCommandStdin(v, stdin)).To(BeNil())
-				Expect(v.Error()).To(MatchError(expectedErr))
-			},
-			Entry("with no string nor map", 42, "$: should be a string or map, but is int"),
-			Entry("with .format missing map", model.Map{"value": model.Seq{"hello", "world"}}, "$: should have .format as string"),
-			Entry("with .value missing map", model.Map{"format": "yaml"}, "$: should have .value"),
-			Entry("with invalid .format map", model.Map{"format": 42, "value": 42}, `$.format: should be string, but is int`),
-			Entry("with unknown .format map", model.Map{"format": "unknown", "value": 42}, `$.format: should be a "yaml", but is "unknown"`),
-			Entry("with unknown field", model.Map{"format": "yaml", "value": 42, "unknown": 42}, `$: field .unknown is not expected`),
-		)
-	})
-
 	Describe("loadCommandExpect", func() {
 		DescribeTable("success cases",
 			func(expect model.Map, statusMatcherShouldBeSet bool, stdoutMatcherShouldBeSet, stderrMatcherShouldBeSet bool) {
@@ -412,17 +408,17 @@ var _ = Describe("Parser", func() {
 				actualStdin, actualStdout, actualStderr := p.loadCommandExpect(env, v, expect)
 				Expect(v.Error()).NotTo(HaveOccurred())
 				if statusMatcherShouldBeSet {
-					Expect(actualStdin).To(BeAssignableToTypeOf(statusEqMatcher))
+					Expect(actualStdin).NotTo(BeNil())
 				} else {
 					Expect(actualStdin).To(BeNil())
 				}
 				if stdoutMatcherShouldBeSet {
-					Expect(actualStdout).To(BeAssignableToTypeOf(streamEqMatcher))
+					Expect(actualStdout).NotTo(BeNil())
 				} else {
 					Expect(actualStdout).To(BeNil())
 				}
 				if stderrMatcherShouldBeSet {
-					Expect(actualStderr).To(BeAssignableToTypeOf(streamEqMatcher))
+					Expect(actualStderr).NotTo(BeNil())
 				} else {
 					Expect(actualStderr).To(BeNil())
 				}
@@ -440,9 +436,6 @@ var _ = Describe("Parser", func() {
 				p.loadCommandExpect(env, v, expect)
 				Expect(v.Error()).To(MatchError(expectedErr))
 			},
-			Entry("with unknown status", model.Map{"status": model.Map{"unknown": true}}, "$.status: matcher for status unknown is not defined"),
-			Entry("with unknown stdout", model.Map{"stdout": model.Map{"unknown": true}}, "$.stdout: matcher for stream unknown is not defined"),
-			Entry("with unknown stderr", model.Map{"stderr": model.Map{"unknown": true}}, "$.stderr: matcher for stream unknown is not defined"),
 			Entry("with unknown field", model.Map{"unknown": 42}, "$: field .unknown is not expected"),
 		)
 	})

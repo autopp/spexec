@@ -41,12 +41,12 @@ var _ = Describe("TestTemplate", func() {
 				&TestTemplate{
 					Name:         model.NewTemplatableFromValue("sample test"),
 					SpecFilename: "sample.yaml",
-					Dir:          model.NewTemplatableFromValue(""),
+					Dir:          "",
 					Command: []*model.Templatable[any]{
 						model.NewTemplatableFromValue[any]("echo"),
 					},
 					Stdin: model.NewTemplatableFromValue[any]("stdin"),
-					Env: []TemplatableStringVar{
+					Env: []*TemplatableStringVar{
 						{
 							Name:  "MESSAGE",
 							Value: model.NewTemplatableFromValue("hello"),
@@ -78,12 +78,12 @@ var _ = Describe("TestTemplate", func() {
 				&TestTemplate{
 					Name:         model.NewTemplatableFromVariable[string]("name"),
 					SpecFilename: "sample.yaml",
-					Dir:          model.NewTemplatableFromValue(""),
+					Dir:          "",
 					Command: []*model.Templatable[any]{
 						model.NewTemplatableFromVariable[any]("command"),
 					},
 					Stdin: model.NewTemplatableFromValue[any]("stdin"),
-					Env: []TemplatableStringVar{
+					Env: []*TemplatableStringVar{
 						{
 							Name:  "MESSAGE",
 							Value: model.NewTemplatableFromValue("hello"),

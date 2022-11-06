@@ -32,13 +32,13 @@ type TemplatableStringVar struct {
 type TestTemplate struct {
 	Name          *model.Templatable[string]
 	SpecFilename  string
-	Dir           *model.Templatable[string]
+	Dir           string
 	Command       []*model.Templatable[any]
 	Stdin         *model.Templatable[any]
 	StatusMatcher *model.Templatable[any]
 	StdoutMatcher *model.Templatable[any]
 	StderrMatcher *model.Templatable[any]
-	Env           []TemplatableStringVar
+	Env           []*TemplatableStringVar
 	Timeout       time.Duration
 	TeeStdout     bool
 	TeeStderr     bool
@@ -46,14 +46,13 @@ type TestTemplate struct {
 
 // TODO: set validator path
 func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) (*model.Test, error) {
-	name, err := tt.Name.Expand(env, v)
-	if err != nil {
-		return nil, err
-	}
-
-	dir, err := tt.Dir.Expand(env, v)
-	if err != nil {
-		return nil, err
+	name := ""
+	if tt.Name != nil {
+		var err error
+		name, err = tt.Name.Expand(env, v)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	command := make([]model.StringExpr, 0, len(tt.Command))
@@ -68,33 +67,45 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 		command = append(command, c)
 	}
 
-	stdin, err := tt.Stdin.Expand(env, v)
-	if err != nil {
-		return nil, err
-	}
-	evaledStdin := evalCommandStdin(v, stdin)
-	if evaledStdin == nil {
-		// TODO: error handling
-		return nil, errors.New(errors.ErrInvalidSpec, "cannot load stdin")
+	evaledStdin := []byte("")
+	if tt.Stdin != nil {
+		stdin, err := tt.Stdin.Expand(env, v)
+		if err != nil {
+			return nil, err
+		}
+		evaledStdin = evalCommandStdin(v, stdin)
+		if evaledStdin == nil {
+			// TODO: error handling
+			return nil, errors.New(errors.ErrInvalidSpec, "cannot load stdin")
+		}
 	}
 
-	status, err := tt.StatusMatcher.Expand(env, v)
-	if err != nil {
-		return nil, err
+	var statusMatcher model.StatusMatcher
+	if tt.StatusMatcher != nil {
+		status, err := tt.StatusMatcher.Expand(env, v)
+		if err != nil {
+			return nil, err
+		}
+		statusMatcher = statusMR.ParseMatcher(v, status)
 	}
-	statusMatcher := statusMR.ParseMatcher(v, status)
 
-	stdout, err := tt.StdoutMatcher.Expand(env, v)
-	if err != nil {
-		return nil, err
+	var stdoutMatcher model.StreamMatcher
+	if tt.StdoutMatcher != nil {
+		stdout, err := tt.StdoutMatcher.Expand(env, v)
+		if err != nil {
+			return nil, err
+		}
+		stdoutMatcher = streamMR.ParseMatcher(v, stdout)
 	}
-	stdoutMatcher := streamMR.ParseMatcher(v, stdout)
 
-	stderr, err := tt.StderrMatcher.Expand(env, v)
-	if err != nil {
-		return nil, err
+	var stderrMatcher model.StreamMatcher
+	if tt.StderrMatcher != nil {
+		stderr, err := tt.StderrMatcher.Expand(env, v)
+		if err != nil {
+			return nil, err
+		}
+		stderrMatcher = streamMR.ParseMatcher(v, stderr)
 	}
-	stderrMatcher := streamMR.ParseMatcher(v, stderr)
 
 	tEnv := make([]util.StringVar, 0, len(tt.Env))
 	for _, tsv := range tt.Env {
@@ -109,7 +120,7 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 	return &model.Test{
 		Name:          name,
 		SpecFilename:  tt.SpecFilename,
-		Dir:           dir,
+		Dir:           tt.Dir,
 		Command:       command,
 		Stdin:         evaledStdin,
 		StatusMatcher: statusMatcher,

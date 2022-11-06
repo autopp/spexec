@@ -583,8 +583,8 @@ var _ = Describe("Validator", func() {
 					NewTemplateValue(
 						Map{"foo": Map{"$": "x"}, "bar": Map{"baz": Map{"$": "y"}}},
 						[]TemplateRef{
-							NewTemplateFieldRef("foo", NewTemplateVar("x")),
 							NewTemplateFieldRef("bar", NewTemplateFieldRef("baz", NewTemplateVar("y"))),
+							NewTemplateFieldRef("foo", NewTemplateVar("x")),
 						},
 					),
 				),

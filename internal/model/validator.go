@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -322,9 +323,15 @@ func (v *Validator) MustBeTemplatable(x any) (*Templatable[any], bool) {
 		}
 
 		if m, ok := v.MayBeMap(x); ok {
-			for k, v := range m {
+			keys := make([]string, 0, len(m))
+			for k := range m {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+
+			for _, k := range keys {
 				newPaths := append([]*objectPath{}, paths...)
-				parseTemplatabe(v, append(newPaths, &objectPath{kind: fieldPath, field: k}))
+				parseTemplatabe(m[k], append(newPaths, &objectPath{kind: fieldPath, field: k}))
 			}
 
 			return
