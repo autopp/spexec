@@ -17,9 +17,11 @@ package template
 import (
 	"time"
 
+	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
 	"github.com/autopp/spexec/internal/model"
 	"github.com/autopp/spexec/internal/util"
+	"gopkg.in/yaml.v3"
 )
 
 type TemplatableStringVar struct {
@@ -32,7 +34,7 @@ type TestTemplate struct {
 	SpecFilename  string
 	Dir           *model.Templatable[string]
 	Command       []*model.Templatable[any]
-	Stdin         *model.Templatable[string]
+	Stdin         *model.Templatable[any]
 	StatusMatcher *model.Templatable[any]
 	StdoutMatcher *model.Templatable[any]
 	StderrMatcher *model.Templatable[any]
@@ -42,6 +44,7 @@ type TestTemplate struct {
 	TeeStderr     bool
 }
 
+// TODO: set validator path
 func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *matcher.StatusMatcherRegistry, streamMR *matcher.StreamMatcherRegistry) (*model.Test, error) {
 	name, err := tt.Name.Expand(env, v)
 	if err != nil {
@@ -68,6 +71,11 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 	stdin, err := tt.Stdin.Expand(env, v)
 	if err != nil {
 		return nil, err
+	}
+	evaledStdin := evalCommandStdin(v, stdin)
+	if evaledStdin == nil {
+		// TODO: error handling
+		return nil, errors.New(errors.ErrInvalidSpec, "cannot load stdin")
 	}
 
 	status, err := tt.StatusMatcher.Expand(env, v)
@@ -103,7 +111,7 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 		SpecFilename:  tt.SpecFilename,
 		Dir:           dir,
 		Command:       command,
-		Stdin:         []byte(stdin),
+		Stdin:         evaledStdin,
 		StatusMatcher: statusMatcher,
 		StdoutMatcher: stdoutMatcher,
 		StderrMatcher: stderrMatcher,
@@ -112,4 +120,40 @@ func (tt *TestTemplate) Expand(env *model.Env, v *model.Validator, statusMR *mat
 		TeeStdout:     tt.TeeStdout,
 		TeeStderr:     tt.TeeStderr,
 	}, nil
+}
+
+func evalCommandStdin(v *model.Validator, stdin any) []byte {
+	if stdinString, ok := v.MayBeString(stdin); ok {
+		return []byte(stdinString)
+	} else if stdinMap, ok := v.MayBeMap(stdin); ok {
+		if !v.MustContainOnly(stdinMap, "format", "value") {
+			return nil
+		}
+
+		stdinFormat, formatOk := v.MustHaveString(stdinMap, "format")
+		stdinValue, valueOk := v.MustHave(stdinMap, "value")
+		if !formatOk || !valueOk {
+			return nil
+		}
+
+		switch stdinFormat {
+		case "yaml":
+			value, err := yaml.Marshal(stdinValue)
+			if err != nil {
+				v.InField("value", func() {
+					v.AddViolation(`cannot encode to a YAML string: %s`, err)
+				})
+				return nil
+			}
+			return value
+		default:
+			v.InField("format", func() {
+				v.AddViolation(`should be a "yaml", but is %q`, stdinFormat)
+			})
+			return nil
+		}
+	} else {
+		v.AddViolation("should be a string or map, but is %s", model.TypeNameOf(stdin))
+		return nil
+	}
 }
