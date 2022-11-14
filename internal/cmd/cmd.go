@@ -40,15 +40,15 @@ type options struct {
 	isStrict  bool
 }
 
+const versionFlag = "version"
+const outputFlag = "output"
+const colorFlag = "color"
+const formatFlag = "format"
+const strictFlag = "strict"
+
 // Main is the entrypoint of command line
 func Main(version string, stdin io.Reader, stdout, stderr io.Writer, args []string) error {
 	opts := &options{}
-
-	const versionFlag = "version"
-	const outputFlag = "output"
-	const colorFlag = "color"
-	const formatFlag = "format"
-	const strictFlag = "strict"
 
 	cmd := &cobra.Command{
 		Use:           "spexec file",
@@ -101,25 +101,25 @@ func (o *options) complete(cmd *cobra.Command, args []string) error {
 		o.isStdin = false
 	}
 
-	if err := validateEnumFlag(o.color, "always", "never", "auto"); err != nil {
+	if err := validateEnumFlag(colorFlag, o.color, "always", "never", "auto"); err != nil {
 		return err
 	}
 
-	if err := validateEnumFlag(o.format, "simple", "documentation", "json"); err != nil {
+	if err := validateEnumFlag(formatFlag, o.format, "simple", "documentation", "json"); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func validateEnumFlag(value string, validValues ...string) error {
+func validateEnumFlag(flag, value string, validValues ...string) error {
 	for _, v := range validValues {
 		if value == v {
 			return nil
 		}
 	}
 
-	return fmt.Errorf("invalid --color flag: %s", value)
+	return fmt.Errorf("invalid --%s flag: %s", flag, value)
 }
 
 func (o *options) run() error {
