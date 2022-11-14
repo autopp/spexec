@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strings"
 	"time"
 
@@ -116,8 +117,13 @@ func (v *Validator) MustBeMap(x any) (Map, bool) {
 	return nil, false
 }
 
+func (v *Validator) MayBeSeq(x any) (Seq, bool) {
+	s, ok := x.(Seq)
+	return s, ok
+}
+
 func (v *Validator) MustBeSeq(x any) (Seq, bool) {
-	if s, ok := x.(Seq); ok {
+	if s, ok := v.MayBeSeq(x); ok {
 		return s, true
 	}
 	v.AddViolation("should be seq, but is %s", TypeNameOf(x))
@@ -282,6 +288,66 @@ func (v *Validator) MustBeDuration(x any) (time.Duration, bool) {
 	}
 
 	return d, true
+}
+
+func (v *Validator) MustBeTemplatable(x any) (*Templatable[any], bool) {
+	type objectPathType = int
+
+	const (
+		fieldPath objectPathType = iota
+		indexPath
+	)
+
+	type objectPath struct {
+		kind  objectPathType
+		field string
+		index int
+	}
+
+	refs := make([]TemplateRef, 0)
+	var parseTemplatabe func(x any, paths []*objectPath)
+	parseTemplatabe = func(x any, paths []*objectPath) {
+		if name, ok := v.MayBeVariable(x); ok {
+			var ref TemplateRef = NewTemplateVar(name)
+			for i := len(paths) - 1; i >= 0; i-- {
+				path := paths[i]
+				if path.kind == fieldPath {
+					ref = NewTemplateFieldRef(path.field, ref)
+				} else if path.kind == indexPath {
+					ref = NewTemplateIndexRef(path.index, ref)
+				}
+			}
+
+			refs = append(refs, ref)
+			return
+		}
+
+		if m, ok := v.MayBeMap(x); ok {
+			keys := make([]string, 0, len(m))
+			for k := range m {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+
+			for _, k := range keys {
+				newPaths := append([]*objectPath{}, paths...)
+				parseTemplatabe(m[k], append(newPaths, &objectPath{kind: fieldPath, field: k}))
+			}
+
+			return
+		}
+
+		if s, ok := v.MayBeSeq(x); ok {
+			for i, v := range s {
+				newPaths := append([]*objectPath{}, paths...)
+				parseTemplatabe(v, append(newPaths, &objectPath{kind: indexPath, index: i}))
+			}
+		}
+	}
+
+	parseTemplatabe(x, make([]*objectPath, 0))
+
+	return NewTemplatableFromTemplateValue[any](NewTemplateValue(x, refs)), true
 }
 
 func (v *Validator) MustHave(m Map, key string) (any, bool) {
@@ -521,6 +587,15 @@ func (v *Validator) MayHaveTemplatableString(m Map, key string) (*Templatable[st
 	})
 
 	return nil, false, false
+}
+
+func (v *Validator) MustHaveTemplatableString(m Map, key string) (*Templatable[string], bool) {
+	s, exists, ok := v.MayHaveTemplatableString(m, key)
+	if !exists && ok {
+		v.AddViolation("should have .%s as templatable string", key)
+	}
+
+	return s, exists && ok
 }
 
 func (v *Validator) MustContainOnly(m Map, keys ...string) bool {

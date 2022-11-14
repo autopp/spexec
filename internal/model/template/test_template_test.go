@@ -41,12 +41,12 @@ var _ = Describe("TestTemplate", func() {
 				&TestTemplate{
 					Name:         model.NewTemplatableFromValue("sample test"),
 					SpecFilename: "sample.yaml",
-					Dir:          model.NewTemplatableFromValue(""),
+					Dir:          "",
 					Command: []*model.Templatable[any]{
 						model.NewTemplatableFromValue[any]("echo"),
 					},
-					Stdin: model.NewTemplatableFromValue(""),
-					Env: []TemplatableStringVar{
+					Stdin: model.NewTemplatableFromValue[any]("stdin"),
+					Env: []*TemplatableStringVar{
 						{
 							Name:  "MESSAGE",
 							Value: model.NewTemplatableFromValue("hello"),
@@ -64,7 +64,7 @@ var _ = Describe("TestTemplate", func() {
 					SpecFilename:  "sample.yaml",
 					Dir:           "",
 					Command:       []model.StringExpr{model.NewLiteralStringExpr("echo")},
-					Stdin:         []byte(""),
+					Stdin:         []byte("stdin"),
 					Env:           []util.StringVar{{Name: "MESSAGE", Value: "hello"}},
 					StatusMatcher: testutil.NewExampleStatusMatcher(true, "message", nil),
 					StdoutMatcher: testutil.NewExampleStreamMatcher(true, "message", nil),
@@ -78,12 +78,12 @@ var _ = Describe("TestTemplate", func() {
 				&TestTemplate{
 					Name:         model.NewTemplatableFromVariable[string]("name"),
 					SpecFilename: "sample.yaml",
-					Dir:          model.NewTemplatableFromValue(""),
+					Dir:          "",
 					Command: []*model.Templatable[any]{
 						model.NewTemplatableFromVariable[any]("command"),
 					},
-					Stdin: model.NewTemplatableFromValue(""),
-					Env: []TemplatableStringVar{
+					Stdin: model.NewTemplatableFromValue[any]("stdin"),
+					Env: []*TemplatableStringVar{
 						{
 							Name:  "MESSAGE",
 							Value: model.NewTemplatableFromValue("hello"),
@@ -101,7 +101,7 @@ var _ = Describe("TestTemplate", func() {
 					SpecFilename:  "sample.yaml",
 					Dir:           "",
 					Command:       []model.StringExpr{model.NewLiteralStringExpr("echo")},
-					Stdin:         []byte(""),
+					Stdin:         []byte("stdin"),
 					Env:           []util.StringVar{{Name: "MESSAGE", Value: "hello"}},
 					StatusMatcher: testutil.NewExampleStatusMatcher(true, "message", nil),
 					StdoutMatcher: testutil.NewExampleStreamMatcher(true, "message", nil),
@@ -113,4 +113,31 @@ var _ = Describe("TestTemplate", func() {
 			),
 		)
 	})
+})
+
+var _ = Describe("evalCommandStdin", func() {
+	DescribeTable("success cases",
+		func(stdin any, expected string) {
+			v, _ := model.NewValidator("", true)
+			actual := evalCommandStdin(v, stdin)
+			Expect(v.Error()).NotTo(HaveOccurred())
+			Expect(string(actual)).To(Equal(expected))
+		},
+		Entry("with simple string", "hello", "hello"),
+		Entry("with yaml format", model.Map{"format": "yaml", "value": model.Seq{"hello", "world"}}, "- hello\n- world\n"),
+	)
+
+	DescribeTable("failure cases",
+		func(stdin any, expectedErr string) {
+			v, _ := model.NewValidator("", true)
+			Expect(evalCommandStdin(v, stdin)).To(BeNil())
+			Expect(v.Error()).To(MatchError(expectedErr))
+		},
+		Entry("with no string nor map", 42, "$: should be a string or map, but is int"),
+		Entry("with .format missing map", model.Map{"value": model.Seq{"hello", "world"}}, "$: should have .format as string"),
+		Entry("with .value missing map", model.Map{"format": "yaml"}, "$: should have .value"),
+		Entry("with invalid .format map", model.Map{"format": 42, "value": 42}, `$.format: should be string, but is int`),
+		Entry("with unknown .format map", model.Map{"format": "unknown", "value": 42}, `$.format: should be a "yaml", but is "unknown"`),
+		Entry("with unknown field", model.Map{"format": "yaml", "value": 42, "unknown": 42}, `$: field .unknown is not expected`),
+	)
 })

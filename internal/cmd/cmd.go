@@ -23,6 +23,7 @@ import (
 	"github.com/autopp/spexec/internal/matcher/status"
 	"github.com/autopp/spexec/internal/matcher/stream"
 	"github.com/autopp/spexec/internal/model"
+	"github.com/autopp/spexec/internal/model/template"
 	"github.com/autopp/spexec/internal/reporter"
 	"github.com/autopp/spexec/internal/runner"
 	"github.com/autopp/spexec/internal/spec"
@@ -126,11 +127,11 @@ func (o *options) run() error {
 	streamMR := stream.NewStreamMatcherRegistryWithBuiltins()
 
 	p := spec.NewParser(statusMR, streamMR)
-	specs := []struct {
-		filename string
-		tests    []*model.Test
+	specTemplates := []struct {
+		filename      string
+		testTemplates []*template.TestTemplate
 	}{}
-	var tests []*model.Test
+	var testTemplates []*template.TestTemplate
 	var err error
 	env := model.NewEnv(nil)
 	if o.isStdin {
@@ -139,11 +140,11 @@ func (o *options) run() error {
 		if err != nil {
 			return err
 		}
-		tests, err = p.ParseStdin(env, v)
-		specs = append(specs, struct {
-			filename string
-			tests    []*model.Test
-		}{"<stdin>", tests})
+		testTemplates, err = p.ParseStdin(env, v)
+		specTemplates = append(specTemplates, struct {
+			filename      string
+			testTemplates []*template.TestTemplate
+		}{"<stdin>", testTemplates})
 	} else {
 		for _, filename := range o.filenames {
 			var v *model.Validator
@@ -151,14 +152,14 @@ func (o *options) run() error {
 			if err != nil {
 				break
 			}
-			tests, err = p.ParseFile(env, v, filename)
+			testTemplates, err = p.ParseFile(env, v, filename)
 			if err != nil {
 				break
 			}
-			specs = append(specs, struct {
-				filename string
-				tests    []*model.Test
-			}{filename, tests})
+			specTemplates = append(specTemplates, struct {
+				filename      string
+				testTemplates []*template.TestTemplate
+			}{filename, testTemplates})
 		}
 	}
 	if err != nil {
@@ -203,6 +204,40 @@ func (o *options) run() error {
 	reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
 
 	reporter, err := reporter.New(reporterOpts...)
+	if err != nil {
+		return err
+	}
+
+	specs := []struct {
+		filename string
+		tests    []*model.Test
+	}{}
+	for _, st := range specTemplates {
+		var v *model.Validator
+		v, err = model.NewValidator(st.filename, o.isStrict)
+		if err != nil {
+			break
+		}
+
+		tests := make([]*model.Test, 0)
+		for _, tt := range st.testTemplates {
+			var t *model.Test
+			t, err = tt.Expand(env, v, statusMR, streamMR)
+			if err != nil {
+				break
+			}
+			err = v.Error()
+			if err != nil {
+				break
+			}
+			tests = append(tests, t)
+		}
+		specs = append(specs, struct {
+			filename string
+			tests    []*model.Test
+		}{filename: st.filename, tests: tests})
+	}
+
 	if err != nil {
 		return err
 	}

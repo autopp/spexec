@@ -153,6 +153,26 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeSeq()", func() {
+		Context("with a Seq", func() {
+			It("returns the given Seq and true", func() {
+				given := make(Seq, 0)
+				m, b := v.MayBeSeq(given)
+
+				Expect(m).To(Equal(given))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with a not Seq", func() {
+			It("returns something and false", func() {
+				_, b := v.MayBeSeq(42)
+
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeSeq()", func() {
 		Context("with a Seq", func() {
 			It("returns the given Seq and true", func() {
@@ -529,6 +549,69 @@ var _ = Describe("Validator", func() {
 				Expect(b).To(BeFalse())
 			})
 		})
+	})
+
+	Describe("MustBeTemplatable", func() {
+		DescribeTable("success cases",
+			func(given any, expected *Templatable[any]) {
+				actual, ok := v.MustBeTemplatable(given)
+
+				Expect(ok).To(BeTrue())
+				Expect(actual).To(Equal(expected))
+				Expect(v.Error()).NotTo(HaveOccurred())
+			},
+			Entry(`with bool literal`,
+				true,
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(true, []TemplateRef{}))),
+			Entry(`with number literal`,
+				42,
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(42, []TemplateRef{}))),
+			Entry(`with string literal`,
+				"hello",
+				NewTemplatableFromTemplateValue[any](NewTemplateValue("hello", []TemplateRef{}))),
+			Entry(`with map contains simple values`,
+				Map{"message": "hello"},
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(Map{"message": "hello"}, []TemplateRef{})),
+			),
+			Entry(`with variable map`,
+				Map{"$": "x"},
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(Map{"$": "x"}, []TemplateRef{NewTemplateVar("x")})),
+			),
+			Entry(`with map contains variable`,
+				Map{"foo": Map{"$": "x"}, "bar": Map{"baz": Map{"$": "y"}}},
+				NewTemplatableFromTemplateValue[any](
+					NewTemplateValue(
+						Map{"foo": Map{"$": "x"}, "bar": Map{"baz": Map{"$": "y"}}},
+						[]TemplateRef{
+							NewTemplateFieldRef("bar", NewTemplateFieldRef("baz", NewTemplateVar("y"))),
+							NewTemplateFieldRef("foo", NewTemplateVar("x")),
+						},
+					),
+				),
+			),
+			Entry(`with seq contains simple values`,
+				Seq{"hello", "world"},
+				NewTemplatableFromTemplateValue[any](NewTemplateValue(Seq{"hello", "world"}, []TemplateRef{})),
+			),
+			Entry(`with seq contains variable`,
+				Seq{"hello", Map{"$": "x"}},
+				NewTemplatableFromTemplateValue[any](
+					NewTemplateValue(Seq{"hello", Map{"$": "x"}},
+						[]TemplateRef{NewTemplateIndexRef(1, NewTemplateVar("x"))}),
+				),
+			),
+			Entry(`with seq contains map contains variable and seq`,
+				Seq{"message", Map{"hello": Map{"$": "x"}, "world": Seq{0, 1, Map{"$": "y"}}}},
+				NewTemplatableFromTemplateValue[any](
+					NewTemplateValue(Seq{"message", Map{"hello": Map{"$": "x"}, "world": Seq{0, 1, Map{"$": "y"}}}},
+						[]TemplateRef{
+							NewTemplateIndexRef(1, NewTemplateFieldRef("hello", NewTemplateVar("x"))),
+							NewTemplateIndexRef(1, NewTemplateFieldRef("world", NewTemplateIndexRef(2, NewTemplateVar("y")))),
+						},
+					),
+				),
+			),
+		)
 	})
 
 	Describe("MustHave()", func() {
@@ -1054,6 +1137,39 @@ var _ = Describe("Validator", func() {
 				Expect(ok).To(BeFalse())
 				Expect(v.Error()).To(BeValidationError(expected))
 			},
+			Entry("when the specified field is not a string value", Map{"field": 42}, "$.field: should be string or variable, but got int"),
+			Entry("when the specified field is not a variable map", Map{"field": Map{"$": "x", "$$": "y"}}, "$.field: should be string or variable, but got map"),
+		)
+	})
+
+	Describe("MustHaveTemplatableString", func() {
+		DescribeTable("returns Templatable[string]",
+			func(m Map, expected *Templatable[string]) {
+				actual, ok := v.MustHaveTemplatableString(m, "field")
+
+				Expect(ok).To(BeTrue())
+				Expect(actual).To(Equal(expected))
+			},
+			Entry(
+				"when the specified field is a string",
+				Map{"field": "hello"},
+				NewTemplatableFromValue("hello"),
+			),
+			Entry(
+				"when the specified field is variable",
+				Map{"field": Map{"$": "x"}},
+				NewTemplatableFromVariable[string]("x"),
+			),
+		)
+
+		DescribeTable("add violation",
+			func(m Map, expected any) {
+				_, ok := v.MustHaveTemplatableString(m, "field")
+
+				Expect(ok).To(BeFalse())
+				Expect(v.Error()).To(BeValidationError(expected))
+			},
+			Entry("when the given map dose not have specified field", Map{}, "$: should have .field as templatable string"),
 			Entry("when the specified field is not a string value", Map{"field": 42}, "$.field: should be string or variable, but got int"),
 			Entry("when the specified field is not a variable map", Map{"field": Map{"$": "x", "$$": "y"}}, "$.field: should be string or variable, but got map"),
 		)
