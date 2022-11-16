@@ -178,9 +178,6 @@ func (o *options) run() error {
 	}
 	reporterOpts = append(reporterOpts, reporter.WithWriter(out))
 
-	if err != nil {
-		return err
-	}
 	var colorMode bool
 	switch o.color {
 	case "always":
@@ -212,6 +209,8 @@ func (o *options) run() error {
 		filename string
 		tests    []*model.Test
 	}{}
+
+RunTests:
 	for _, st := range specTemplates {
 		var v *model.Validator
 		v, err = model.NewValidator(st.filename, o.isStrict)
@@ -224,11 +223,11 @@ func (o *options) run() error {
 			var t *model.Test
 			t, err = tt.Expand(env, v, statusMR, streamMR)
 			if err != nil {
-				break
+				break RunTests
 			}
 			err = v.Error()
 			if err != nil {
-				break
+				break RunTests
 			}
 			tests = append(tests, t)
 		}
