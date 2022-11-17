@@ -135,8 +135,7 @@ func (o *options) run() error {
 	var err error
 	env := model.NewEnv(nil)
 	if o.isStdin {
-		var v *model.Validator
-		v, err = model.NewValidator("", o.isStrict)
+		v, err := model.NewValidator("", o.isStrict)
 		if err != nil {
 			return err
 		}
@@ -147,23 +146,19 @@ func (o *options) run() error {
 		}{"<stdin>", testTemplates})
 	} else {
 		for _, filename := range o.filenames {
-			var v *model.Validator
-			v, err = model.NewValidator(filename, o.isStrict)
+			v, err := model.NewValidator(filename, o.isStrict)
 			if err != nil {
-				break
+				return err
 			}
 			testTemplates, err = p.ParseFile(env, v, filename)
 			if err != nil {
-				break
+				return err
 			}
 			specTemplates = append(specTemplates, struct {
 				filename      string
 				testTemplates []*template.TestTemplate
 			}{filename, testTemplates})
 		}
-	}
-	if err != nil {
-		return err
 	}
 
 	runner := runner.NewRunner()
