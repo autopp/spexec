@@ -140,6 +140,9 @@ func (o *options) run() error {
 			return err
 		}
 		testTemplates, err = p.ParseStdin(env, v)
+		if err != nil {
+			return err
+		}
 		specTemplates = append(specTemplates, struct {
 			filename      string
 			testTemplates []*template.TestTemplate
