@@ -165,7 +165,6 @@ func (o *options) run() error {
 	}
 
 	runner := runner.NewRunner()
-	reporterOpts := make([]reporter.Option, 0)
 	out := os.Stdout
 	if len(o.output) != 0 {
 		out, err = os.Create(o.output)
@@ -174,7 +173,6 @@ func (o *options) run() error {
 		}
 		defer out.Close()
 	}
-	reporterOpts = append(reporterOpts, reporter.WithWriter(out))
 
 	var colorMode bool
 	switch o.color {
@@ -185,7 +183,6 @@ func (o *options) run() error {
 	case "auto":
 		colorMode = isatty.IsTerminal(out.Fd())
 	}
-	reporterOpts = append(reporterOpts, reporter.WithColor(colorMode))
 
 	var formatter reporter.ReportFormatter
 	switch o.format {
@@ -196,9 +193,8 @@ func (o *options) run() error {
 	case "json":
 		formatter = &reporter.JSONFormatter{}
 	}
-	reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
 
-	reporter, err := reporter.New(reporterOpts...)
+	reporter, err := reporter.New(reporter.WithWriter(out), reporter.WithColor(colorMode), reporter.WithFormatter(formatter))
 	if err != nil {
 		return err
 	}
