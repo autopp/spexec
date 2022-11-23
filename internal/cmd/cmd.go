@@ -208,12 +208,11 @@ func (o *options) run() error {
 		tests    []*model.Test
 	}{}
 
-RunTests:
 	for _, st := range specTemplates {
 		var v *model.Validator
 		v, err = model.NewValidator(st.filename, o.isStrict)
 		if err != nil {
-			break
+			return err
 		}
 
 		tests := make([]*model.Test, 0)
@@ -221,11 +220,11 @@ RunTests:
 			var t *model.Test
 			t, err = tt.Expand(env, v, statusMR, streamMR)
 			if err != nil {
-				break RunTests
+				return err
 			}
 			err = v.Error()
 			if err != nil {
-				break RunTests
+				return err
 			}
 			tests = append(tests, t)
 		}
@@ -233,10 +232,6 @@ RunTests:
 			filename string
 			tests    []*model.Test
 		}{filename: st.filename, tests: tests})
-	}
-
-	if err != nil {
-		return err
 	}
 
 	var results []*model.TestResult
@@ -248,16 +243,11 @@ RunTests:
 		results = append(results, rs...)
 	}
 
-	allGreen := true
 	for _, r := range results {
 		if !r.IsSuccess {
-			allGreen = false
-			break
+			return errors.New(errors.ErrTestFailed, "test failed")
 		}
 	}
 
-	if !allGreen {
-		return errors.New(errors.ErrTestFailed, "test failed")
-	}
 	return nil
 }
