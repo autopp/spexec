@@ -164,7 +164,6 @@ func (o *options) run() error {
 		}
 	}
 
-	runner := runner.NewRunner()
 	out := os.Stdout
 	if len(o.output) != 0 {
 		out, err = os.Create(o.output)
@@ -230,6 +229,7 @@ func (o *options) run() error {
 		}{filename: st.filename, tests: tests})
 	}
 
+	runner := runner.NewRunner()
 	var results []*model.TestResult
 	for _, spec := range specs {
 		rs, err := runner.RunTests(spec.filename, spec.tests, reporter)
