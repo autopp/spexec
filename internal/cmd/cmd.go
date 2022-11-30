@@ -217,11 +217,11 @@ func (o *options) run() error {
 			if err != nil {
 				return err
 			}
-			err = v.Error()
-			if err != nil {
-				return err
-			}
 			tests = append(tests, t)
+		}
+		err = v.Error()
+		if err != nil {
+			return err
 		}
 		specs = append(specs, struct {
 			filename string
