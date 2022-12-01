@@ -131,7 +131,6 @@ func (o *options) run() error {
 		filename      string
 		testTemplates []*template.TestTemplate
 	}{}
-	var testTemplates []*template.TestTemplate
 	var err error
 	env := model.NewEnv(nil)
 	if o.isStdin {
@@ -139,7 +138,7 @@ func (o *options) run() error {
 		if err != nil {
 			return err
 		}
-		testTemplates, err = p.ParseStdin(env, v)
+		testTemplates, err := p.ParseStdin(env, v)
 		if err != nil {
 			return err
 		}
@@ -153,7 +152,7 @@ func (o *options) run() error {
 			if err != nil {
 				return err
 			}
-			testTemplates, err = p.ParseFile(env, v, filename)
+			testTemplates, err := p.ParseFile(env, v, filename)
 			if err != nil {
 				return err
 			}
@@ -204,16 +203,14 @@ func (o *options) run() error {
 	}{}
 
 	for _, st := range specTemplates {
-		var v *model.Validator
-		v, err = model.NewValidator(st.filename, o.isStrict)
+		v, err := model.NewValidator(st.filename, o.isStrict)
 		if err != nil {
 			return err
 		}
 
 		tests := make([]*model.Test, 0)
 		for _, tt := range st.testTemplates {
-			var t *model.Test
-			t, err = tt.Expand(env, v, statusMR, streamMR)
+			t, err := tt.Expand(env, v, statusMR, streamMR)
 			if err != nil {
 				return err
 			}
