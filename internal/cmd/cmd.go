@@ -131,30 +131,30 @@ func (o *options) run() error {
 		filename      string
 		testTemplates []*template.TestTemplate
 	}{}
-	var testTemplates []*template.TestTemplate
 	var err error
 	env := model.NewEnv(nil)
 	if o.isStdin {
-		var v *model.Validator
-		v, err = model.NewValidator("", o.isStrict)
+		v, err := model.NewValidator("", o.isStrict)
 		if err != nil {
 			return err
 		}
-		testTemplates, err = p.ParseStdin(env, v)
+		testTemplates, err := p.ParseStdin(env, v)
+		if err != nil {
+			return err
+		}
 		specTemplates = append(specTemplates, struct {
 			filename      string
 			testTemplates []*template.TestTemplate
 		}{"<stdin>", testTemplates})
 	} else {
 		for _, filename := range o.filenames {
-			var v *model.Validator
-			v, err = model.NewValidator(filename, o.isStrict)
+			v, err := model.NewValidator(filename, o.isStrict)
 			if err != nil {
-				break
+				return err
 			}
-			testTemplates, err = p.ParseFile(env, v, filename)
+			testTemplates, err := p.ParseFile(env, v, filename)
 			if err != nil {
-				break
+				return err
 			}
 			specTemplates = append(specTemplates, struct {
 				filename      string
@@ -162,12 +162,7 @@ func (o *options) run() error {
 			}{filename, testTemplates})
 		}
 	}
-	if err != nil {
-		return err
-	}
 
-	runner := runner.NewRunner()
-	reporterOpts := make([]reporter.Option, 0)
 	out := os.Stdout
 	if len(o.output) != 0 {
 		out, err = os.Create(o.output)
@@ -176,11 +171,7 @@ func (o *options) run() error {
 		}
 		defer out.Close()
 	}
-	reporterOpts = append(reporterOpts, reporter.WithWriter(out))
 
-	if err != nil {
-		return err
-	}
 	var colorMode bool
 	switch o.color {
 	case "always":
@@ -190,7 +181,6 @@ func (o *options) run() error {
 	case "auto":
 		colorMode = isatty.IsTerminal(out.Fd())
 	}
-	reporterOpts = append(reporterOpts, reporter.WithColor(colorMode))
 
 	var formatter reporter.ReportFormatter
 	switch o.format {
@@ -201,9 +191,8 @@ func (o *options) run() error {
 	case "json":
 		formatter = &reporter.JSONFormatter{}
 	}
-	reporterOpts = append(reporterOpts, reporter.WithFormatter(formatter))
 
-	reporter, err := reporter.New(reporterOpts...)
+	reporter, err := reporter.New(reporter.WithWriter(out), reporter.WithColor(colorMode), reporter.WithFormatter(formatter))
 	if err != nil {
 		return err
 	}
@@ -212,25 +201,24 @@ func (o *options) run() error {
 		filename string
 		tests    []*model.Test
 	}{}
+
 	for _, st := range specTemplates {
-		var v *model.Validator
-		v, err = model.NewValidator(st.filename, o.isStrict)
+		v, err := model.NewValidator(st.filename, o.isStrict)
 		if err != nil {
-			break
+			return err
 		}
 
 		tests := make([]*model.Test, 0)
 		for _, tt := range st.testTemplates {
-			var t *model.Test
-			t, err = tt.Expand(env, v, statusMR, streamMR)
+			t, err := tt.Expand(env, v, statusMR, streamMR)
 			if err != nil {
-				break
-			}
-			err = v.Error()
-			if err != nil {
-				break
+				return err
 			}
 			tests = append(tests, t)
+		}
+		err = v.Error()
+		if err != nil {
+			return err
 		}
 		specs = append(specs, struct {
 			filename string
@@ -238,10 +226,7 @@ func (o *options) run() error {
 		}{filename: st.filename, tests: tests})
 	}
 
-	if err != nil {
-		return err
-	}
-
+	runner := runner.NewRunner()
 	var results []*model.TestResult
 	for _, spec := range specs {
 		rs, err := runner.RunTests(spec.filename, spec.tests, reporter)
@@ -251,16 +236,11 @@ func (o *options) run() error {
 		results = append(results, rs...)
 	}
 
-	allGreen := true
 	for _, r := range results {
 		if !r.IsSuccess {
-			allGreen = false
-			break
+			return errors.New(errors.ErrTestFailed, "test failed")
 		}
 	}
 
-	if !allGreen {
-		return errors.New(errors.ErrTestFailed, "test failed")
-	}
 	return nil
 }
