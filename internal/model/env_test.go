@@ -59,4 +59,21 @@ var _ = Describe("Env", func() {
 			Expect(ok).To(BeTrue())
 		})
 	})
+
+	Describe("GetCurrentScope()", func() {
+		It("returns map as current scope", func() {
+			env.Define("command", "spexec")
+			env.Define("args", []string{"spec.yaml"})
+			env = NewEnv(env)
+			env.Define("args", []string{"test.yaml"})
+			env.Define("flags", []string{"--strict"})
+
+			expected := map[string]any{
+				"command": "spexec",
+				"args":    []string{"test.yaml"},
+				"flags":   []string{"--strict"},
+			}
+			Expect(env.GetCurrentScope()).To(Equal(expected))
+		})
+	})
 })
