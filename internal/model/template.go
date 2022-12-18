@@ -17,6 +17,7 @@ package model
 import (
 	"bytes"
 	"encoding/gob"
+	"text/template"
 
 	"github.com/autopp/spexec/internal/errors"
 )
@@ -43,6 +44,28 @@ func (tv *TemplateVar) Expand(env *Env, v *Validator, value any) (any, bool, err
 	}
 
 	return value, true, nil
+}
+
+type TemplateText struct {
+	text string
+}
+
+func NewTemplateText(text string) *TemplateText {
+	return &TemplateText{text}
+}
+
+func (tt *TemplateText) Expand(env *Env, v *Validator, value any) (any, bool, error) {
+	t, err := template.New("").Parse(tt.text)
+	if err != nil {
+		return nil, false, err
+	}
+
+	buf := new(bytes.Buffer)
+	if err = t.Execute(buf, Map{"Var": env.GetCurrentScope()}); err != nil {
+		return nil, false, err
+	}
+
+	return buf.String(), true, nil
 }
 
 type TemplateFieldRef struct {
