@@ -314,6 +314,50 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeTemplateText()", func() {
+		Context("with 1 element map which contain '$str' and the text", func() {
+			It("returns the name and true", func() {
+				text := "hello {{.Var.message}}"
+				given := Map{"$str": text}
+				tt, b := v.MayBeTemplateText(given)
+				Expect(tt).To(Equal(NewTemplateText(text)))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with 1 elements map contain '$str' and not string", func() {
+			It("returns something and false", func() {
+				given := Map{"$str": 42}
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with 1 element map without '$'", func() {
+			It("returns something and false", func() {
+				given := Map{"$$": "answer"}
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with not map", func() {
+			It("returns something and false", func() {
+				given := "answer"
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with two or more elements map", func() {
+			It("returns something and false", func() {
+				given := Map{"$str": "hello {{.Var.x}}", "$$": 42}
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeStringExpr", func() {
 		Context("with a string", func() {
 			It("returns literalStringExpr and true", func() {

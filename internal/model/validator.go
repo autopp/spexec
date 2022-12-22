@@ -177,6 +177,20 @@ func (v *Validator) MayBeVariable(x any) (string, bool) {
 	return name, true
 }
 
+func (v *Validator) MayBeTemplateText(x any) (*TemplateText, bool) {
+	q, value, ok := v.MayBeQualified(x)
+	if !ok || q != "$str" {
+		return nil, false
+	}
+
+	text, ok := v.MayBeString(value)
+	if !ok {
+		return nil, false
+	}
+
+	return NewTemplateText(text), true
+}
+
 func (v *Validator) MustBeStringExpr(x any) (StringExpr, bool) {
 	if s, ok := v.MayBeString(x); ok {
 		return NewLiteralStringExpr(s), true
