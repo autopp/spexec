@@ -1165,6 +1165,11 @@ var _ = Describe("Validator", func() {
 				Map{"field": Map{"$": "x"}},
 				NewTemplatableFromVariable[string]("x"),
 			),
+			Entry(
+				"when the specified field is template text",
+				Map{"field": Map{"$str": "x is {{ .Var.x }}"}},
+				NewTemplatableFromText[string]("x is {{ .Var.x }}"),
+			),
 		)
 
 		It("returns something and false when the given map dose not have specified field", func() {
