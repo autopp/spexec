@@ -320,7 +320,7 @@ var _ = Describe("Validator", func() {
 				text := "hello {{.Var.message}}"
 				given := Map{"$str": text}
 				tt, b := v.MayBeTemplateText(given)
-				Expect(tt).To(Equal(NewTemplateText(text)))
+				Expect(tt).To(Equal(text))
 				Expect(b).To(BeTrue())
 			})
 		})
