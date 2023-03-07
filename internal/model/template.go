@@ -209,7 +209,7 @@ func NewTemplatableFromVariable[T any](name string) *Templatable[T] {
 }
 
 func NewTemplatableFromText[T any](text string) *Templatable[T] {
-	return NewTemplatableFromTemplateValue[T](NewTemplateValue(Map{"$str": text}, []TemplateRef{NewTemplateText(text)}))
+	return NewTemplatableFromTemplateValue[T](NewTemplateValue(Map{"$t": text}, []TemplateRef{NewTemplateText(text)}))
 }
 
 func (t *Templatable[T]) Expand(env *Env, v *Validator) (T, error) {

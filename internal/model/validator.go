@@ -179,7 +179,7 @@ func (v *Validator) MayBeVariable(x any) (string, bool) {
 
 func (v *Validator) MayBeTemplateText(x any) (string, bool) {
 	q, value, ok := v.MayBeQualified(x)
-	if !ok || q != "$str" {
+	if !ok || q != "$t" {
 		return "", false
 	}
 
