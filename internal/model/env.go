@@ -46,3 +46,19 @@ func (e *Env) Lookup(name string) (any, bool) {
 
 	return e.prev.Lookup(name)
 }
+
+func (e *Env) GetCurrentScope() map[string]any {
+	m := map[string]any{}
+	var collectScope func(e *Env)
+	collectScope = func(e *Env) {
+		if e == nil {
+			return
+		}
+		collectScope(e.prev)
+		for name, v := range e.vars {
+			m[name] = v
+		}
+	}
+	collectScope(e)
+	return m
+}

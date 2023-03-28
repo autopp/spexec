@@ -177,6 +177,20 @@ func (v *Validator) MayBeVariable(x any) (string, bool) {
 	return name, true
 }
 
+func (v *Validator) MayBeTemplateText(x any) (string, bool) {
+	q, value, ok := v.MayBeQualified(x)
+	if !ok || q != "$t" {
+		return "", false
+	}
+
+	text, ok := v.MayBeString(value)
+	if !ok {
+		return "", false
+	}
+
+	return text, true
+}
+
 func (v *Validator) MustBeStringExpr(x any) (StringExpr, bool) {
 	if s, ok := v.MayBeString(x); ok {
 		return NewLiteralStringExpr(s), true
@@ -580,6 +594,10 @@ func (v *Validator) MayHaveTemplatableString(m Map, key string) (*Templatable[st
 
 	if name, ok := v.MayBeVariable(x); ok {
 		return NewTemplatableFromVariable[string](name), true, true
+	}
+
+	if text, ok := v.MayBeTemplateText(x); ok {
+		return NewTemplatableFromText[string](text), true, true
 	}
 
 	v.InField(key, func() {

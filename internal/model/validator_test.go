@@ -314,6 +314,50 @@ var _ = Describe("Validator", func() {
 		})
 	})
 
+	Describe("MayBeTemplateText()", func() {
+		Context("with 1 element map which contain '$t' and the text", func() {
+			It("returns the name and true", func() {
+				text := "hello {{.Var.message}}"
+				given := Map{"$t": text}
+				tt, b := v.MayBeTemplateText(given)
+				Expect(tt).To(Equal(text))
+				Expect(b).To(BeTrue())
+			})
+		})
+
+		Context("with 1 elements map contain '$t' and not string", func() {
+			It("returns something and false", func() {
+				given := Map{"$t": 42}
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with 1 element map without '$'", func() {
+			It("returns something and false", func() {
+				given := Map{"$$": "answer"}
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with not map", func() {
+			It("returns something and false", func() {
+				given := "answer"
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+
+		Context("with two or more elements map", func() {
+			It("returns something and false", func() {
+				given := Map{"$t": "hello {{.Var.x}}", "$$": 42}
+				_, b := v.MayBeTemplateText(given)
+				Expect(b).To(BeFalse())
+			})
+		})
+	})
+
 	Describe("MustBeStringExpr", func() {
 		Context("with a string", func() {
 			It("returns literalStringExpr and true", func() {
@@ -1120,6 +1164,11 @@ var _ = Describe("Validator", func() {
 				"when the specified field is variable",
 				Map{"field": Map{"$": "x"}},
 				NewTemplatableFromVariable[string]("x"),
+			),
+			Entry(
+				"when the specified field is template text",
+				Map{"field": Map{"$t": "x is {{ .Var.x }}"}},
+				NewTemplatableFromText[string]("x is {{ .Var.x }}"),
 			),
 		)
 

@@ -17,6 +17,7 @@ package model
 import (
 	"bytes"
 	"encoding/gob"
+	"text/template"
 
 	"github.com/autopp/spexec/internal/errors"
 )
@@ -43,6 +44,28 @@ func (tv *TemplateVar) Expand(env *Env, v *Validator, value any) (any, bool, err
 	}
 
 	return value, true, nil
+}
+
+type TemplateText struct {
+	text string
+}
+
+func NewTemplateText(text string) *TemplateText {
+	return &TemplateText{text}
+}
+
+func (tt *TemplateText) Expand(env *Env, v *Validator, value any) (any, bool, error) {
+	t, err := template.New("").Parse(tt.text)
+	if err != nil {
+		return nil, false, err
+	}
+
+	buf := new(bytes.Buffer)
+	if err = t.Execute(buf, Map{"Var": env.GetCurrentScope()}); err != nil {
+		return nil, false, err
+	}
+
+	return buf.String(), true, nil
 }
 
 type TemplateFieldRef struct {
@@ -183,6 +206,10 @@ func NewTemplatableFromTemplateValue[T any](tv *TemplateValue) *Templatable[T] {
 
 func NewTemplatableFromVariable[T any](name string) *Templatable[T] {
 	return NewTemplatableFromTemplateValue[T](NewTemplateValue(Map{"$": name}, []TemplateRef{NewTemplateVar(name)}))
+}
+
+func NewTemplatableFromText[T any](text string) *Templatable[T] {
+	return NewTemplatableFromTemplateValue[T](NewTemplateValue(Map{"$t": text}, []TemplateRef{NewTemplateText(text)}))
 }
 
 func (t *Templatable[T]) Expand(env *Env, v *Validator) (T, error) {

@@ -59,6 +59,23 @@ var _ = Describe("TemplateVar", func() {
 	})
 })
 
+var _ = Describe("TemplateText", func() {
+	Describe("Expand()", func() {
+		It("returns expanded text", func() {
+			env := NewEnv(nil)
+			env.Define("answer", "42")
+			v, _ := NewValidator("", true)
+
+			tt := NewTemplateText("answer is {{ .Var.answer }}")
+			actual, ok, err := tt.Expand(env, v, "answer is {{ .Var.answer }}")
+			Expect(ok).To(BeTrue())
+			Expect(v.Error()).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred())
+			Expect(actual).To(Equal("answer is 42"))
+		})
+	})
+})
+
 var _ = Describe("TemplateFieldRef", func() {
 	Describe("Expand()", func() {
 		field := "answer"
