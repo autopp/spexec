@@ -18,7 +18,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 
 	"github.com/autopp/spexec/internal/errors"
 	"github.com/autopp/spexec/internal/matcher"
@@ -27,8 +26,6 @@ import (
 	"github.com/autopp/spexec/internal/util"
 	"gopkg.in/yaml.v3"
 )
-
-var evnVarNamePattern = regexp.MustCompile(`^[a-zA-Z_]\w+$`)
 
 type Parser struct {
 	statusMR *matcher.StatusMatcherRegistry
