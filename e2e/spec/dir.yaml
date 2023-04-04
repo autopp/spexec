@@ -1,0 +1,22 @@
+tests:
+  - name: 'dir specifies directory of command execution'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      format: yaml
+      value:
+        tests:
+          - command:
+              - ls
+            dir: '/'
+            expect:
+              status:
+                success: true
+              stdout:
+                contain: "etc\n"
+    expect:
+      status:
+        eq: 0
+    teeStdout: true

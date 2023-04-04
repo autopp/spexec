@@ -114,7 +114,7 @@ func (p *Parser) loadTest(env *model.Env, v *model.Validator, x any) *template.T
 		return nil
 	}
 
-	v.MustContainOnly(tc, "name", "command", "stdin", "env", "expect", "timeout", "teeStdout", "teeStderr")
+	v.MustContainOnly(tc, "name", "command", "stdin", "env", "dir", "expect", "timeout", "teeStdout", "teeStderr")
 
 	tt := new(template.TestTemplate)
 	tt.SpecFilename = v.Filename
@@ -178,7 +178,12 @@ func (p *Parser) loadTest(env *model.Env, v *model.Validator, x any) *template.T
 		tt.TeeStderr = teeStderr
 	}
 
-	tt.Dir = v.GetDir()
+	// TODO: should be templatable?
+	if dir, exists, _ := v.MayHaveString(tc, "dir"); exists {
+		tt.Dir = dir
+	} else {
+		tt.Dir = v.GetDir()
+	}
 
 	return tt
 }
