@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## v0.4.0
+
+New features
+- Set ".yaml" ext to YAML format file string expr (#45)
+- Add `teeStdout`/`teeStderr` property to test case (#46)
+
+Improvements
+- Pretty print failure message of `beEmpty` (#47)
+- Pretty print failure message of `eq` (#48)
+
+Bug fixes
+- Fix typo in error message (#59)
+- Show correct flag name in error message (#70)
+
 ## v0.3.0
 
 New features
