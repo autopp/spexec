@@ -19,8 +19,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/autopp/spexec/internal/cmd"
-	"github.com/autopp/spexec/internal/errors"
+	"github.com/autopp/spexec/pkg/cmd"
+	"github.com/autopp/spexec/pkg/errors"
 )
 
 var version = "HEAD"
