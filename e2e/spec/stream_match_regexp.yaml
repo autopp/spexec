@@ -1,0 +1,37 @@
+tests:
+  - name: 'stream matchRegexp matcher for matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      format: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              stdout:
+                matchRegexp: el+o
+    expect:
+      status:
+        eq: 0
+  - name: 'stream matchRegexp matcher for not matched output'
+    command:
+      - type: env
+        name: SPEXEC
+      - '-'
+    stdin:
+      format: yaml
+      value:
+        tests:
+          - command:
+              - echo
+              - hello world
+            expect:
+              stdout:
+                matchRegexp: elll+o
+    expect:
+      status:
+        eq: 1
